@@ -1,0 +1,179 @@
+.vstxt {
+    padding: 0px 50px;
+    text-align:  center;
+}
+
+img.logo {
+    height: 48px;
+    image-rendering: optimizeQuality;
+    padding-right: 10px;
+}
+
+/* general filter box css */
+
+#filter {
+    margin-top: 50px;
+    margin-bottom: 20px;
+}
+
+#filter {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+#filter-toggle {
+    width: 100%;
+    border: 1px solid black;
+    border-radius: 0px;
+}
+
+#search {
+    background-color: rgb(41, 41, 41);
+    border: 1px solid black;
+    border-top: none;
+    transition: all 0.5s;
+    position: relative;
+    width: 100%;
+}
+
+.filters {
+    padding: 20px 50px;
+}
+
+#filter .pfilter:nth-child(0){
+    order: 1;
+}
+
+#filter .pfilter:nth-child(2) {
+    order: 3;
+}
+
+#filter .pfilter > div > div {
+    width: 100%;
+}
+
+#filter .pfilter {
+    width: 100%;
+}
+
+#filter .flex {
+    margin: auto;
+}
+
+
+/*.chara-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    justify-content: center;
+    padding-bottom: 1%;
+}
+
+.chara-toggle img[inactive] {
+    filter: grayscale(100%);
+}*/
+
+/* general upload table css */
+
+.links .mdi::before, .links .mdi::after {
+    font-size: 46px;
+}
+
+#matches img {
+    image-rendering: crisp-edges;
+}
+
+.match-row {
+    flex-wrap: nowrap;
+    height: auto;
+    width: 100%;
+    border-bottom: 2px solid;
+    padding: 10px 0px;
+}
+
+
+#upload-list {
+    margin-top: 0px;
+}
+
+
+#upload-list > .wrapper {
+    width: 70%;
+}
+
+.match-row {
+    justify-content: space-between;
+}
+
+.match-info {
+    text-align: center;
+}
+
+.match-row .players .flex:nth-child(0){
+    order: 1;
+}
+
+.match-row .players .flex:nth-child(2) {
+    order: 3;
+}
+
+.match-row .filler {
+    height: 100%;
+}
+
+.match-info.row, .match-data.row, .match-info.row + .match-data.row {
+    margin: 0px;
+}
+
+.match-info.row + .match-data.row {
+    margin: 0px;
+}
+
+.layout.match-info.row {
+    margin-left: 8px;
+    align-content: center;
+    min-height: 40px;
+    flex: auto;
+}
+
+.layout.match-data {
+    flex: 80%;
+}
+
+.players {
+    justify-content: center;
+}
+
+.players.column {
+    padding-left: 15px;
+}
+
+.links .icons {
+    margin: auto;
+}
+
+.links.column {
+    justify-content: space-evenly;
+    text-align: right;
+    padding-right: 15px;
+  }
+
+  .links.column .icons {
+      margin: 0;
+  }
+
+  .match-row .flex {
+    flex: 0 0 auto;
+  }
+
+  /*.warning-icon {
+    background-color: white;
+    border-radius: 24px;
+    height: 15px;
+    width: 15px;
+  }*/
+
+  .tooltip.msg {
+      text-align: center;
+  }

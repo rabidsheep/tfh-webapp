@@ -1,0 +1,203 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="global.css">
+        <link rel="stylesheet" href="filters.css">
+        <link rel="stylesheet" href="uploadlist.css">
+
+        <script type="text/javascript" src="jquery-3.6.0.js"></script>
+    </head>
+    <body>
+        <div id="page-wrapper">
+            <!--<div id="topbar">
+            </div>-->
+            <div id="sidebar-wrapper">
+                <div id="sidebar-bg">
+                    <div id="sidebar-menu">
+                        <a href="/home"><h3>Home</h3></a>
+                        <a href="/upload"><h3>Upload</h3></a>
+                        <a href="/"><h3>Wiki</h3></a>
+                        <a href="/contact"><h3>Contact</h3></a>
+                    </div>
+                </div>
+            </div>
+
+            <div id="main-wrapper">
+                <div id="main">
+                    <div id="filter">
+                        <div class="toggle">
+                            <div class="arrow"></div>
+                            <div style="color:black; display: inline-block;">⏵</div>
+                            <label>filters</label>
+                        </div>
+                        <div class="search">
+                            <div id="p1-filter" class="pfilter">
+                                <h3>Player 1</h3>
+                                <div class="pfilter__name">
+                                    <input type="text" name="p1" placeholder="Player Name" />
+                                    <label>Name</label>
+                                </div>
+
+                                <div class="pfilter__chara">
+                                    <label>Character</label>
+                                    <select name="p1-chara">
+                                        <option value="Arizona">Arizona</option>
+                                        <option value="Oleander">Oleander</option>
+                                        <option value="Paprika">Paprika</option>
+                                        <option value="Pom">Pom</option>
+                                        <option value="Shanty">Shanty</option>
+                                        <option value="Tianhuo">Tianhuo</option>
+                                        <option value="Velvet">Velvet</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="filler"><h2>vs.</h2></div>
+
+                            <div id="p2-filter" class="pfilter">
+                                <h3>Player 2</h3>
+                                <div class="pfilter__name">
+                                    <input type="text" name="p2" placeholder="Player Name" />
+                                    <label>Name</label>
+                                </div>
+
+                                <div class="pfilter__chara">
+                                    <!--<label>Character</label>
+                                    <div class="filter__chara wrapper">
+                                        <div class="chara-select" id="p2-chara">
+                                            <div class="chara-select__trigger"><span></span>
+                                                <div class="arrow"></div>
+                                            </div>
+                                            <div class="chara-select__options">
+                                                <span class="chara-option" data-value="Arizona">Arizona</span>
+                                                <span class="chara-option" data-value="Oleander">Oleander</span>
+                                                <span class="chara-option" data-value="Paprika">Paprika</span>
+                                                <span class="chara-option" data-value="Pom">Pom</span>
+                                                <span class="chara-option" data-value="Shanty">Shanty</span>
+                                                <span class="chara-option" data-value="Tianhuo">Tianhuo</span>
+                                                <span class="chara-option" data-value="Velvet">Velvet</span>
+                                            </div>
+                                        </div>
+                                    </div>-->
+
+                                    <label>Character</label>
+                                    <select name="p1-chara">
+                                        <option value="Arizona">Arizona</option>
+                                        <option value="Oleander">Oleander</option>
+                                        <option value="Paprika">Paprika</option>
+                                        <option value="Pom">Pom</option>
+                                        <option value="Shanty">Shanty</option>
+                                        <option value="Tianhuo">Tianhuo</option>
+                                        <option value="Velvet">Velvet</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="upload-list">
+                        <table class="uploads-table">
+                            <tr class="col-headers">
+                                <th class="id-col">ID</th>
+                                <th class="p1-col" colspan="2">P1</th>
+                                <th class="vs-col"></th>
+                                <th class="p2-col" colspan="2">P2</th>
+                                <th class="dl-col">Download</th>
+                                <th class="yt-col">YouTube</th>
+                            </tr>
+                            <!-- Placeholder data -->
+                            <tr class="data-row">
+                                <td class="id-cell">1</td>
+                                <td class="p1-name">Player 1</td>
+                                <td class="p1-chara"><img src="img/pixel/p_ari.png" /></td>
+                                <td class="vs-cell">vs.</td>
+                                <td class="p2-chara"><img src="img/pixel/p_pap.png" /></td>
+                                <td class="p2-name">Player 2</td>
+                                <td class="dl-cell"><img src="img/icon/download.png" /></td>
+                                <td class="yt-cell"><img data-yt="true" src="img/icon/youtube.png" /></td>
+                            </tr>
+                            <tr class="data-row">
+                                <td class="id-cell">2</td>
+                                <td class="p1-name">Player 1</td>
+                                <td class="p1-chara"><img src="img/pixel/p_ole.png" /></td>
+                                <td class="vs-cell">vs.</td>
+                                <td class="p2-chara"><img src="img/pixel/p_pom.png" /></td>
+                                <td class="p2-name">Player 2</td>
+                                <td class="dl-cell"><img src="img/icon/download.png" /></td>
+                                <td class="yt-cell"><img data-yt="false" src="img/icon/youtube.png" /></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="dropdown.js"></script>
+        <script>
+            $(document).ready(function() {
+
+                // open/close filter box
+                $('#filter-toggle').click(function() {
+                    $(this).toggleClass('close');
+                    $(this).siblings('#filter-search').slideToggle("slow");
+                });
+
+                // resize name input label
+                $('.name-filter').click(function() {
+                    var otherLabel = $('.name-filter').not(this).children('label.active');
+                    var thisLabel = $(this).children('label');
+                    
+                    // if other filter's label has active class & input field is empty...
+                    if (otherLabel && !otherLabel.siblings('input').val()) {
+                        otherLabel.animate({fontSize: '16px', top: '10', left: '5'});
+                        otherLabel.toggleClass('active');
+                    }
+
+                    // if this label does not already have an active class...
+                    if (!thisLabel.hasClass('active')) {
+                        thisLabel.toggleClass('active');
+                        thisLabel.animate({fontSize: '12px', top: '-15', left: '0'});
+                    }
+                });
+
+                // resize character dropdown label
+                $('.chara-filter').click(function() {
+                    var otherLabel = $('.chara-filter').not(this).children('label.active');
+                    var thisLabel = $(this).children('label');
+                    
+                    // if other filter's label has active class & no option is selected...
+                    if (otherLabel && !otherLabel.siblings('.chara-select-wrapper').find('.selected').length) {
+                        otherLabel.animate({fontSize: '16px', top: '10', left: '5'});
+                        otherLabel.toggleClass('active');
+                    }
+
+                    // if this label does not already have an active class...
+                    if (!thisLabel.hasClass('active')) {
+                        thisLabel.toggleClass('active');
+                        thisLabel.animate({fontSize: '12px', top: '-15', left: '0'});
+                    }
+                });
+
+                // resize labels if input fields are clicked out of
+                $(document).click(function(e) {
+                    if (!$(e.target).closest('.name-input').length) {
+                        $('.name-filter').each(function() {
+                            if (!$(this).children('input').val()) {
+                                $(this).children('label.active').animate({fontSize: '16px', top: '10', left: '5'});
+                                $(this).children('label.active').toggleClass('active');
+                            }
+                        })
+                    };
+
+                    if (!$(e.target).closest('.chara-filter').length) {
+                        $('.chara-filter').each(function() {
+                            if (!$(this).find('.selected').length) {
+                                $(this).children('label.active').animate({fontSize: '16px', top: '10', left: '5'});
+                                $(this).children('label.active').toggleClass('active');
+                            }
+                        })
+                    };
+
+                })
+            });
+        </script>
+    </body>
+</html>

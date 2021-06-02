@@ -3,11 +3,6 @@
     <Filters />
 
     <!-- matches table -->
-    <v-checkbox
-    v-model="showCompatible"
-    :label="`Only show replays compatible with current patch (v${this.$version})`"
-    color="primary"
-    />
     <div id="matches">
       <v-layout column>
         <MatchRow
@@ -24,7 +19,7 @@
 
 <script>
 import MatchRow from '../components/MatchRow.vue'
-import Filters from '../components/Filters.vue'
+import Filters from '../components/Filters2.vue'
 
 export default {
   name: 'Matches',
@@ -47,8 +42,8 @@ export default {
           date: '06/26/27',
           patch: 2.07,
           players: [
-            { name: 'player 1', character: 'paprika' },
-            { name: 'player 2', character: 'pom' }
+            { name: 'player 1', character: 'Paprika' },
+            { name: 'player 2', character: 'Pom' }
           ],
           dl: true,
           yt: true
@@ -57,8 +52,8 @@ export default {
           date: '04/25/23',
           patch: 2.03,
           players: [
-            { name: 'player 3', character: 'shanty' },
-            { name: 'player 4', character: 'oleander' }
+            { name: 'player 3', character: 'Shanty' },
+            { name: 'player 4', character: 'Oleander' }
           ],
           dl: true,
           yt: false

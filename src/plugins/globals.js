@@ -1,3 +1,22 @@
 import Vue from 'vue'
-import config from './../config'
-Vue.prototype.$config = config
+
+// current game version
+Vue.prototype.$version = 2.07;
+
+let charactersRes = [
+    'Arizona',
+    'Oleander',
+    'Paprika',
+    'Pom',
+    'Shanty',
+    'Tianhuo',
+    'Velvet'
+]
+
+Vue.use({
+    install: () => {
+        Object.defineProperty(Vue.prototype, '$characters', {
+          get () { return charactersRes }
+        })
+      }
+    })

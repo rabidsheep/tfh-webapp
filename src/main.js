@@ -1,14 +1,13 @@
 import Vue from 'vue'
 import App from './App.vue'
-import vuetify from './plugins/vuetify';
+import vuetify from './plugins/vuetify'
+import router from './router'
+import './plugins/globals.js'
 //import router from './router'
 
 Vue.use(vuetify);
 
 Vue.config.productionTip = false;
-
-// current game version
-Vue.prototype.$version = 2.07;
 
 // filter to capitalize first letter of a word
 Vue.filter('capitalize', function (value) {
@@ -31,5 +30,6 @@ new Vue({
   data: {
     version: 2.07
   },
+  router,
   render: h => h(App)
 }).$mount('#app')

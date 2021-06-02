@@ -1,5 +1,5 @@
 <template>
-  <v-layout match-row :align-center="!$vuetify.breakpoint.xsOnly" :column="$vuetify.breakpoint.xsOnly">
+  <v-layout match-row :align-center="!$vuetify.breakpoint.xsOnly" :column="$vuetify.breakpoint.xsOnly" :style="$vuetify.breakpoint.xsOnly ? `width: 90%; margin: auto` : ``">
       <!-- match info (date/patch) -->
       <v-layout match-info :column="!$vuetify.breakpoint.xsOnly" :row="$vuetify.breakpoint.xsOnly">
         <v-flex>
@@ -19,7 +19,7 @@
     <v-layout match-data :row="$vuetify.breakpoint.xsOnly">
       <!-- player info (name/character)-->
       <v-layout players :column="$vuetify.breakpoint.xsOnly">
-        <v-flex v-for="(player, i) in players" :key=i>
+        <v-flex v-for="(player, i) in players" :key=i :style="$vuetify.breakpoint.xsOnly ? `margin-bottom: 5px;` : ``">
           <v-layout align-center :reverse="i === 0 && $vuetify.breakpoint.smAndUp">
             <!-- *save for possible reuse later -- maybe allow filtering by tournament?*
               <div v-for="(character, j) in player.characters" :key=j>
@@ -28,8 +28,8 @@
                 </v-avatar>
             </div>-->
             <div>
-                <v-avatar tile size="72px">
-                  <img :src="require(`../assets/img/pixel/${player.character}.png`)" :alt="player.character | capitalize" :title="player.character | capitalize" />
+                <v-avatar tile height="100%" :class="$vuetify.breakpoint.smAndUp ? `mr-5 ml-5` : `mr-5`">
+                  <img :src="require(`../assets/img/sel/${player.character}.png`)" :alt="player.character" :title="player.character" />
                 </v-avatar>
             </div>
             <div class="ma-1">
@@ -48,7 +48,7 @@
       <!-- dl/yt links -->
       <v-layout links :column="$vuetify.breakpoint.xsOnly">
 
-        <v-flex class="icons" large>
+        <v-flex class="icons" large :style="$vuetify.breakpoint.xsOnly ? `margin-bottom: 5px;` : ``">
           <!-- display tooltip if replay is not compatible with current patch -->
           <v-tooltip v-model="show" top :disabled="this.$version === patch" color="primary">
             <template v-slot:activator="{on, attrs}">

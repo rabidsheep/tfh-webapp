@@ -1,5 +1,5 @@
 .vstxt {
-    padding: 0px 50px;
+    padding: 0px 30px;
     text-align:  center;
 }
 
@@ -12,7 +12,7 @@ img.logo {
 /* general filter box css */
 
 #filter {
-    margin-top: 50px;
+    margin-top: 30px;
     margin-bottom: 20px;
 }
 
@@ -49,13 +49,6 @@ img.logo {
     order: 3;
 }
 
-#filter .pfilter > div > div {
-    width: 100%;
-}
-
-#filter .pfilter {
-    width: 100%;
-}
 
 #filter .flex {
     margin: auto;
@@ -80,15 +73,16 @@ img.logo {
     font-size: 46px;
 }
 
-#matches img {
+/*#matches img {
     image-rendering: crisp-edges;
-}
+}*/
 
 .match-row {
     flex-wrap: nowrap;
     height: auto;
     width: 100%;
     border-bottom: 2px solid;
+    justify-content: space-between;
     padding: 10px 0px;
 }
 
@@ -100,10 +94,6 @@ img.logo {
 
 #upload-list > .wrapper {
     width: 70%;
-}
-
-.match-row {
-    justify-content: space-between;
 }
 
 .match-info {

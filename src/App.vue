@@ -4,7 +4,7 @@
       <v-layout column align-center>
           <Topbar />
           <div id="router-view">
-            <Matches />
+            <router-view />
           </div>
       </v-layout>
     </v-main>
@@ -13,12 +13,10 @@
 
 <script>
 import Topbar from './components/Topbar.vue'
-import Matches from './views/Matches.vue'
 
 export default {
 	components: {
-    Topbar,
-    Matches
+    Topbar
 	},
   watch: {
     onScroll: function (event) {

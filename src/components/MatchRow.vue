@@ -29,7 +29,7 @@
             </div>-->
             <div>
                 <v-avatar tile height="100%" :class="$vuetify.breakpoint.smAndUp ? `mr-5 ml-5` : `mr-5`">
-                  <img :src="require(`../assets/img/sel/${player.character}.png`)" :alt="player.character" :title="player.character" />
+                  <img :src="require(`../assets/${$characters[player.cid].imgUrl}`)" :alt="$characters[player.cid].name" :title="$characters[player.cid].name" />
                 </v-avatar>
             </div>
             <div class="ma-1">

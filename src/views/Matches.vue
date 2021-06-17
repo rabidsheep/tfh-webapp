@@ -19,7 +19,7 @@
 
 <script>
 import MatchRow from '../components/MatchRow.vue'
-import Filters from '../components/Filters2.vue'
+import Filters from '../components/Filters.vue'
 
 export default {
   name: 'Matches',
@@ -42,8 +42,8 @@ export default {
           date: '06/26/27',
           patch: 2.07,
           players: [
-            { name: 'player 1', character: 'Paprika' },
-            { name: 'player 2', character: 'Pom' }
+            { name: 'player 1', cid: 0 },
+            { name: 'player 2', cid: 1 }
           ],
           dl: true,
           yt: true
@@ -52,8 +52,8 @@ export default {
           date: '04/25/23',
           patch: 2.03,
           players: [
-            { name: 'player 3', character: 'Shanty' },
-            { name: 'player 4', character: 'Oleander' }
+            { name: 'player 3', cid: 2 },
+            { name: 'player 4', cid: 3 }
           ],
           dl: true,
           yt: false

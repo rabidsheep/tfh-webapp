@@ -1,18 +1,28 @@
 <template>
     <v-form v-model="valid">
         <v-container>
+            
+            <v-file-input
+                accept=".tfhr"
+                label="File input"
+                truncate-length="50"
+            />
+
             <v-text-field
             v-model="p1Name"
             :rules="nameRules"
             label="Player 1"
             required
             />
+
+
             <v-text-field
             v-model="p2Name"
             :rules="nameRules"
             label="Player 2"
             required
             />
+
         </v-container>
     </v-form>
 </template>

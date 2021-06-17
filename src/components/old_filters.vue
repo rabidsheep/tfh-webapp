@@ -15,7 +15,7 @@
                                 <template v-slot:activator="{ on, attrs }">
                                     <v-btn v-bind="attrs" v-on="on" height="auto" icon>
                                         <v-avatar v-if="!selectedCharacters[i]" height="100%" tile>
-                                            <img :src="require(`../assets/img/sel/Random.png`)" />
+                                            <img :src="require(`../assets/img/sel/random.png`)" />
                                         </v-avatar>
 
                                         <v-avatar v-if="selectedCharacters[i]" height="100%" tile>
@@ -30,16 +30,16 @@
                                 <v-list width="200px">
                                     <v-list-item>
                                         <v-avatar class="mb-2 mr-2" height="100%" tile>
-                                            <img :src="require(`../assets/img/sel/Random.png`)" />
+                                            <img :src="require(`../assets/img/sel/random.png`)" />
                                         </v-avatar>
                                         Any Character
                                     </v-list-item>
 
-                                    <v-list-item v-for="character in characters" :key=character>
+                                    <v-list-item :for="character in $characters" :key=character>
                                         <v-avatar class="mb-2 mr-2" height="100%" tile>
-                                            <img :src="require(`../assets/img/sel/${character}.png`)">
+                                            <img :src="require(`../assets/${character.imgUrl}`)">
                                         </v-avatar>
-                                        {{ character }}
+                                        {{ character.name }}
                                     </v-list-item>
                                 </v-list>
                                 <!-- /char select list -->
@@ -84,7 +84,7 @@ export default {
             [{ name: [String, null], character: [String, null] }],
             [{ name: [String, null], character: [String, null] }]
         ],*/
-        characters: [
+        /*characters: [
             'Arizona',
             'Oleander',
             'Paprika',
@@ -92,7 +92,7 @@ export default {
             'Shanty',
             'Tianhuo',
             'Velvet'
-        ],
+        ],*/
         selectedCharacters: [],
         players: [],
         selectedPlayers: [],

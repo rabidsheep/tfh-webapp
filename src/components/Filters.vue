@@ -5,29 +5,65 @@
             <div id="search" v-show="!hidden">
                 <v-layout filters :column="$vuetify.breakpoint.xsOnly">
                     <!-- player filters -->
-                    <v-flex column pfilter v-for="i in [1, 2]" :key=i>
-                        <!-- player name -->
+                    <v-layout pfilter v-for="i in [0, 1]" :key=i :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"> 
+                        <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
+                            <v-menu
+                            max-height="400px"
+                            transition="slide-y-transition"
+                            offset-y>
+                                <!-- char select button -->
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-btn v-bind="attrs" v-on="on" height="auto" icon>
+                                        <v-avatar v-if="!selectedCharacters[i]" height="100%" tile>
+                                            <img :src="require(`../assets/img/sel/Random.png`)" />
+                                        </v-avatar>
+
+                                        <v-avatar v-if="selectedCharacters[i]" height="100%" tile>
+                                            <img :src="require(`../assets/img/sel/${selectedCharacters[i]}.png`)" />
+                                        </v-avatar>
+                                    </v-btn>
+                                </template>
+                                <!-- /char select button -->
+                                
+                                <!-- char select list
+                                add @click="selectCharacter(i, character) once hooked up to db-->
+                                <v-list width="200px">
+                                    <v-list-item>
+                                        <v-avatar class="mb-2 mr-2" height="100%" tile>
+                                            <img :src="require(`../assets/img/sel/Random.png`)" />
+                                        </v-avatar>
+                                        Any Character
+                                    </v-list-item>
+
+                                    <v-list-item v-for="character in characters" :key=character>
+                                        <v-avatar class="mb-2 mr-2" height="100%" tile>
+                                            <img :src="require(`../assets/img/sel/${character}.png`)">
+                                        </v-avatar>
+                                        {{ character }}
+                                    </v-list-item>
+                                </v-list>
+                                <!-- /char select list -->
+                            </v-menu>
+                        </div>
+
+                        <!-- player select -->
+                      <div style="width:100%;">
                         <v-autocomplete
-                            hide-no-data
-                            clearable
-                            append-icon=""
-                            :menu-props="{bottom: true, offsetY: true}"
-                            :label="`Player ${i}`"
-                            :items="players"
-                        />
-                        <!-- player character -->
-                        <v-autocomplete
-                            hide-no-data
-                            clearable
-                            :menu-props="{bottom: true, offsetY: true}"
-                            label="Character"
-                            :items="characters"
-                        />
-                    </v-flex>
+                                hide-no-data
+                                clearable
+                                append-icon=""
+                                :menu-props="{bottom: true, offsetY: true}"
+                                :label="`Player ${i + 1}`"
+                                :items="players"
+                            />
+                        </div>
+
+                        <!-- /player select-->
+                    </v-layout>
                     <!-- /player filters -->
 
                     <v-flex v-if="$vuetify.breakpoint.smAndUp">
-                        <div class="ma-1 vstxt">vs.</div>
+                        <div class="vstxt">vs.</div>
                     </v-flex>
                 </v-layout>
             </div>
@@ -39,38 +75,150 @@
 export default {
     name: 'Filters',
     props: {
-        showCompatible: Boolean,
-        filters: [{
-            p1: [{ name: [String, null], character: [String, null] }],
-            p2: [{ name: [String, null], character: [String, null] }]
-        }]
+        query: Object
     },
-    data: () => {
-        return {
-            hidden: false,
-            showToTop: false,
-            characters: [
-                'Arizona',
-                'Oleander',
-                'Paprika',
-                'Pom',
-                'Shanty',
-                'Tianhuo',
-                'Velvet'
-            ],
-            players: [],
+    data: () => ({
+        hidden: false,
+        showToTop: false,
+        /*filters: [
+            [{ name: [String, null], character: [String, null] }],
+            [{ name: [String, null], character: [String, null] }]
+        ],*/
+        characters: [
+            'Arizona',
+            'Oleander',
+            'Paprika',
+            'Pom',
+            'Shanty',
+            'Tianhuo',
+            'Velvet'
+        ],
+        selectedCharacters: [],
+        players: [],
+        selectedPlayers: [],
+    }),
+    /*mounted: function() {
+        this.getMatches(this.query)
+        this.loadCharacters()
+        this.loadPlayers()
+        this.loadVersions()
+        this.loadChannels()
+    },
+    watch: {
+        selectedPlayers: function (player) {
+            let query = Object.assign({}, this.query)
+            for (let i = 0; i < 2; i++) {
+                if (player[i]) {
+                query[`p${i + 1}`] = player[i]
+                } else {
+                delete query[`p${i + 1}`]
+                }
+            }
+            delete query.page
+            this.$router.push({ path: '/', query: query })
+        },
+        '$route.query': function (query) {
+            this.query = query
+        },
+        title: function (title) {
+            let query = Object.assign({}, this.query)
+            query.title = title
+            delete query.page
+            this.$router.push({ path: '/', query: query })
+        },
+        page: function (page) {
+            let query = Object.assign({}, this.query)
+            query.page = page
+            this.$router.push({ path: '/', query: query })
+        },
+        query: function (query) {
+            this.updateSelectedPlayers()
+            this.updateSelectedCharacters()
+            this.getMatches(query)
+            this.page = query.page || 1
         }
-    }
+    },
+    methods: {
+        loadCharacters: function () {
+            this.$characters.get()
+                .then((response) => {
+                    let characters = {}
+                    response.body.forEach((character) => {
+                        characters[character.id] = character
+                })
+                this.characters = characters
+                this.updateSelectedCharacters()
+            })
+        },
+        updateSelectedCharacters: function () {
+        for (let i = 0; i < 2; i++) {
+            if (this.query[`p${i + 1}chars`]) {
+                let queryCharacters = this.query[`p${i + 1}chars`].split(',')
+                this.selectedCharacters[i] = this.characters[queryCharacters[0]]
+            } else {
+                this.selectedCharacters[i] = []
+            }
+        }
+        },
+        selectCharacter: function (playerNumber, characterPosition, characterId) {
+            let characterQuery = ''
+            if (this.query[`p${playerNumber}chars`]) {
+                let characters = this.query[`p${playerNumber}chars`].split(',')
+                characters[characterPosition - 1] = characterId
+                characterQuery = characters.filter((character) => character).join(',')
+            } else {
+                characterQuery = characterId
+            }
+            let query = Object.assign({}, this.query)
+            query[`p${playerNumber}chars`] = characterQuery
+            delete query.page
+            this.$router.push({ path: '/', query: query })
+        },
+        loadPlayers: function () {
+            this.$players.get()
+                .then((response) => {
+                response.body.forEach((player) => {
+                    player.aliases.forEach((alias) => {
+                    this.players.push(alias)
+                    })
+                })
+                this.players.sort()
+                this.updateSelectedPlayers()
+                })
+        },
+        updateSelectedPlayers: function () {
+            for (let i = 0; i < 2; i++) {
+                if (this.query[`p${i + 1}`]) {
+                this.selectedPlayers[i] = this.query[`p${i + 1}`]
+                } else {
+                this.selectedPlayers[i] = undefined
+                }
+            }
+        },
+        getMatches: function (query) {
+            this.loading = true
+            return this.$matches.get(query)
+                .then((response) => {
+                this.loading = false
+                if (response.ok) {
+                    this.error = false
+                    this.matches = response.body.matches
+                    this.resultsCount = response.body.count
+                } else {
+                    this.error = true
+                    this.errorMessage = `${response.status}: ${response.statusText}`
+                }
+                })
+        },
+        onScroll: function (event) {
+            this.showToTop = event.currentTarget.scrollY >= 250
+        }
+    }*/
 }
 </script>
 
 
 <style scoped>
-#filter-toggle .v-btn >>> .v-btn__content {
-      justify-content: left;
-}
-
-
 .v-input >>> .v-input__slot::before {
     border-color: #b21d45 !important;
   }
@@ -84,5 +232,9 @@ export default {
     width: 100%;
     text-align: left;
     border: 1px solid black;
+}
+
+#search >>> .v-btn {
+    border: none;
 }
 </style>

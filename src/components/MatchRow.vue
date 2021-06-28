@@ -69,10 +69,10 @@
 
         </v-flex>
         <v-flex class="icons" large>
-          <v-btn icon>
-          <a target="_blank" :href="`https://www.youtube.com/`">
-            <v-icon large :color="yt ? '#d52726' : '#171717'">mdi-youtube</v-icon>
-          </a>
+          <v-btn :disabled="!yt" icon>
+            <a :href="ytUrl">
+              <v-icon large :color="yt ? '#d52726' : '#171717'">mdi-youtube</v-icon>
+            </a>
           </v-btn>
         </v-flex>
       </v-layout>
@@ -92,6 +92,7 @@ export default {
     players: Array,
     dl: Boolean,
     yt: Boolean,
+    ytUrl: String,
   },
   data: () => {
     return {
@@ -115,5 +116,9 @@ a {
 #matches .v-btn::before, #matches .v-btn::after {
   background-color: transparent;
   opacity: 1;
+}
+
+.theme--dark.v-btn.v-btn--disabled .v-icon {
+  color: #171717 !important;
 }
 </style>

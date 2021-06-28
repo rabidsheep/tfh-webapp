@@ -42,8 +42,8 @@ export default {
           date: '06/26/27',
           patch: 2.07,
           players: [
-            { name: 'player 1', cid: 0 },
-            { name: 'player 2', cid: 1 }
+            { name: 'player 1', cid: 1 },
+            { name: 'player 2', cid: 2 }
           ],
           dl: true,
           yt: true
@@ -52,8 +52,8 @@ export default {
           date: '04/25/23',
           patch: 2.03,
           players: [
-            { name: 'player 3', cid: 2 },
-            { name: 'player 4', cid: 3 }
+            { name: 'player 3', cid: 3 },
+            { name: 'player 4', cid: 4 }
           ],
           dl: true,
           yt: false

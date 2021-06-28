@@ -13,13 +13,13 @@
                             offset-y>
                                 <!-- char select button -->
                                 <template v-slot:activator="{ on, attrs }">
-                                    <v-btn v-bind="attrs" v-on="on" height="auto" icon>
+                                    <v-btn :ripple="false" class="char-select" v-bind="attrs" v-on="on" height="auto" icon>
                                         <v-avatar v-if="!selectedCharacters[i]" height="100%" tile>
                                             <img :src="require(`../assets/img/sel/random.png`)" />
                                         </v-avatar>
 
                                         <v-avatar v-if="selectedCharacters[i]" height="100%" tile>
-                                            <img :src="require(`../assets/img/sel/${selectedCharacters[i]}.png`)" />
+                                            <img :src="require(`../assets/${selectedCharacters[i].imgUrl}`)" />
                                         </v-avatar>
                                     </v-btn>
                                 </template>
@@ -28,14 +28,10 @@
                                 <!-- char select list
                                 add @click="selectCharacter(i, character) once hooked up to db-->
                                 <v-list width="200px">
-                                    <v-list-item>
-                                        <v-avatar class="mb-2 mr-2" height="100%" tile>
-                                            <img :src="require(`../assets/img/sel/random.png`)" />
-                                        </v-avatar>
-                                        Any Character
-                                    </v-list-item>
-
-                                    <v-list-item v-for="(character, id) in $characters" :key="id">
+                                    <v-list-item
+                                    v-for="(character, id) in $characters"
+                                    :key="id"
+                                    @click="selectCharacter(i, character)">
                                         <v-avatar class="mb-2 mr-2" height="100%" tile>
                                             <img :src="require(`../assets/${character.imgUrl}`)">
                                         </v-avatar>
@@ -94,8 +90,8 @@ export default {
         this.loadPlayers()
         this.loadVersions()
         this.loadChannels()
-    },
-    watch: {
+    },*/
+    /*watch: {
         selectedPlayers: function (player) {
             let query = Object.assign({}, this.query)
             for (let i = 0; i < 2; i++) {
@@ -128,31 +124,20 @@ export default {
             this.getMatches(query)
             this.page = query.page || 1
         }
-    },
+    },*/
     methods: {
-        loadCharacters: function () {
-            this.$characters.get()
-                .then((response) => {
-                    let characters = {}
-                    response.body.forEach((character) => {
-                        characters[character.id] = character
-                })
-                this.characters = characters
-                this.updateSelectedCharacters()
-            })
-        },
-        updateSelectedCharacters: function () {
-        for (let i = 0; i < 2; i++) {
-            if (this.query[`p${i + 1}chars`]) {
-                let queryCharacters = this.query[`p${i + 1}chars`].split(',')
-                this.selectedCharacters[i] = this.characters[queryCharacters[0]]
-            } else {
-                this.selectedCharacters[i] = []
+        /*updateSelectedCharacters: function () {
+            for (let i = 0; i < 2; i++) {
+                if (this.query[`p${i + 1}chars`]) {
+                    let queryCharacters = this.query[`p${i + 1}chars`].split(',')
+                    this.selectedCharacters[i] = this.characters[queryCharacters[0]]
+                } else {
+                    this.selectedCharacters[i] = []
+                }
             }
-        }
-        },
-        selectCharacter: function (playerNumber, characterPosition, characterId) {
-            let characterQuery = ''
+        },*/
+        selectCharacter: function (playerNum, character) {
+            /*let characterQuery = ''
             if (this.query[`p${playerNumber}chars`]) {
                 let characters = this.query[`p${playerNumber}chars`].split(',')
                 characters[characterPosition - 1] = characterId
@@ -163,9 +148,10 @@ export default {
             let query = Object.assign({}, this.query)
             query[`p${playerNumber}chars`] = characterQuery
             delete query.page
-            this.$router.push({ path: '/', query: query })
+            this.$router.push({ path: '/', query: query })*/
+            this.selectedCharacters[playerNum] = character;
         },
-        loadPlayers: function () {
+        /*loadPlayers: function () {
             this.$players.get()
                 .then((response) => {
                 response.body.forEach((player) => {
@@ -203,8 +189,8 @@ export default {
         },
         onScroll: function (event) {
             this.showToTop = event.currentTarget.scrollY >= 250
-        }
-    }*/
+        }*/
+    }
 }
 </script>
 
@@ -218,14 +204,15 @@ export default {
     border-color: #d29da0 !important;
 }
 
-.v-btn {
+#search >>> .v-btn {
+    border: none;
     border-radius: 0px;
     width: 100%;
     text-align: left;
-    border: 1px solid black;
 }
 
-#search >>> .v-btn {
-    border: none;
+.char-select:hover::before, .char-select:focus::before {
+    opacity: 0;
 }
+
 </style>

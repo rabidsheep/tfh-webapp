@@ -2,6 +2,7 @@ import Vue from 'vue'
 
 Vue.prototype.$version = 2.07;
 Vue.prototype.$characters = [
+  {name: 'Any Character', imgUrl: 'img/sel/random.png'},
   {name: 'Arizona', imgUrl: 'img/sel/ari.png'},
   {name: 'Oleander', imgUrl: 'img/sel/ole.png'},
   {name: 'Paprika', imgUrl: 'img/sel/pap.png'},

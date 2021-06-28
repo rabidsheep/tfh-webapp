@@ -2,11 +2,7 @@
     <v-form v-model="valid">
         <v-container>
             
-            <v-file-input
-                accept=".tfhr"
-                label="File input"
-                truncate-length="50"
-            />
+            <input type="file" id="matchUpload">
 
             <v-text-field
             v-model="p1Name"

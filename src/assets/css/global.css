@@ -7,6 +7,16 @@ img.logo {
     height: 48px;
     image-rendering: optimizeQuality;
     padding-right: 10px;
+    display: inline-block;
+}
+
+.v-toolbar__title {
+    display: inline-block;
+}
+
+.character-select {
+    display:inline-block;
+    width:auto;
 }
 
 /* general filter box css */
@@ -145,6 +155,15 @@ img.logo {
   }
 
   /* upload form css */
+#upload-form {
+    margin-top:30px;
+    width: 80%;
+}
+
+#match-upload {
+    margin-bottom: 20px;
+    width: 100%;
+}
 
 .v-file-input {
     width: 80%;

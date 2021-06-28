@@ -46,7 +46,8 @@ export default {
             { name: 'player 2', cid: 2 }
           ],
           dl: true,
-          yt: true
+          yt: true,
+          ytUrl: 'https://www.youtube.com/'
         },
         {
           date: '04/25/23',
@@ -56,7 +57,8 @@ export default {
             { name: 'player 4', cid: 4 }
           ],
           dl: true,
-          yt: false
+          yt: false,
+          ytUrl: ''
         }]
     }
   },

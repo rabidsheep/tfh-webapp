@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
+    "css-loader": "^3.6.0",
     "vue": "^2.6.11",
     "vue-float-label": "^1.6.1",
+    "vue-resource": "^1.5.3",
     "vue-router": "^3.5.1",
     "vuetify": "^2.4.0"
   },

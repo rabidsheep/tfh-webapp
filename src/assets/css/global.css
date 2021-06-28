@@ -54,28 +54,11 @@ img.logo {
     margin: auto;
 }
 
-
-/*.chara-toggle {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
-    justify-content: center;
-    padding-bottom: 1%;
-}
-
-.chara-toggle img[inactive] {
-    filter: grayscale(100%);
-}*/
-
 /* general upload table css */
 
 .links .mdi::before, .links .mdi::after {
     font-size: 46px;
 }
-
-/*#matches img {
-    image-rendering: crisp-edges;
-}*/
 
 .match-row {
     flex-wrap: nowrap;
@@ -157,13 +140,13 @@ img.logo {
     flex: 0 0 auto;
   }
 
-  /*.warning-icon {
-    background-color: white;
-    border-radius: 24px;
-    height: 15px;
-    width: 15px;
-  }*/
-
   .tooltip.msg {
       text-align: center;
   }
+
+  /* upload form css */
+
+.v-file-input {
+    width: 80%;
+    margin: auto;
+}

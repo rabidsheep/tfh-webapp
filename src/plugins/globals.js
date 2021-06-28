@@ -1,22 +1,13 @@
 import Vue from 'vue'
 
-// current game version
 Vue.prototype.$version = 2.07;
-
-let charactersRes = [
-    'Arizona',
-    'Oleander',
-    'Paprika',
-    'Pom',
-    'Shanty',
-    'Tianhuo',
-    'Velvet'
+Vue.prototype.$characters = [
+  {name: 'Any Character', imgUrl: 'img/sel/random.png'},
+  {name: 'Arizona', imgUrl: 'img/sel/ari.png'},
+  {name: 'Oleander', imgUrl: 'img/sel/ole.png'},
+  {name: 'Paprika', imgUrl: 'img/sel/pap.png'},
+  {name: 'Pom', imgUrl: 'img/sel/pom.png'},
+  {name: 'Shanty', imgUrl: 'img/sel/shanty.png'},
+  {name: 'Tianhuo', imgUrl: 'img/sel/tian.png'},
+  {name: 'Velvet', imgUrl: 'img/sel/vel.png'}
 ]
-
-Vue.use({
-    install: () => {
-        Object.defineProperty(Vue.prototype, '$characters', {
-          get () { return charactersRes }
-        })
-      }
-    })

@@ -44,14 +44,26 @@
 
                         <!-- player select -->
                       <div style="width:100%;">
-                        <v-autocomplete
-                                hide-no-data
+                        <v-combobox
                                 clearable
                                 append-icon=""
+                                v-model="selectedPlayers[i]"
                                 :menu-props="{bottom: true, offsetY: true}"
                                 :label="`Player ${i + 1}`"
                                 :items="players"
-                            />
+                                :search-input.sync="search[i]"
+                                @change = "selectPlayers"
+                            >
+                            <template v-slot:no-data>
+                                <v-list-item>
+                                <v-list-item-content>
+                                    <v-list-item-title>
+                                        No results matching "<strong>{{ search[i] }}</strong>".
+                                    </v-list-item-title>
+                                </v-list-item-content>
+                                </v-list-item>
+                            </template>
+                        </v-combobox>
                         </div>
 
                         <!-- /player select-->
@@ -81,8 +93,9 @@ export default {
             [{ name: [String, null], character: [String, null] }]
         ],*/
         selectedCharacters: [],
-        players: [],
+        players: ["player 1", "player 2", "player 3", "player 4"],
         selectedPlayers: [],
+        search: [null, null],
     }),
     /*mounted: function() {
         this.getMatches(this.query)
@@ -150,7 +163,11 @@ export default {
             delete query.page
             this.$router.push({ path: '/', query: query })*/
             this.selectedCharacters[playerNum] = character;
+            console.log(this.selectedCharacters);
         },
+        selectPlayers() {
+            console.log(this.selectedPlayers);
+        }
         /*loadPlayers: function () {
             this.$players.get()
                 .then((response) => {

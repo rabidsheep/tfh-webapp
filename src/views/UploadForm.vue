@@ -63,7 +63,7 @@
                 />
 
                 <v-text-field
-                label="Date"
+                label="Upload Date"
                 disabled
                 />
 

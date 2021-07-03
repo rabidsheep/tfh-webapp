@@ -29,7 +29,7 @@
             </div>-->
             <div>
                 <v-avatar tile height="100%" :class="$vuetify.breakpoint.smAndUp ? `mr-5 ml-5` : `mr-5`">
-                  <img :src="require(`../assets/${$characters[player.cid].imgUrl}`)" :alt="$characters[player.cid].name" :title="$characters[player.cid].name" />
+                  <img :src="require(`../assets/img/sel/${$characters[player.cid].id}.png`)" :alt="$characters[player.cid].name" :title="$characters[player.cid].name" />
                 </v-avatar>
             </div>
             <div class="ma-1">
@@ -69,10 +69,14 @@
 
         </v-flex>
         <v-flex class="icons" large>
-          <v-btn :disabled="!yt" icon>
+          <v-btn :ripple="false" :disabled="!yt" icon>
             <a :href="ytUrl">
-              <v-icon large :color="yt ? '#d52726' : '#171717'">mdi-youtube</v-icon>
-            </a>
+              <v-icon large :color="yt ? '#d52726' : '#5e5e5e'">mdi-youtube</v-icon>
+              <div v-if="!yt" class="crossout">
+                <v-icon class="yt-unavail">mdi-slash-forward</v-icon>
+              </div>
+              <!--<v-icon large class="yt-alt" :color="yt ? '#d52726' : '#5e5e5e'">{{ yt ? 'mdi-video' : 'mdi-video-off' }}</v-icon>
+            --></a>
           </v-btn>
         </v-flex>
       </v-layout>
@@ -119,6 +123,6 @@ a {
 }
 
 .theme--dark.v-btn.v-btn--disabled .v-icon {
-  color: #171717 !important;
+  color: #5e5e5e !important;
 }
 </style>

@@ -70,6 +70,25 @@ img.logo {
     font-size: 46px;
 }
 
+
+.crossout {
+    position: absolute;
+    width: auto;
+    top: 1px;
+    right: 0;
+    left: -2px;
+}
+
+.yt-unavail {
+    margin: auto;
+}
+
+.yt-unavail.mdi::before, .yt-unavail.mdi::after {
+    -webkit-transform: rotateZ(118deg);
+    transform: rotateZ(118deg) scaleY(1.4);
+    text-shadow: -3px -3px #3a3939;
+}
+
 .match-row {
     flex-wrap: nowrap;
     height: auto;

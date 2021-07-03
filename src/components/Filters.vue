@@ -7,39 +7,10 @@
                     <!-- player filters -->
                     <v-layout pfilter v-for="i in [0, 1]" :key=i :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"> 
                         <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
-                            <v-menu
-                            max-height="400px"
-                            transition="slide-y-transition"
-                            offset-y>
-                                <!-- char select button -->
-                                <template v-slot:activator="{ on, attrs }">
-                                    <v-btn :ripple="false" class="char-select" v-bind="attrs" v-on="on" height="auto" icon>
-                                        <v-avatar v-if="!selectedCharacters[i]" height="100%" tile>
-                                            <img :src="require(`../assets/img/sel/random.png`)" />
-                                        </v-avatar>
-
-                                        <v-avatar v-if="selectedCharacters[i]" height="100%" tile>
-                                            <img :src="require(`../assets/${selectedCharacters[i].imgUrl}`)" />
-                                        </v-avatar>
-                                    </v-btn>
-                                </template>
-                                <!-- /char select button -->
-                                
-                                <!-- char select list
-                                add @click="selectCharacter(i, character) once hooked up to db-->
-                                <v-list width="200px">
-                                    <v-list-item
-                                    v-for="(character, id) in $characters"
-                                    :key="id"
-                                    @click="selectCharacter(i, character)">
-                                        <v-avatar class="mb-2 mr-2" height="100%" tile>
-                                            <img :src="require(`../assets/${character.imgUrl}`)">
-                                        </v-avatar>
-                                        {{ character.name }}
-                                    </v-list-item>
-                                </v-list>
-                                <!-- /char select list -->
-                            </v-menu>
+                            <CharacterSelect
+                            :ripple = "false"
+                            :selectedCharacters="selectedCharacters"
+                            @character-select="selectCharacter($event, i)"/>
                         </div>
 
                         <!-- player select -->
@@ -80,7 +51,10 @@
 </template>
 
 <script>
+import CharacterSelect from './CharacterSelect.vue';
+
 export default {
+  components: { CharacterSelect },
     name: 'Filters',
     props: {
         query: Object
@@ -88,13 +62,9 @@ export default {
     data: () => ({
         hidden: false,
         showToTop: false,
-        /*filters: [
-            [{ name: [String, null], character: [String, null] }],
-            [{ name: [String, null], character: [String, null] }]
-        ],*/
-        selectedCharacters: [],
+        selectedCharacters: [null, null],
         players: ["player 1", "player 2", "player 3", "player 4"],
-        selectedPlayers: [],
+        selectedPlayers: [null, null],
         search: [null, null],
     }),
     /*mounted: function() {
@@ -149,7 +119,7 @@ export default {
                 }
             }
         },*/
-        selectCharacter: function (playerNum, character) {
+        selectCharacter: function (character, index) {
             /*let characterQuery = ''
             if (this.query[`p${playerNumber}chars`]) {
                 let characters = this.query[`p${playerNumber}chars`].split(',')
@@ -162,8 +132,8 @@ export default {
             query[`p${playerNumber}chars`] = characterQuery
             delete query.page
             this.$router.push({ path: '/', query: query })*/
-            this.selectedCharacters[playerNum] = character;
-            console.log(this.selectedCharacters);
+            this.selectedCharacters[index] = JSON.parse(JSON.stringify(character));
+            console.log(this.selectedCharacters); 
         },
         selectPlayers() {
             console.log(this.selectedPlayers);
@@ -225,11 +195,5 @@ export default {
     border: none;
     border-radius: 0px;
     width: 100%;
-    text-align: left;
 }
-
-.char-select:hover::before, .char-select:focus::before {
-    opacity: 0;
-}
-
 </style>

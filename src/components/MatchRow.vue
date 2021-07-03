@@ -1,5 +1,5 @@
 <template>
-  <v-layout match-row :align-center="!$vuetify.breakpoint.xsOnly" :column="$vuetify.breakpoint.xsOnly" :style="$vuetify.breakpoint.xsOnly ? `width: 90%; margin: auto` : ``">
+  <v-layout match-row :align-center="!$vuetify.breakpoint.xsOnly" :column="$vuetify.breakpoint.xsOnly">
       <!-- match info (date/patch) -->
       <v-layout match-info :column="!$vuetify.breakpoint.xsOnly" :row="$vuetify.breakpoint.xsOnly">
         <v-flex>
@@ -29,7 +29,10 @@
             </div>-->
             <div>
                 <v-avatar tile height="100%" :class="$vuetify.breakpoint.smAndUp ? `mr-5 ml-5` : `mr-5`">
-                  <img :src="require(`../assets/img/sel/${$characters[player.cid].id}.png`)" :alt="$characters[player.cid].name" :title="$characters[player.cid].name" />
+                  <img
+                  :src="require(`../assets/img/sel/${$characters[player.cid].id}.png`)"
+                  :alt="$characters[player.cid].name"
+                  :title="$characters[player.cid].name" />
                 </v-avatar>
             </div>
             <div class="ma-1">
@@ -37,11 +40,9 @@
             </div>
           </v-layout>
         </v-flex>
-        <v-flex>
-          <v-layout filler align-center v-if="$vuetify.breakpoint.smAndUp">
-            <div class="ma-1 vstxt">vs.</div>
-          </v-layout>
-        </v-flex>
+        <div class="filler" v-if="$vuetify.breakpoint.smAndUp">
+          vs.
+        </div>
       </v-layout>
       <!-- /player info -->
 

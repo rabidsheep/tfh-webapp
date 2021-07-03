@@ -22,7 +22,7 @@ img.logo {
 /* general filter box css */
 
 #filter {
-    margin-top: 30px;
+    margin: auto;
     margin-bottom: 20px;
 }
 
@@ -65,6 +65,13 @@ img.logo {
 }
 
 /* general upload table css */
+
+.filler {
+    display: flex;
+    align-items: center;
+    width: 20%;
+    justify-content: center;
+}
 
 .links .mdi::before, .links .mdi::after {
     font-size: 46px;
@@ -176,7 +183,6 @@ img.logo {
 
   /* upload form css */
 #upload-form {
-    margin-top:30px;
     width: 80%;
 }
 

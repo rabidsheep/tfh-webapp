@@ -50,7 +50,8 @@ export default {
 }
 
 #router-view {
-  width: 100%;
+  padding-top: 30px;
+  width: 90%;
   max-width: 960px;
 }
 </style>

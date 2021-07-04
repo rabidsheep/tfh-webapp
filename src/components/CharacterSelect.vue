@@ -37,13 +37,21 @@
 export default {
   name: 'CharacterSelect',
   props: {
-    selectedCharacters: Array
+    selectedCharacters: Array,
+    index: Number,
   },
   data: () => ({
       selectedCharacter: null,
-  
   }),
+  watch: {
+      /* automatically changes character icons for UploadForm page if replay file
+      name is in default format */
+      selectedCharacters(newValue) {
+          this.selectedCharacter = newValue[this.index];
+      }
+  },
   methods: {
+        /* passes selected character up to parent */ 
         selectCharacter: function (selected) {
             this.$emit('character-select', selected)
             this.selectedCharacter = selected;       

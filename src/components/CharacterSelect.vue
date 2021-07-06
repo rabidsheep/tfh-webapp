@@ -6,12 +6,12 @@
         <!-- char select button -->
         <template v-slot:activator="{ on, attrs }">
             <v-btn :ripple="false" class="char-select" v-bind="attrs" v-on="on" height="auto" icon>
-                <v-avatar v-if="!selectedCharacter" height="100%" tile>
+                <v-avatar v-if="!selectedChar" height="100%" tile>
                     <img :src="require(`../assets/img/sel/0.png`)" />
                 </v-avatar>
 
-                <v-avatar v-if="selectedCharacter" height="100%" tile>
-                    <img :src="require(`../assets/img/sel/${selectedCharacter.id}.png`)" />
+                <v-avatar v-if="selectedChar" height="100%" tile>
+                    <img :src="require(`../assets/img/sel/${selectedChar.id}.png`)" />
                 </v-avatar>
             </v-btn>
         </template>
@@ -37,7 +37,7 @@
 export default {
   name: 'CharacterSelect',
   props: {
-    selectedCharacters: Array,
+    selectedChar: Object,
     index: Number,
   },
   data: () => ({
@@ -46,8 +46,8 @@ export default {
   watch: {
       /* automatically changes character icons for UploadForm page if replay file
       name is in default format */
-      selectedCharacters(newValue) {
-          this.selectedCharacter = newValue[this.index];
+      selectedChar: function(newValue) {
+          this.selectedCharacter = newValue;
       }
   },
   methods: {

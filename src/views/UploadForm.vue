@@ -15,7 +15,8 @@
             ref="uploadBtn"
             type="file"
             id="match-upload"
-            @change="retrieveFileData" />
+            @change="readFileData"
+            required />
             </v-layout> 
 
             <v-layout v-for="i in [0, 1]" :key=i>
@@ -23,16 +24,26 @@
                 class="character-select"
                 :style="!$vuetify.breakpoint.xsOnly ? `padding-right: 20px;` : `padding-right: 20px;` ">
                     <CharacterSelect
+                    :selectedChar="playerInfo[i].characters"
                     :index = "i"
-                    :selectedCharacters="selectedCharacters"
                     @character-select="selectCharacter($event, i)"/>
+
+                    <v-select
+                    style="display: none;"
+                    v-model="playerInfo[i].characters"
+                    :rules="rules.characters"
+                    :items="$characters"
+                    :item-text="'name'"
+                    ref="characterSelect"
+                    required
+                    />
 
                 </div>
                 
                 <div style="width: 100%;">
                     <v-text-field
-                    v-model="players[i]"
-                    :rules="nameRules"
+                    v-model="playerInfo[i].name"
+                    :rules="rules.names"
                     :label="`Player ${i + 1}`"
                     required
                     />
@@ -40,50 +51,59 @@
             </v-layout>
 
                 <v-text-field
+                v-model="ytUrl"
                 label="YouTube Link (Optional)"
                 />
 
                 <v-text-field
+                v-model="version"
                 label="Version Number"
                 disabled
                 />
 
                 <v-text-field
+                v-model="uploadDate"
                 label="Upload Date"
                 disabled
-                />
+                >
+                </v-text-field>
 
                 <!-- should we allow users to add comments to their uploads? -->
 
                 <center>
-                    <v-btn @click="create">Upload</v-btn>
+                    <v-btn :disabled="!valid" @click="create">Upload</v-btn>
                 </center>
         </v-container>
     </v-form>
 </template>
 
 <script>
+import CharacterSelect from '../components/CharacterSelect.vue';
+import firebase from 'firebase';
+import moment from 'moment';
+
 
 function initialState () {
     return {
         valid: false,
-        players: [null, null],
-        nameRules: [
-            v => !!v || 'Required'
+        playerInfo: [
+            {name: '', characters: {name: 'Any Character', devName: '', id: 0}},
+            {name: '', characters: {name: 'Any Character', devName: '', id: 0}}
         ],
-        charRules: [
-            v => !!v || 'Required'
-        ],
-        selectedCharacters: [null, null],
+        ytUrl: null,
+        version: null,
+        uploadDate: moment(new Date()).format('MM/DD/YYYY'),
+        rules: {
+            names: [ v => !!v || 'Required' ],
+            characters: [ v => v.name != 'Any Character' && v.name != null ]
+        },
         fileName: null,
         fileData: null,
         fileUrl: null,
         isSelecting: false,
-        uploadValue: 0,
+        uploadValue: 0
     }
 }
-import CharacterSelect from '../components/CharacterSelect.vue';
-import firebase from 'firebase';
 
 export default {
     components: { CharacterSelect },
@@ -101,12 +121,13 @@ export default {
             this.$refs.uploadBtn.click()
             },
         selectCharacter: function (character, index) {
-            this.selectedCharacters[index] = JSON.parse(JSON.stringify(character));
-            console.log(this.selectedCharacters); 
+            this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
         },
         /* first uploads file to storage and retrieves download url,
         then posts file info to Realtime Database */
         create() {
+
+
             const storageRef = firebase.storage().ref(`${this.fileData.name}`).put(this.fileData);
             storageRef.on(`state_changed`,
                 snapshot => {
@@ -122,8 +143,12 @@ export default {
                     console.log(this.fileUrl);
 
                     const post = {
-                        url: this.fileUrl,
-                        name: this.fileName
+                        file_url: this.fileUrl,
+                        file_name: this.fileName,
+                        p1: this.playerInfo[0],
+                        p2: this.playerInfo[1],
+                        version: this.version,
+                        upload_date: this.uploadDate,
                     }
 
                     firebase.database().ref('Matches').push(post)
@@ -136,33 +161,57 @@ export default {
 
                     // clear data
                     Object.assign(this.$data, initialState());
+
                 })
             })
 
         },
-        retrieveFileData(event) {
-            this.fileData = event.target.files[0];
-            this.fileName = event.target.files[0].name;
+        readFileData(event) {
+            this.fileData = event.target.files[0]
+            this.fileName = this.fileData.name;
+            var reader = new FileReader();
+
+            reader.onload = (e) => {
+                /* p1 - offset 8-72
+                p2 - offset 73-137
+                characters - 199-213 (max)*/
+                /* [A-Za-z0-9\\x00-\\x7F$&+,:;=?@#|'<>.^*()%!`~{}/\\[\]_ -] */
+                var playerNames = ((e.target.result).substring(8, 137).replace(/\0{1,65}/g, '\n')).split('\n', 2);
+                var characterNames = (e.target.result).substring(198,213).match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
+                this.retrievePlayerInfo(playerNames, characterNames);
+            }
+            
+            reader.readAsText(event.target.files[0], "UTF-8");
+        },
+        retrievePlayerInfo(playerNames, characterNames) {
+            for (const i in playerNames) {
+                this.$set(this.playerInfo[i], 'name', playerNames[i]);
+            }
+
+            for (const i in characterNames) {
+                this.$set(this.playerInfo[i], 'characters', (this.$characters).find(x => x.devName == characterNames[i]));
+            }
+
+            console.log(JSON.parse(JSON.stringify(this.playerInfo)));
+        },
             /* default filename regex:
             [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}\_[A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}\.tfhr
             [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2} = ####-##-##_##-##-##
             [A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8} = [character]_vs_[character]*/
             
             /*if file contains substring [character]_vs_[character]...*/
-            if (this.fileName.match('[A-Za-z]{3,8}\\_vs\\_[A-Za-z]{3,8}')) {
+            /*if (this.fileName.match('[A-Za-z]{3,8}\\_vs\\_[A-Za-z]{3,8}')) {*/
                 /* check that characters listed exist */
-                if ((this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[0])
+                /*if ((this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[0])
                 && (this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[1])) {
                     this.selectedCharacters = [
                         (this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[0]),
                         (this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[1])
                         ]
                     console.log(JSON.parse(JSON.stringify(this.selectedCharacters)));
-                }
-            }
+                }*/
         }
     }
-}
 </script>
 
 <style scoped>

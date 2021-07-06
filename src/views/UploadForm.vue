@@ -80,7 +80,6 @@
 <script>
 import CharacterSelect from '../components/CharacterSelect.vue';
 import firebase from 'firebase';
-import moment from 'moment';
 
 
 function initialState () {
@@ -92,7 +91,6 @@ function initialState () {
         ],
         ytUrl: null,
         version: null,
-        uploadDate: moment(new Date()).format('MM/DD/YYYY'),
         rules: {
             names: [ v => !!v || 'Required' ],
             characters: [ v => v.name != 'Any Character' && v.name != null ]
@@ -124,10 +122,8 @@ export default {
             this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
         },
         /* first uploads file to storage and retrieves download url,
-        then posts file info to Realtime Database */
+        then posts file info to Firestore Database */
         create() {
-
-
             const storageRef = firebase.storage().ref(`${this.fileData.name}`).put(this.fileData);
             storageRef.on(`state_changed`,
                 snapshot => {
@@ -140,23 +136,22 @@ export default {
                     this.uploadValue = 100;
                     storageRef.snapshot.ref.getDownloadURL().then((url) => {
                     this.fileUrl = url;
-                    console.log(this.fileUrl);
 
-                    const post = {
-                        file_url: this.fileUrl,
-                        file_name: this.fileName,
-                        p1: this.playerInfo[0],
-                        p2: this.playerInfo[1],
+                    var db = firebase.firestore();
+
+                    db.collection("matches").add({
+                        fileUrl: this.fileUrl,
+                        fileName: this.fileName,
+                        players: this.playerInfo,
                         version: this.version,
-                        upload_date: this.uploadDate,
-                    }
-
-                    firebase.database().ref('Matches').push(post)
-                    .then((response) => {
-                        console.log(response)
+                        timestamp: new Date(),
+                        ytUrl: this.ytUrl,
                     })
-                    .catch(err => {
-                        console.log(err)
+                    .then((docRef) => {
+                        console.log("Doc written with ID: ", docRef.id);
+                    })
+                    .catch((error) => {
+                        console.error("Error adding doc: ", error);
                     })
 
                     // clear data
@@ -172,12 +167,17 @@ export default {
             var reader = new FileReader();
 
             reader.onload = (e) => {
+                var result = e.target.result;
                 /* p1 - offset 8-72
                 p2 - offset 73-137
                 characters - 199-213 (max)*/
                 /* [A-Za-z0-9\\x00-\\x7F$&+,:;=?@#|'<>.^*()%!`~{}/\\[\]_ -] */
-                var playerNames = ((e.target.result).substring(8, 137).replace(/\0{1,65}/g, '\n')).split('\n', 2);
-                var characterNames = (e.target.result).substring(198,213).match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
+                this.version = (result).charCodeAt(146);
+                var playerNames = (result).substring(8, 137)
+                                        .replace(/\0{1,65}/g, '\n')
+                                        .split('\n', 2);
+                var characterNames = (result).substring(198,213)
+                                            .match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
                 this.retrievePlayerInfo(playerNames, characterNames);
             }
             
@@ -189,7 +189,8 @@ export default {
             }
 
             for (const i in characterNames) {
-                this.$set(this.playerInfo[i], 'characters', (this.$characters).find(x => x.devName == characterNames[i]));
+                var character = (this.$characters).find(c => c.devName == characterNames[i]);
+                this.$set(this.playerInfo[i], 'characters', character);
             }
 
             console.log(JSON.parse(JSON.stringify(this.playerInfo)));

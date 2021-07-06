@@ -1,6 +1,15 @@
 import Vue from 'vue'
+import VueResource from 'vue-resource'
+import config from './config'
+import firebase from 'firebase'
 
-Vue.prototype.$version = 2.07;
+Vue.prototype.$config = config;
+
+firebase.initializeApp(config.firebaseConfig);
+
+Vue.use(VueResource)
+
+Vue.prototype.$version = 2;
 Vue.prototype.$characters = [
   {name: 'Any Character', devName: '', id: 0},
   {name: 'Arizona', devName: 'Cow', id: 1},

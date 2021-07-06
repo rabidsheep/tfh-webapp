@@ -152,6 +152,11 @@ img.logo {
 
 .players {
     justify-content: center;
+    width: 50%;
+}
+
+.player {
+    width: 45%;
 }
 
 .players.column {

@@ -9,7 +9,8 @@
                         <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
                             <CharacterSelect
                             :ripple = "false"
-                            :selectedCharacters="selectedCharacters"
+                            :selectedChar="playerInfo[i].characters"
+                            :index="i"
                             @character-select="selectCharacter($event, i)"/>
                         </div>
 
@@ -18,7 +19,7 @@
                         <v-combobox
                                 clearable
                                 append-icon=""
-                                v-model="selectedPlayers[i]"
+                                v-model="playerInfo[i].name"
                                 :menu-props="{bottom: true, offsetY: true}"
                                 :label="`Player ${i + 1}`"
                                 :items="players"
@@ -53,20 +54,28 @@
 <script>
 import CharacterSelect from './CharacterSelect.vue';
 
+function initialState () {
+    return {
+        hidden: false,
+        showToTop: false,
+        playerInfo: [
+            {name: '', characters: {name: 'Any Character', devName: '', id: 0}},
+            {name: '', characters: {name: 'Any Character', devName: '', id: 0}}
+        ],
+        players: ["player 1", "player 2", "player 3", "player 4"],
+        search: [null, null],
+    }
+}
+
 export default {
   components: { CharacterSelect },
     name: 'Filters',
     props: {
         query: Object
     },
-    data: () => ({
-        hidden: false,
-        showToTop: false,
-        selectedCharacters: [null, null],
-        players: ["player 1", "player 2", "player 3", "player 4"],
-        selectedPlayers: [null, null],
-        search: [null, null],
-    }),
+    data: function(){
+        return initialState();
+    },
     /*mounted: function() {
         this.getMatches(this.query)
         this.loadCharacters()
@@ -132,11 +141,11 @@ export default {
             query[`p${playerNumber}chars`] = characterQuery
             delete query.page
             this.$router.push({ path: '/', query: query })*/
-            this.selectedCharacters[index] = JSON.parse(JSON.stringify(character));
-            console.log(this.selectedCharacters); 
+            this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
+            console.log(JSON.parse(JSON.stringify(this.playerInfo))); 
         },
         selectPlayers() {
-            console.log(this.selectedPlayers);
+            console.log(JSON.parse(JSON.stringify(this.playerInfo)));
         }
         /*loadPlayers: function () {
             this.$players.get()

@@ -12,3 +12,7 @@ Repository for the TFH Webapp
 `firebase deploy` to deploy
 
 https://tfh-webapp.web.app/#/
+
+## testing functions
+`firebase emulators:start` to run firestore emulator
+`firebase serve --only functions` to deploy functions

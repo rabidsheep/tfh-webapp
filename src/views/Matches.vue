@@ -16,6 +16,7 @@
                             :ripple = "false"
                             :selectedChar="playerInfo[i].characters"
                             :index="i"
+                            :selectionEnabled="true"
                             @character-select="selectCharacter($event, i)"/>
                         </div>
 
@@ -25,10 +26,9 @@
                                 clearable
                                 append-icon=""
                                 v-model="playerInfo[i].name"
-                                :menu-props="{bottom: true, offsetY: true}"
+                                :menu-props="{bottom: true, offsetY: true, maxHeight: '200'}"
                                 :label="`Player ${i + 1}`"
                                 :items="players"
-                                :search-input.sync="search[i]"
                                 @change = "selectPlayers"
                             >
                             <template v-slot:no-data>
@@ -55,8 +55,12 @@
         </v-expand-transition>
     </v-layout>
 
+    
     <!-- matches table -->
-    <div id="matches">
+    <div class="loading" style="margin: 20% 0" v-if="loading">
+      <v-progress-linear indeterminate v-show="loading"/>
+    </div>
+    <div id="matches" v-if="!loading">
       <v-layout column>
         <MatchRow
           v-for="(match, i) in matches"
@@ -67,6 +71,8 @@
       </v-layout>
     </div>
     <!-- /matches table -->
+
+
   </div>
 </template>
 
@@ -88,12 +94,13 @@ export default {
   },
   data: () => {
     return {
-      players: ["player 1", "player 2", "player 3", "player 4"],
+      players: [],
+      page: 1,
       search: [null, null],
       showToTop: false,
       hidden: false,
       showCompatible: true,
-      resultsCount: -1,
+      resultsCount: 30,
       loading: false,
       error: false,
       errorMessage: '',
@@ -102,11 +109,12 @@ export default {
             {name: null, characters: {name: 'Any Character', devName: '', id: 0}}
       ],
       matches: [],
-      resLimit: 3,
+      lastVisible: null,
     }
   },
   mounted: function() {
     this.getMatches(this.playerInfo)
+    this.loadPlayers()
   },
   watch: {
     playerInfo:{
@@ -115,8 +123,31 @@ export default {
     },
     deep: true
   },
+    page: function(playerInfo) {
+      this.getMatches(playerInfo)
+    }
   },
   methods: {
+    loadPlayers: function() {
+      let db = firebase.firestore().collection('matches');
+      db.get().then((querySnapshot) => {
+        let p1Names = querySnapshot.docs.map(doc => doc.data().p1);
+        let p2Names = querySnapshot.docs.map(doc => doc.data().p2);
+
+        for (const i in p1Names) {
+          if (!this.players.some(x => x === p1Names[i])) {
+            this.players.push(p1Names[i]);
+          }
+        }
+        for (const i in p1Names) {
+         if (!this.players.some(x => x === p2Names[i])) {
+            this.players.push(p2Names[i]);
+          }
+        }
+        console.log(this.players);
+      })
+
+    },
     getMatches: function (playerInfo) {
       playerInfo = JSON.parse(JSON.stringify(playerInfo));
       console.log(playerInfo);
@@ -134,13 +165,17 @@ export default {
         }
       }
 
+      db = db.orderBy("timestamp", "desc")
+
+      if (this.page > 1) {
+        db = db.startAfter(this.lastVisible);
+      }
         /* sort by timestamp */
-        db.orderBy('timestamp','desc')
-          .get()
+        db.get()
           .then((querySnapshot) => {
-            this.loading = false;
             /* maps objects so they don't display as [Object object] */
             this.matches = querySnapshot.docs.map(doc => doc.data());
+            this.loading = false;
             
           })
     },
@@ -148,18 +183,6 @@ export default {
       this.showToTop = event.currentTarget.scrollY >= 250
     },
     selectCharacter: function (character, index) {
-            /*let characterQuery = ''
-            if (this.query[`p${playerNumber}chars`]) {
-                let characters = this.query[`p${playerNumber}chars`].split(',')
-                characters[characterPosition - 1] = characterId
-                characterQuery = characters.filter((character) => character).join(',')
-            } else {
-                characterQuery = characterId
-            }
-            let query = Object.assign({}, this.query)
-            query[`p${playerNumber}chars`] = characterQuery
-            delete query.page
-            this.$router.push({ path: '/', query: query })*/
             this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
             console.log("Updated filter characters.")
         },

@@ -5,7 +5,7 @@
     offset-y>
         <!-- char select button -->
         <template v-slot:activator="{ on, attrs }">
-            <v-btn :ripple="false" class="char-select" v-bind="attrs" v-on="on" height="auto" icon>
+            <v-btn :disabled="!selectionEnabled" :ripple="false" class="char-select" v-bind="attrs" v-on="on" height="auto" icon>
                 <v-avatar v-if="!selectedChar" height="100%" tile>
                     <img :src="require(`../assets/img/sel/0.png`)" />
                 </v-avatar>
@@ -18,7 +18,7 @@
         <!-- /char select button -->
         
         <!-- char select list -->
-        <v-list width="200px">
+        <v-list v-if="selectionEnabled" width="200px">
             <v-list-item
             v-for="(character, id) in $characters"
             :key="id"
@@ -38,6 +38,7 @@ export default {
   name: 'CharacterSelect',
   props: {
     selectedChar: Object,
+    selectionEnabled: Boolean,
     index: Number,
   },
   data: () => ({

@@ -1,5 +1,5 @@
 module.exports = {
-  root: true,
+  root: false,
   env: {
     es6: true,
     node: true,
@@ -9,6 +9,7 @@ module.exports = {
     "google",
   ],
   rules: {
-    quotes: ["off", "double"],
+    "quotes": ["off", "double"],
+    "linebreak-style": 0,
   },
 };

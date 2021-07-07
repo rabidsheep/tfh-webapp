@@ -1,11 +1,9 @@
 import Vue from 'vue'
 import VueResource from 'vue-resource'
 import config from './config'
-import firebase from 'firebase'
+//import firebase from 'firebase'
 
 Vue.prototype.$config = config;
-
-firebase.initializeApp(config.firebaseConfig);
 
 Vue.use(VueResource)
 

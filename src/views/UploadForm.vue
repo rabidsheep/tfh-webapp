@@ -1,106 +1,136 @@
 <template>
-    <v-form v-model="valid">
-        <v-container id="upload-form">
-            
-            <v-layout align-center style="margin-bottom: 20px;">
-            <v-btn
-            @click="onButtonClick">
-            Upload File
-            </v-btn>
+    <v-container id="upload-form">
+        <v-overlay v-if="loading">
+            <v-container fluid fill-height>
+                <v-layout justify-center align-center>
+                    <v-progress-circular indeterminate/>
+                </v-layout>
+            </v-container>
+        </v-overlay>
 
-            <label class="file-name">{{ fileName ? fileName : 'No file chosen' }}</label>
-
-            <input
-            style="display: none;"
-            ref="uploadBtn"
-            type="file"
-            id="match-upload"
-            @change="readFileData"
-            required />
-            </v-layout> 
-
-            <v-layout v-for="i in [0, 1]" :key=i>
-                <div
-                class="character-select"
-                :style="!$vuetify.breakpoint.xsOnly ? `padding-right: 20px;` : `padding-right: 20px;` ">
-                    <CharacterSelect
-                    :selectedChar="playerInfo[i].characters"
-                    :index = "i"
-                    @character-select="selectCharacter($event, i)"/>
-
-                    <v-select
-                    style="display: none;"
-                    v-model="playerInfo[i].characters"
-                    :rules="rules.characters"
-                    :items="$characters"
-                    :item-text="'name'"
-                    ref="characterSelect"
-                    required
-                    />
-
-                </div>
-                
-                <div style="width: 100%;">
-                    <v-text-field
-                    v-model="playerInfo[i].name"
-                    :rules="rules.names"
-                    :label="`Player ${i + 1}`"
-                    required
-                    />
-                </div>
+        <v-overlay v-if="error">
+            <v-container fluid fill-height>
+            <v-layout justify-center align-center>
+                <v-card width="50%">
+                    <v-card-title>Upload Failed</v-card-title>
+                    <v-card-subtitle>Error: {{ this.errorMsg }}</v-card-subtitle>
+                    <v-card-text>Your file could not be submitted.
+                        If you believe this to be a problem on the application's end,
+                        please contact us at [devContact].
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-btn
+                        @click="error=false"
+                        color="primary"
+                        style="margin: auto">OK</v-btn>
+                    </v-card-actions>
+                </v-card>
             </v-layout>
+            </v-container>
+        </v-overlay>
 
-                <v-text-field
-                v-model="ytUrl"
-                label="YouTube Link (Optional)"
-                />
+        <v-form 
+        ref="form"
+        v-model="valid">
+                <v-layout align-center style="margin-bottom: 20px;">
+                <v-btn
+                @click="onButtonClick">
+                Upload File
+                </v-btn>
 
-                <v-text-field
-                v-model="version"
-                label="Version Number"
-                disabled
-                />
+                <label class="file-name">{{ fileName ? fileName : 'No file chosen' }}</label>
 
-                <!-- should we allow users to add comments to their uploads? -->
+                <input
+                style="display: none;"
+                ref="uploadBtn"
+                type="file"
+                id="match-upload"
+                accept=".tfhr"
+                @change="readFileData"
+                required />
+                </v-layout> 
 
-                <center>
-                    <v-btn :disabled="!valid" @click="create">Upload</v-btn>
-                </center>
-        </v-container>
-    </v-form>
+                <v-layout v-for="i in [0, 1]" :key=i>
+                    <div
+                    class="character-select"
+                    :style="!$vuetify.breakpoint.xsOnly ? `padding-right: 20px;` : `padding-right: 20px;` ">
+                        <CharacterSelect
+                        :selectedChar="playerInfo[i].characters"
+                        :index = "i"
+                        :selectionEnabled="false"
+                        @character-select="selectCharacter($event, i)"/>
+
+                        <v-select
+                        style="display: none;"
+                        v-model="playerInfo[i].characters"
+                        :rules="rules.characters"
+                        :items="$characters"
+                        :item-text="'name'"
+                        ref="characterSelect"
+                        required
+                        />
+
+                    </div>
+                    
+                    <div style="width: 100%;">
+                        <v-text-field
+                        v-model="playerInfo[i].name"
+                        :rules="rules.names"
+                        :label="`Player ${i + 1}`"
+                        required
+                        />
+                    </div>
+                </v-layout>
+
+                    <v-text-field
+                    v-model="ytUrl"
+                    label="YouTube Link (Optional)"
+                    />
+
+                    <v-text-field
+                    v-model="version"
+                    label="Version Number"
+                    disabled
+                    />
+
+                    <!-- should we allow users to add comments to their uploads? -->
+
+                    <center>
+                        <v-btn :disabled="!valid" @click="create">Upload</v-btn>
+                    </center>
+        </v-form>
+    </v-container>
 </template>
 
 <script>
 import CharacterSelect from '../components/CharacterSelect.vue';
 import firebase from 'firebase';
 
-
-function initialState () {
-    return {
-        valid: false,
-        playerInfo: [
-            {name: '', characters: {name: 'Any Character', devName: '', id: 0}},
-            {name: '', characters: {name: 'Any Character', devName: '', id: 0}}
-        ],
-        ytUrl: null,
-        version: null,
-        rules: {
-            names: [ v => !!v || 'Required' ],
-            characters: [ v => v.name != 'Any Character' && v.name != null ]
-        },
-        fileName: null,
-        fileData: null,
-        fileUrl: null,
-        isSelecting: false,
-        uploadValue: 0
-    }
-}
-
 export default {
     components: { CharacterSelect },
     name: 'UploadForm',
     data: function(){
-       return initialState();
+       return {
+            valid: false,
+            playerInfo: [
+                {name: '', characters: {name: 'Any Character', devName: '', id: 0}},
+                {name: '', characters: {name: 'Any Character', devName: '', id: 0}}
+            ],
+            ytUrl: null,
+            version: null,
+            rules: {
+                names: [ v => !!v || 'Required' ],
+                characters: [ v => v.name != 'Any Character' && v.name != null ]
+            },
+            fileName: null,
+            fileData: null,
+            fileUrl: null,
+            isSelecting: false,
+            loading: false,
+            error: false,
+            errorMsg: '',
+            uploadValue: 0
+       }
     },
     methods: {
         onButtonClick() {
@@ -117,6 +147,8 @@ export default {
         /* first uploads file to storage and retrieves download url,
         then posts file info to Firestore Database */
         create() {
+            this.loading = true;
+
             const storageRef = firebase.storage().ref(`${this.fileData.name}`).put(this.fileData);
             storageRef.on(`state_changed`,
                 snapshot => {
@@ -149,10 +181,14 @@ export default {
                     })
                     .catch((error) => {
                         console.error("Error adding doc: ", error);
+                        this.errorMsg = error;
+                        return this.error = true;
                     })
 
                     // clear data
-                    Object.assign(this.$data, initialState());
+                    this.$refs.form.reset();
+                    this.fileName = null;
+                    this.loading = false;
 
                 })
             })

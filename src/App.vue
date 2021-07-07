@@ -53,5 +53,6 @@ export default {
   padding-top: 30px;
   width: 90%;
   max-width: 960px;
+  padding-bottom: 30px;
 }
 </style>

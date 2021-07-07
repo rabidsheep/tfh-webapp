@@ -59,8 +59,8 @@ function initialState () {
         hidden: false,
         showToTop: false,
         playerInfo: [
-            {name: '', characters: {name: 'Any Character', devName: '', id: 0}},
-            {name: '', characters: {name: 'Any Character', devName: '', id: 0}}
+            {name: null, characters: {name: 'Any Character', devName: '', id: 0}},
+            {name: null, characters: {name: 'Any Character', devName: '', id: 0}}
         ],
         players: ["player 1", "player 2", "player 3", "player 4"],
         search: [null, null],

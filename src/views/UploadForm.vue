@@ -61,13 +61,6 @@
                 disabled
                 />
 
-                <v-text-field
-                v-model="uploadDate"
-                label="Upload Date"
-                disabled
-                >
-                </v-text-field>
-
                 <!-- should we allow users to add comments to their uploads? -->
 
                 <center>
@@ -142,6 +135,10 @@ export default {
                     db.collection("matches").add({
                         fileUrl: this.fileUrl,
                         fileName: this.fileName,
+                        p1: this.playerInfo[0].name,
+                        p1Chara: this.playerInfo[0].characters,
+                        p2: this.playerInfo[1].name,
+                        p2Chara: this.playerInfo[1].characters,
                         players: this.playerInfo,
                         version: this.version,
                         timestamp: new Date(),

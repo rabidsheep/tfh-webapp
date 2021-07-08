@@ -175,7 +175,7 @@ export default {
                         ytUrl: this.ytUrl,
                     }
 
-                     // clear data
+                    
                     this.$matches.save(data);
 
                     this.loading = false;

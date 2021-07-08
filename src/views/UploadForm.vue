@@ -1,5 +1,5 @@
 <template>
-    <v-container id="upload-form">
+    <v-container id="upload-form__page">
         <v-overlay v-if="loading">
             <v-container fluid fill-height>
                 <v-layout justify-center align-center>
@@ -29,10 +29,46 @@
             </v-container>
         </v-overlay>
 
+            
+
         <v-form 
+        class="upload-form__container"
         ref="form"
         v-model="valid">
-                <v-layout align-center style="margin-bottom: 20px;">
+        
+        <!--FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
+            
+            <div class="tab-content">
+
+            <vue-dropzone
+            :options="dropzoneOptions"
+            :include-styling="false"
+            :useCustomSlot="true"
+            @vdropzone-file-added="vfileAdded"
+            @vdropzone-success="vsuccess"
+            @vdropzone-error="verror"
+            @vdropzone-success-multiple="vsuccessMuliple"
+            @vdropzone-drop="vddrop"
+            id="custom-dropzone">
+            <div class="dropzone-custom-content">
+                Upload Files
+            </div>
+            <div class="dropzone-custom-details">
+                </div>
+            </vue-dropzone>
+
+            <input
+                style="display: none;"
+                ref="uploadBtn"
+                type="file"
+                id="match-upload"
+                accept=".tfhr"
+                @change="readFileData"
+                required />
+        </div>
+        
+        -->
+            <v-layout align-center style="margin-bottom: 20px;">
                 <v-btn
                 @click="onButtonClick">
                 Upload File
@@ -69,7 +105,6 @@
                         ref="characterSelect"
                         required
                         />
-
                     </div>
                     
                     <div style="width: 100%;">
@@ -82,22 +117,21 @@
                     </div>
                 </v-layout>
 
-                    <v-text-field
-                    v-model="ytUrl"
-                    label="YouTube Link (Optional)"
-                    />
+                <v-text-field
+                v-model="ytUrl"
+                label="YouTube Link (Optional)"
+                />
 
-                    <v-text-field
-                    v-model="version"
-                    label="Version Number"
-                    disabled
-                    />
+                <v-text-field
+                v-model="version"
+                label="Version Number"
+                disabled
+                />
 
-                    <!-- should we allow users to add comments to their uploads? -->
-
-                    <center>
-                        <v-btn :disabled="!valid" @click="create">Upload</v-btn>
-                    </center>
+                <!-- should we allow users to add comments to their uploads? -->
+                <center>
+                    <v-btn :disabled="!valid" @click="create">Upload</v-btn>
+                </center>
         </v-form>
     </v-container>
 </template>
@@ -105,17 +139,25 @@
 <script>
 import CharacterSelect from '../components/CharacterSelect.vue';
 import firebase from 'firebase';
+import 'firebase/storage';
+//import vue2Dropzone from 'vue2-dropzone'
+//import 'vue2-dropzone/dist/vue2Dropzone.min.css'
 
 export default {
-    components: { CharacterSelect },
+    components: { /*vueDropzone: vue2Dropzone,*/ CharacterSelect },
     name: 'UploadForm',
-    data: function(){
+    data() {
        return {
+           dropzoneOptions: {
+               url: 'https://httpbin.org/post',
+               dictDefaultMessage: "Drop Files",
+           },
             valid: false,
             playerInfo: [
-                {name: '', character: {name: 'Any Character', devName: '', id: 0}},
-                {name: '', character: {name: 'Any Character', devName: '', id: 0}}
+                    {name: '', character: {name: 'Any Character', devName: '', id: 0}},
+                    {name: '', character: {name: 'Any Character', devName: '', id: 0}}
             ],
+            matches: [],
             ytUrl: null,
             version: null,
             rules: {
@@ -129,10 +171,17 @@ export default {
             loading: false,
             error: false,
             errorMsg: '',
-            uploadValue: 0
+            uploadValue: 0,
+            fileAdded: false,
+            filesAdded: false,
+            fileSuccess: false,
+            fileError: false,
+            successMultiple: false,
+            dDrop: false,
        }
     },
     methods: {
+        /* makes visible upload button act like html file upload button */
         onButtonClick() {
             this.isSelecting = true
             window.addEventListener('focus', () => {
@@ -141,6 +190,7 @@ export default {
 
             this.$refs.uploadBtn.click()
             },
+        /* updates character info */
         selectCharacter: function (character, index) {
             this.$set(this.playerInfo[index], 'character', JSON.parse(JSON.stringify(character)));
         },
@@ -149,7 +199,10 @@ export default {
         create() {
             this.loading = true;
 
-            const storageRef = firebase.storage().ref(`${this.fileData.name}`).put(this.fileData);
+            const storageRef = firebase.storage()
+            .ref(`${this.fileData.name}`)
+            .put(this.fileData);
+            
             storageRef.on(`state_changed`,
                 snapshot => {
                     this.uploadValue = (snapshot.bytesTransferred/snapshot.totalBytes) * 100;
@@ -181,7 +234,10 @@ export default {
                     this.loading = false;
                     this.$refs.form.reset();
                     this.fileName = null;
-                    /*var db = firebase.firestore();
+                    /*
+                    IGNORE
+                    FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
+                    var db = firebase.firestore();
 
                     db.collection("matches").add({
                         data
@@ -193,23 +249,54 @@ export default {
                         console.error("Error adding doc: ", error);
                         this.errorMsg = error;
                         return this.error = true;
-                    })*/
+                    })
+                    IGNORE
+                    */
 
                 })
             })
 
         },
+        /*** reads data from file and decodes substrings ***/
         readFileData(event) {
-            this.fileData = event.target.files[0]
-            this.fileName = this.fileData.name;
+            /*
+            IGNORE
+            FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
+            this.fileName = event.name;
             var reader = new FileReader();
 
             reader.onload = (e) => {
                 var result = e.target.result;
-                /* p1 - offset 8-72
+                this.version = (result).charCodeAt(146);
+                var playerNames = (result).substring(8, 137)
+                                        .replace(/\0{1,65}/g, '\n')
+                                        .split('\n', 2);
+                var characterNames = (result).substring(198,213)
+                                            .match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
+                this.retrievePlayerInfo(playerNames, characterNames);
+            }
+            
+            reader.readAsText(event, "UTF-8");
+            IGNORE
+            */
+
+            this.fileData = event.target.files[0];
+            this.fileName = event.target.name;
+            var reader = new FileReader();
+
+            reader.onload = (e) => {
+                console.log(e);
+                var result = e.target.result;
+                /*
+                p1 - offset 8-72
                 p2 - offset 73-137
-                characters - 199-213 (max)*/
-                /* [A-Za-z0-9\\x00-\\x7F$&+,:;=?@#|'<>.^*()%!`~{}/\\[\]_ -] */
+                characters - 199-213 (max)
+                
+                default filename regex:
+                [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}\_[A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}\.tfhr
+                [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2} = ####-##-##_##-##-##
+                [A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8} = [character]_vs_[character]
+                */
                 this.version = (result).charCodeAt(146);
                 var playerNames = (result).substring(8, 137)
                                         .replace(/\0{1,65}/g, '\n')
@@ -231,26 +318,91 @@ export default {
                 this.$set(this.playerInfo[i], 'character', character);
             }
 
-            console.log(JSON.parse(JSON.stringify(this.playerInfo)));
+            /*
+            IGNORE
+            FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
+            console.log('Matches', this.matches);
+            console.log('PlayerInfo', this.playerInfo);
+            this.matches.push(this.playerInfo);
+            console.log('New Matches', this.matches[0]);
+            IGNORE
+            */
         },
-            /* default filename regex:
-            [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}\_[A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}\.tfhr
-            [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2} = ####-##-##_##-##-##
-            [A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8} = [character]_vs_[character]*/
-            
-            /*if file contains substring [character]_vs_[character]...*/
-            /*if (this.fileName.match('[A-Za-z]{3,8}\\_vs\\_[A-Za-z]{3,8}')) {*/
-                /* check that characters listed exist */
-                /*if ((this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[0])
-                && (this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[1])) {
-                    this.selectedCharacters = [
-                        (this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[0]),
-                        (this.$characters).find(x => x.name == this.fileName.match(/[A-Za-z]{3,8}/g)[1])
-                        ]
-                    console.log(JSON.parse(JSON.stringify(this.selectedCharacters)));
-                }*/
-        }
+        /*
+        IGNORE
+        FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
+        vfileAdded(file) {
+            this.fileAdded = true
+            this.readFileData(file);
+            // window.toastr.info('', 'Event : vdropzone-file-added')
+        },
+        vfilesAdded() {
+            this.filesAdded = true
+            // window.toastr.info('', 'Event : vdropzone-files-added')
+        },
+        vsuccess() {
+            this.success = true
+            // window.toastr.success('', 'Event : vdropzone-success')
+        },
+        vsuccessMuliple() {
+            this.successMultiple = true
+            // window.toastr.success('', 'Event : vdropzone-success-multiple')
+        },
+        verror() {
+            this.error = true
+            // window.toastr.error(file.upload.filename, 'Event : vdropzone-error - ' + file.status)
+        },
+            vddrop() {
+            this.dDrop = true
+        },
+    },
+    watch: {
+        fileAdded() {
+            let that = this
+            setTimeout(function() {
+            that.fileAdded = false
+            }, 2000)
+        },
+        filesAdded() {
+            let that = this
+            setTimeout(function() {
+            that.filesAdded = false
+            }, 2000)
+        },
+        success() {
+            let that = this
+            setTimeout(function() {
+            that.success = false
+            }, 2000)
+        },
+        error() {
+            let that = this
+            setTimeout(function() {
+            that.error = false
+            }, 2000)
+        },
+        successMultiple() {
+            let that = this
+            setTimeout(function() {
+            that.successMultiple = false
+            }, 2000)
+        },
+        isMounted() {
+            let that = this
+            setTimeout(function() {
+            that.isMounted = false
+            }, 2000)
+        },
+        dDrop() {
+            let that = this
+            setTimeout(function() {
+            that.dDrop = false
+            }, 2000)
+        },
+        IGNORE
+        */
     }
+}
 </script>
 
 <style scoped>
@@ -259,4 +411,36 @@ export default {
         font-size: 20px;
     }
 
+    .upload-box--active {
+        border-color: #b21d45;
+    }
+
+    #custom-dropzone {
+    background-color: rgb(41,41,41);
+    border-style: dashed;
+    border-width: 3px;
+    border-radius: 15px;
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 0.2px;
+    color: #777;
+    transition: .2s linear;
+    height: 200px;
+    margin-bottom: 20px;
+  }
+
+  #custom-dropzone.dz-drag-hover {
+      border-color: #b21d45;
+  }
+
+  #custom-dropzone >>> .dz-message {
+    width: auto;
+    display: flex;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .dropzone-custom-content {
+      font-size: 26px;
+      margin: auto;
+  }
 </style>

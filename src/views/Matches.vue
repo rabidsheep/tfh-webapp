@@ -73,10 +73,10 @@
     <!-- /matches table -->
 
 <!-- pagination-->
-    <v-layout class="mt-3">
+    <v-layout v-if="!loading" class="mt-3">
       <v-spacer/>
       <v-pagination
-        v-model="page"
+        v-model="playerInfo.page"
         :length="Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
         :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
         circle

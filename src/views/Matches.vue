@@ -14,7 +14,7 @@
                         <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
                             <CharacterSelect
                             :ripple = "false"
-                            :selectedChar="playerInfo[i].characters"
+                            :selectedChar="i === 0 ? playerInfo.p1.character : playerInfo.p2.character"
                             :index="i"
                             :selectionEnabled="true"
                             @character-select="selectCharacter($event, i)"/>
@@ -24,12 +24,13 @@
                       <div style="width:100%;">
                         <v-combobox
                                 clearable
+                                v-model="playerInfo[`p${i + 1}`].name"
                                 append-icon=""
-                                v-model="playerInfo[i].name"
                                 :menu-props="{bottom: true, offsetY: true, maxHeight: '200'}"
                                 :label="`Player ${i + 1}`"
                                 :items="players"
-                                @change = "selectPlayers"
+                                :search-input.sync="search[i]"
+                                @change = "selectPlayers(i)"
                             >
                             <template v-slot:no-data>
                                 <v-list-item>
@@ -66,11 +67,22 @@
           v-for="(match, i) in matches"
           :key="i"
           v-bind="match"
-          :consecutiveMatch="(i > 0) && (matches[i - 1].video === match.video)"
         />
       </v-layout>
     </div>
     <!-- /matches table -->
+
+<!-- pagination-->
+    <v-layout class="mt-3">
+      <v-spacer/>
+      <v-pagination
+        v-model="page"
+        :length="Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
+        :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
+        circle
+      />
+      <v-spacer/>
+    </v-layout>
 
 
   </div>
@@ -100,14 +112,15 @@ export default {
       showToTop: false,
       hidden: false,
       showCompatible: true,
-      resultsCount: 30,
+      resultsCount: null,
       loading: false,
       error: false,
       errorMessage: '',
-      playerInfo: [
-            {name: null, characters: {name: 'Any Character', devName: '', id: 0}},
-            {name: null, characters: {name: 'Any Character', devName: '', id: 0}}
-      ],
+      playerInfo: {
+            p1: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
+            p2: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
+            page: 0,
+      },
       matches: [],
       lastVisible: null,
     }
@@ -149,45 +162,66 @@ export default {
 
     },
     getMatches: function (playerInfo) {
-      playerInfo = JSON.parse(JSON.stringify(playerInfo));
-      console.log(playerInfo);
-      let db = firebase.firestore().collection('matches');
       this.loading = true;
 
-      /* adds filters */
-      for (const i in playerInfo) {
-        if (playerInfo[i].name) {
-          db = db.where('p' + (parseInt(i)+1), '==', playerInfo[i].name)
+      this.$matches.get(playerInfo)
+      .then((response) => {
+        if (response.ok) {
+          this.error = false;
+          this.matches = response.body.matches;
+          this.resultsCount = response.body.count;
+          this.loading = false;
+        } else {
+          this.error = true;
+          this.errorMsg = `${response.status}: ${response.statusText}`
+          this.loading = false;
         }
-
-        if (playerInfo[i].characters && playerInfo[i].characters.id != 0) {
-          db = db.where('p' + (parseInt(i)+1) + 'Chara.name', '==', playerInfo[i].characters.name)
-        }
-      }
-
-      db = db.orderBy("timestamp", "desc")
-
-      if (this.page > 1) {
-        db = db.startAfter(this.lastVisible);
-      }
+      })
         /* sort by timestamp */
-        db.get()
+        /*db.limit(5).get()
           .then((querySnapshot) => {
             /* maps objects so they don't display as [Object object] */
+           /* this.lastVisible = querySnapshot.docs[querySnapshot.docs.length-1];
             this.matches = querySnapshot.docs.map(doc => doc.data());
-            this.loading = false;
             
-          })
+          })*/
     },
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     },
     selectCharacter: function (character, index) {
-            this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
-            console.log("Updated filter characters.")
+            /*let characterQuery = ''
+            if (this.query[`p${playerNumber}chars`]) {
+                let characters = this.query[`p${playerNumber}chars`].split(',')
+                characters[characterPosition - 1] = characterId
+                characterQuery = characters.filter((character) => character).join(',')
+            } else {
+                characterQuery = characterId
+            }
+            let query = Object.assign({}, this.query)
+            query[`p${playerNumber}chars`] = characterQuery
+            delete query.page
+            this.$router.push({ path: '/', query: query })*/
+            const i = index + 1;
+            this.$set(
+              this.playerInfo[`p${i}`],
+              'character',
+              JSON.parse(JSON.stringify(character))
+            );
+
+            console.log(
+              "P" + (i) + " character updated.\n"
+              + "P" + i + " Character: ",
+              JSON.parse(JSON.stringify(this.playerInfo[`p${i}`].character))
+            );
         },
-    selectPlayers() {
-      console.log("Updated filter players.")
+    selectPlayers(index) {
+      const i = index + 1;
+      console.log(
+        "P" + i + " name updated.\n"
+        + "P" + i + " Name:",
+        JSON.parse(JSON.stringify(this.playerInfo[`p${i}`].name))
+      );
     }
   }
 }

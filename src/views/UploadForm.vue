@@ -55,14 +55,14 @@
                     class="character-select"
                     :style="!$vuetify.breakpoint.xsOnly ? `padding-right: 20px;` : `padding-right: 20px;` ">
                         <CharacterSelect
-                        :selectedChar="playerInfo[i].characters"
+                        :selectedChar="playerInfo[i].character"
                         :index = "i"
                         :selectionEnabled="false"
                         @character-select="selectCharacter($event, i)"/>
 
                         <v-select
                         style="display: none;"
-                        v-model="playerInfo[i].characters"
+                        v-model="playerInfo[i].character"
                         :rules="rules.characters"
                         :items="$characters"
                         :item-text="'name'"
@@ -113,8 +113,8 @@ export default {
        return {
             valid: false,
             playerInfo: [
-                {name: '', characters: {name: 'Any Character', devName: '', id: 0}},
-                {name: '', characters: {name: 'Any Character', devName: '', id: 0}}
+                {name: '', character: {name: 'Any Character', devName: '', id: 0}},
+                {name: '', character: {name: 'Any Character', devName: '', id: 0}}
             ],
             ytUrl: null,
             version: null,
@@ -142,7 +142,7 @@ export default {
             this.$refs.uploadBtn.click()
             },
         selectCharacter: function (character, index) {
-            this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
+            this.$set(this.playerInfo[index], 'character', JSON.parse(JSON.stringify(character)));
         },
         /* first uploads file to storage and retrieves download url,
         then posts file info to Firestore Database */
@@ -162,19 +162,29 @@ export default {
                     storageRef.snapshot.ref.getDownloadURL().then((url) => {
                     this.fileUrl = url;
 
-                    var db = firebase.firestore();
-
-                    db.collection("matches").add({
+                    var data = {
                         fileUrl: this.fileUrl,
                         fileName: this.fileName,
                         p1: this.playerInfo[0].name,
-                        p1Chara: this.playerInfo[0].characters,
+                        p1Chara: this.playerInfo[0].character,
                         p2: this.playerInfo[1].name,
-                        p2Chara: this.playerInfo[1].characters,
+                        p2Chara: this.playerInfo[1].character,
                         players: this.playerInfo,
                         version: this.version,
                         timestamp: new Date(),
                         ytUrl: this.ytUrl,
+                    }
+
+                     // clear data
+                    this.$matches.save(data);
+
+                    this.loading = false;
+                    this.$refs.form.reset();
+                    this.fileName = null;
+                    /*var db = firebase.firestore();
+
+                    db.collection("matches").add({
+                        data
                     })
                     .then((docRef) => {
                         console.log("Doc written with ID: ", docRef.id);
@@ -183,12 +193,7 @@ export default {
                         console.error("Error adding doc: ", error);
                         this.errorMsg = error;
                         return this.error = true;
-                    })
-
-                    // clear data
-                    this.$refs.form.reset();
-                    this.fileName = null;
-                    this.loading = false;
+                    })*/
 
                 })
             })
@@ -223,7 +228,7 @@ export default {
 
             for (const i in characterNames) {
                 var character = (this.$characters).find(c => c.devName == characterNames[i]);
-                this.$set(this.playerInfo[i], 'characters', character);
+                this.$set(this.playerInfo[i], 'character', character);
             }
 
             console.log(JSON.parse(JSON.stringify(this.playerInfo)));

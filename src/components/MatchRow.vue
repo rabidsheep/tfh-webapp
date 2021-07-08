@@ -19,7 +19,7 @@
     <v-layout match-data :row="$vuetify.breakpoint.xsOnly">
       <!-- player info (name/character)-->
       <v-layout players :column="$vuetify.breakpoint.xsOnly">
-        <v-flex player v-for="(player, i) in players" :key=i :style="$vuetify.breakpoint.xsOnly ? `margin-bottom: 5px;` : ``">
+        <v-flex player v-for="i in [0,1]" :key=i :style="$vuetify.breakpoint.xsOnly ? `margin-bottom: 5px;` : ``">
           <v-layout align-center :reverse="i === 0 && $vuetify.breakpoint.smAndUp">
             <!-- *save for possible reuse later -- maybe allow filtering by tournament?*
               <div v-for="(character, j) in player.characters" :key=j>
@@ -30,13 +30,13 @@
             <div class="player__icon">
                 <v-avatar tile height="100%" :class="$vuetify.breakpoint.smAndUp ? `mr-5 ml-5` : `mr-5`">
                   <img
-                  :src="require(`../assets/img/sel/${player.characters.id}.png`)"
-                  :alt="player.characters.name"
-                  :title="player.characters.name" />
+                  :src="i === 0 ? require(`../assets/img/sel/${p1Chara.id}.png`) : require(`../assets/img/sel/${p2Chara.id}.png`)"
+                  :alt="i === 0 ? p1Chara.name : p2Chara.name"
+                  :title="i === 0 ? p1Chara.name : p2Chara.name" />
                 </v-avatar>
             </div>
             <div class="player__name ma-1" :style="i === 0 && !$vuetify.breakpoint.xsOnly ? 'text-align: right' : 'text-align: left'">
-            {{ player.name }}
+            {{ i === 0 ? p1 : p2 }}
             </div>
           </v-layout>
         </v-flex>
@@ -93,7 +93,11 @@ export default {
   name: 'MatchRow',
   props: {
     version: Number,
-    timestamp: Object,
+    timestamp: String,
+    p1Chara: Object,
+    p2Chara: Object,
+    p1: String,
+    p2: String,
     players: Array,
     fileUrl: String,
     ytUrl: String,
@@ -107,9 +111,9 @@ export default {
   },
  created() {
       /* convert timestamp to date and format it */
-      var date = (this.timestamp).toDate();
-      this.uploadDate = moment(date).format('MM/DD/YYYY');
-      this.uploadTime = moment(date).utc().format('HH:mm:ss');
+      /*var date = (this.timestamp).toDate();*/
+      this.uploadDate = moment(this.timestamp).format('MM/DD/YYYY');
+      this.uploadTime = moment(this.timestamp).utc().format('HH:mm:ss');
   }
 }
 </script>

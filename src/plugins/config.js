@@ -14,7 +14,7 @@ const configs = {
 
 firebase.initializeApp(configs);
 
-const itemsPerPage = 10;
+const itemsPerPage = 1;
 const db = firebase.firestore();
 const auth = firebase.auth();
 const matches = db.collection('matches');

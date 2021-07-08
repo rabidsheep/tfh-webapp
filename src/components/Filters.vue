@@ -76,116 +76,14 @@ export default {
     data: function(){
         return initialState();
     },
-    /*mounted: function() {
-        this.getMatches(this.query)
-        this.loadCharacters()
-        this.loadPlayers()
-        this.loadVersions()
-        this.loadChannels()
-    },*/
-    /*watch: {
-        selectedPlayers: function (player) {
-            let query = Object.assign({}, this.query)
-            for (let i = 0; i < 2; i++) {
-                if (player[i]) {
-                query[`p${i + 1}`] = player[i]
-                } else {
-                delete query[`p${i + 1}`]
-                }
-            }
-            delete query.page
-            this.$router.push({ path: '/', query: query })
-        },
-        '$route.query': function (query) {
-            this.query = query
-        },
-        title: function (title) {
-            let query = Object.assign({}, this.query)
-            query.title = title
-            delete query.page
-            this.$router.push({ path: '/', query: query })
-        },
-        page: function (page) {
-            let query = Object.assign({}, this.query)
-            query.page = page
-            this.$router.push({ path: '/', query: query })
-        },
-        query: function (query) {
-            this.updateSelectedPlayers()
-            this.updateSelectedCharacters()
-            this.getMatches(query)
-            this.page = query.page || 1
-        }
-    },*/
     methods: {
-        /*updateSelectedCharacters: function () {
-            for (let i = 0; i < 2; i++) {
-                if (this.query[`p${i + 1}chars`]) {
-                    let queryCharacters = this.query[`p${i + 1}chars`].split(',')
-                    this.selectedCharacters[i] = this.characters[queryCharacters[0]]
-                } else {
-                    this.selectedCharacters[i] = []
-                }
-            }
-        },*/
         selectCharacter: function (character, index) {
-            /*let characterQuery = ''
-            if (this.query[`p${playerNumber}chars`]) {
-                let characters = this.query[`p${playerNumber}chars`].split(',')
-                characters[characterPosition - 1] = characterId
-                characterQuery = characters.filter((character) => character).join(',')
-            } else {
-                characterQuery = characterId
-            }
-            let query = Object.assign({}, this.query)
-            query[`p${playerNumber}chars`] = characterQuery
-            delete query.page
-            this.$router.push({ path: '/', query: query })*/
             this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
             console.log(JSON.parse(JSON.stringify(this.playerInfo))); 
         },
         selectPlayers() {
             console.log(JSON.parse(JSON.stringify(this.playerInfo)));
         }
-        /*loadPlayers: function () {
-            this.$players.get()
-                .then((response) => {
-                response.body.forEach((player) => {
-                    player.aliases.forEach((alias) => {
-                    this.players.push(alias)
-                    })
-                })
-                this.players.sort()
-                this.updateSelectedPlayers()
-                })
-        },
-        updateSelectedPlayers: function () {
-            for (let i = 0; i < 2; i++) {
-                if (this.query[`p${i + 1}`]) {
-                this.selectedPlayers[i] = this.query[`p${i + 1}`]
-                } else {
-                this.selectedPlayers[i] = undefined
-                }
-            }
-        },
-        getMatches: function (query) {
-            this.loading = true
-            return this.$matches.get(query)
-                .then((response) => {
-                this.loading = false
-                if (response.ok) {
-                    this.error = false
-                    this.matches = response.body.matches
-                    this.resultsCount = response.body.count
-                } else {
-                    this.error = true
-                    this.errorMessage = `${response.status}: ${response.statusText}`
-                }
-                })
-        },
-        onScroll: function (event) {
-            this.showToTop = event.currentTarget.scrollY >= 250
-        }*/
     }
 }
 </script>

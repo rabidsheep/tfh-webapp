@@ -73,7 +73,7 @@
     <!-- /matches table -->
 
 <!-- pagination-->
-    <v-layout v-if="!loading" class="mt-3">
+    <v-layout v-if="!loading && !(resultsCount <= this.$config.itemsPerPage)" class="mt-3">
       <v-spacer/>
       <v-pagination
         v-model="playerInfo.page"

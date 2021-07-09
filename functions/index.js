@@ -34,7 +34,7 @@ api.get('/matches', (req, res) => {
             query['p' + i + 'Chara'] = {
                 name: req.query['p' + i].character.name,
                 devName: req.query['p' + i].character.devName,
-                id: req.query['p' + i].character.id
+                id: parseInt(req.query['p' + i].character.id)
             }
         }
     }

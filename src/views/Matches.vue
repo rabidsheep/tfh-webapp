@@ -202,18 +202,15 @@ export default {
             query[`p${playerNumber}chars`] = characterQuery
             delete query.page
             this.$router.push({ path: '/', query: query })*/
-            const i = index + 1;
-            this.$set(
-              this.playerInfo[`p${i}`],
-              'character',
-              JSON.parse(JSON.stringify(character))
-            );
 
-            console.log(
-              "P" + (i) + " character updated.\n"
-              + "P" + i + " Character: ",
-              JSON.parse(JSON.stringify(this.playerInfo[`p${i}`].character))
-            );
+            const i = index + 1;
+            if (character.id !== this.playerInfo[`p${i}`].character.id) {
+              this.$set(
+                this.playerInfo[`p${i}`],
+                'character',
+                JSON.parse(JSON.stringify(character))
+              );
+            }
         },
     selectPlayers(index) {
       const i = index + 1;

@@ -135,24 +135,20 @@ export default {
   },
   methods: {
     loadPlayers: function() {
-      /*let db = firebase.firestore().collection('matches');
-      db.get().then((querySnapshot) => {
-        let p1Names = querySnapshot.docs.map(doc => doc.data().p1);
-        let p2Names = querySnapshot.docs.map(doc => doc.data().p2);
-
-        for (const i in p1Names) {
-          if (!this.players.some(x => x === p1Names[i])) {
-            this.players.push(p1Names[i]);
-          }
+      
+      this.$players.get()
+      .then((response) => {
+        if (response.ok) {
+          this.error = false;
+          this.players = response.body.players;
+          this.loading = false;
+        } else {
+          this.error = true;
+          this.errorMsg = `${response.status}: ${response.statusText}`
+          console.log(this.errorMsg);
+          this.loading = false;
         }
-        for (const i in p1Names) {
-         if (!this.players.some(x => x === p2Names[i])) {
-            this.players.push(p2Names[i]);
-          }
-        }
-        console.log(this.players);
       })
-      rewriting*/
 
     },
     getMatches: function (playerInfo) {

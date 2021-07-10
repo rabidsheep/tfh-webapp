@@ -16,6 +16,12 @@ let matchesMethods = {
 }
 let matchesRes = Vue.resource(`${uri}/matches/`, {}, matchesMethods)
 
+let playerMethods = {
+  get: { method: 'GET' },
+}
+
+let playerRes = Vue.resource(`${uri}/players/`, {}, playerMethods)
+
 Vue.prototype.$version = 2;
 Vue.prototype.$characters = [
   {name: 'Any Character', devName: '', id: 0},
@@ -33,6 +39,11 @@ Vue.use({
     Object.defineProperty(Vue.prototype, '$matches', {
       get () { return matchesRes }
     })
+
+    Object.defineProperty(Vue.prototype, '$players', {
+      get () { return playerRes }
+    })
+
     Object.defineProperty(Vue.prototype, '$httpInterceptors', {
       get () { return Vue.http.interceptors }
     })

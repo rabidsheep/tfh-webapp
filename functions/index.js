@@ -48,7 +48,6 @@ api.get('/matches', (req, res) => {
                 .toArray((error, matches) => {
                         if (error) throw error;
                         console.log('Matches retrieved.');
-                        client.close();
                         return res.status(200).send({ matches: matches, count: count })
                     })
                 }
@@ -58,8 +57,44 @@ api.get('/matches', (req, res) => {
 });
 
 // upload matches
-api.put('/matches', (req, res) => {
-    MongoClient.connect(url, (error, client) => {
+api.put('/matches', async (req, res) => {
+
+    let players = [req.body.p1, req.body.p2]
+
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
+        if (error) {
+            console.log('Unable to connect: ', error);
+        } else {
+            console.log('Connected.\nUploading match...');
+            let db = client.db('tfhr');
+
+            db
+            .collection('matches')
+            .insertOne(req.body, (error, result) => {
+                if (error) throw error;
+                
+                // adds new entries to player collection
+                for (i in players) {
+                    console.log('Updating player list...');
+
+                    db
+                    .collection('players')
+                    .updateOne(
+                        { 'name': players[i] },
+                        { $setOnInsert: { 'name': players[i] }},
+                        { upsert: true }
+                    )
+                }
+
+                console.log('Match uploaded.\nID: ', result.insertedId);
+                return res.status((200)).send({ docId: result.insertedId });
+            })
+        }
+    })
+});
+
+api.get('/players', (req, res) => {
+    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
         if (error) {
             console.log('Unable to connect: ', error);
         } else {
@@ -67,16 +102,19 @@ api.put('/matches', (req, res) => {
 
             client
             .db('tfhr')
-            .collection('matches')
-            .insertOne(req.body, (error, result) => {
+            .collection('players')
+            .distinct('name', (error, result) => {
                 if (error) throw error;
-                console.log('Match uploaded.\nID: ', result.insertedId);
-                client.close();
-                return res.status((200)).send({ docId: result.insertedId });
-            })
+                console.log('Returning players list.')
+                return res.status((200)).send({ players: result })
+            }
+            )
         }
+
+
+
     })
-});
+})
 
 exports.api = functions.https.onRequest(api);
 

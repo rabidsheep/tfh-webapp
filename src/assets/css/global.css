@@ -45,11 +45,9 @@ img.logo {
     transition: all 0.5s;
     position: relative;
     width: 100%;
-}
-
-.filters {
     padding: 20px 50px;
 }
+
 
 #filter .pfilter:nth-child(0){
     order: 1;

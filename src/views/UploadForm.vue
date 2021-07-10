@@ -68,7 +68,7 @@
         </div>
         
         -->
-            <v-layout align-center style="margin-bottom: 20px;">
+            <div align-center>
                 <v-btn
                 @click="onButtonClick">
                 Upload File
@@ -84,8 +84,15 @@
                 accept=".tfhr"
                 @change="readFileData"
                 required />
-                </v-layout> 
+            </div>
 
+            <!--<v-layout>
+                <v-card><v-card-title>Tips</v-card-title>
+                
+                <v-card-text>If a player was using a screen name you know differs from their most well-known alias, you can edit the player names here to make finding all their matches easier.</v-card-text></v-card>
+            </v-layout>-->
+
+            <div>
                 <v-layout v-for="i in [0, 1]" :key=i>
                     <div
                     class="character-select"
@@ -127,8 +134,9 @@
                 label="Version Number"
                 disabled
                 />
+            </div>
 
-                <!-- should we allow users to add comments to their uploads? -->
+            <!-- should we allow users to add comments to their uploads? -->
                 <center>
                     <v-btn :disabled="!valid" @click="create">Upload</v-btn>
                 </center>
@@ -152,6 +160,7 @@ export default {
                url: 'https://httpbin.org/post',
                dictDefaultMessage: "Drop Files",
            },
+            hidden: true,
             valid: false,
             playerInfo: [
                     {name: '', character: {name: 'Any Character', devName: '', id: 0}},
@@ -435,6 +444,12 @@ export default {
     transition: .2s linear;
     height: 200px;
     margin-bottom: 20px;
+  }
+
+  .upload-form__container {
+      display: grid;
+      grid-template-rows: 0fr 0fr 0fr;
+      grid-row-gap: 30px;
   }
 
   #custom-dropzone.dz-drag-hover {

@@ -5,7 +5,12 @@
     @filter-players="updatePlayers($event)" />-->
 
     <v-layout id="filter" style="position:relative;">
-        <v-btn id="filter-toggle" @click="hidden = !hidden">{{ hidden ? 'Show filters' : 'Hide filters'}}</v-btn>
+        <v-btn
+        id="filter-toggle"
+        @click="hidden = !hidden">
+        {{ hidden ? 'Show filters' : 'Hide filters'}}
+        </v-btn>
+
         <v-expand-transition>
             <div id="search" v-show="!hidden">
                 <v-layout filters :column="$vuetify.breakpoint.xsOnly">
@@ -13,7 +18,6 @@
                     <v-layout pfilter v-for="i in [1, 2]" :key=i :reverse="i === 1 && !$vuetify.breakpoint.xsOnly"> 
                         <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
                             <CharacterSelect
-                            :ripple = "false"
                             :selectedChar="query.playerInfo[`p${i}`].character !== null ? query.playerInfo[`p${i}`].character : $characters[0]"
                             :selectionEnabled="true"
                             @character-select="selectCharacter($event, i)"/>
@@ -48,9 +52,17 @@
                     <!-- /player filters -->
 
                     <v-flex v-if="$vuetify.breakpoint.smAndUp">
-                        <div class="vstxt">vs.</div>
+                        <div class="vstxt">
+                          <v-btn
+                          color="primary"
+                          @click="swap()"><v-icon>mdi-swap-horizontal</v-icon></v-btn>
+                        </div>
                     </v-flex>
                 </v-layout>
+
+                <center>
+                  <v-btn color="primary" @click="clear()">Clear All</v-btn>
+                </center>
             </div>
         </v-expand-transition>
     </v-layout>
@@ -135,7 +147,7 @@ export default {
   },
   methods: {
     loadPlayers: function() {
-      
+
       this.$players.get()
       .then((response) => {
         if (response.ok) {
@@ -187,6 +199,22 @@ export default {
         + "P" + i + " Name:",
         JSON.parse(JSON.stringify(this.query.playerInfo[`p${i}`].name))
       );
+    },
+    swap() {
+      // do nothing if filters are the same on both sides
+      if (JSON.stringify(this.query.playerInfo['p1']) !== JSON.stringify(this.query.playerInfo['p2'])) {
+        // swap filters if not
+        var temp = this.query.playerInfo['p1'];
+        this.query.playerInfo['p1'] = this.query.playerInfo['p2'];
+        this.query.playerInfo['p2'] = temp;
+      }
+    },
+    clear() {
+      // resets filters
+      this.query.playerInfo = {
+              p1: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
+              p2: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
+        }
     }
   }
 }

@@ -226,14 +226,23 @@ export default {
                         version: this.version,
                         timestamp: new Date(),
                         ytUrl: this.ytUrl,
-                    }
+                    };
 
                     
-                    this.$matches.save(data);
+                    this.$matches.save(data).then((response) => {
+                        if (response.ok) {
+                            console.log('Successfully uploaded document (ID: ' + response.body.docId + ')');
+                            this.$refs.form.reset();
+                            this.fileName = null;
+                        } else {
+                            this.error = true;
+                            this.errorMsg = `${response.status}: ${response.statusText}`;
+                            console.log(this.errorMsg);
+                        }
 
-                    this.loading = false;
-                    this.$refs.form.reset();
-                    this.fileName = null;
+                            this.loading = false;
+                        }
+                    );
                     /*
                     IGNORE
                     FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
@@ -281,7 +290,7 @@ export default {
             */
 
             this.fileData = event.target.files[0];
-            this.fileName = event.target.name;
+            this.fileName = this.fileData.name;
             var reader = new FileReader();
 
             reader.onload = (e) => {

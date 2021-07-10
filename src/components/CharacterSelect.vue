@@ -39,7 +39,6 @@ export default {
   props: {
     selectedChar: Object,
     selectionEnabled: Boolean,
-    index: Number,
   },
   data: () => ({
       selectedCharacter: null,
@@ -55,7 +54,7 @@ export default {
         /* passes selected character up to parent */ 
         selectCharacter: function (selected) {
             this.$emit('character-select', selected)
-            this.selectedCharacter = selected;       
+            this.selectedCharacter = selected;
         }
   }
 }

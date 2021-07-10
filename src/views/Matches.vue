@@ -4,18 +4,17 @@
     @filter-characters="updateCharacters($event)"
     @filter-players="updatePlayers($event)" />-->
 
-    <v-layout id="filter">
+    <v-layout id="filter" style="position:relative;">
         <v-btn id="filter-toggle" @click="hidden = !hidden">{{ hidden ? 'Show filters' : 'Hide filters'}}</v-btn>
         <v-expand-transition>
             <div id="search" v-show="!hidden">
                 <v-layout filters :column="$vuetify.breakpoint.xsOnly">
                     <!-- player filters -->
-                    <v-layout pfilter v-for="i in [0, 1]" :key=i :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"> 
+                    <v-layout pfilter v-for="i in [1, 2]" :key=i :reverse="i === 1 && !$vuetify.breakpoint.xsOnly"> 
                         <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
                             <CharacterSelect
                             :ripple = "false"
-                            :selectedChar="i === 0 ? playerInfo.p1.character : playerInfo.p2.character"
-                            :index="i"
+                            :selectedChar="query.playerInfo[`p${i}`].character !== null ? query.playerInfo[`p${i}`].character : $characters[0]"
                             :selectionEnabled="true"
                             @character-select="selectCharacter($event, i)"/>
                         </div>
@@ -24,21 +23,21 @@
                       <div style="width:100%;">
                         <v-combobox
                                 clearable
-                                v-model="playerInfo[`p${i + 1}`].name"
+                                v-model="query.playerInfo[`p${i}`].name"
                                 append-icon=""
-                                :menu-props="{bottom: true, offsetY: true, maxHeight: '200'}"
-                                :label="`Player ${i + 1}`"
+                                :menu-props="{ contentClass: 'player-select-menu', bottom: true, offsetY: true, maxHeight: '200' }"
+                                :label="`Player ${i}`"
                                 :items="players"
-                                :search-input.sync="search[i]"
+                                :search-input.sync="search[`p${i}`]"
                                 @change = "selectPlayers(i)"
                             >
                             <template v-slot:no-data>
                                 <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>
-                                        No results matching "<strong>{{ search[i] }}</strong>".
-                                    </v-list-item-title>
-                                </v-list-item-content>
+                                  <v-list-item-content>
+                                      <v-list-item-title>
+                                          No results matching "<strong>{{ search[`p${i}`] }}</strong>".
+                                      </v-list-item-title>
+                                  </v-list-item-content>
                                 </v-list-item>
                             </template>
                         </v-combobox>
@@ -76,7 +75,7 @@
     <v-layout v-if="!loading && !(resultsCount <= this.$config.itemsPerPage)" class="mt-3">
       <v-spacer/>
       <v-pagination
-        v-model="playerInfo.page"
+        v-model="query.page"
         :length="Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
         :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
         circle
@@ -92,7 +91,6 @@
 import MatchRow from '../components/MatchRow.vue'
 import CharacterSelect from './../components/CharacterSelect.vue';
 //import Filters from '../components/Filters.vue'
-import firebase from 'firebase'
 
 export default {
   name: 'Matches',
@@ -101,14 +99,10 @@ export default {
     //Filters,
     CharacterSelect
   },
-  props: {
-    query: Object,
-  },
   data: () => {
     return {
       players: [],
-      page: 1,
-      search: [null, null],
+      search: {'p1': null, 'p2': null},
       showToTop: false,
       hidden: false,
       showCompatible: true,
@@ -116,33 +110,32 @@ export default {
       loading: false,
       error: false,
       errorMessage: '',
-      playerInfo: {
-            p1: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
-            p2: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
-            page: 0,
+      query: {
+        playerInfo: {
+              p1: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
+              p2: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
+        },
+        page: 0,
       },
       matches: [],
       lastVisible: null,
     }
   },
   mounted: function() {
-    this.getMatches(this.playerInfo)
+    this.getMatches(this.query)
     this.loadPlayers()
   },
   watch: {
-    playerInfo:{
-      handler: function(playerInfo) {
-        this.getMatches(playerInfo);
+    query: {
+      handler: function() {
+        this.getMatches(this.query);
+      },
+      deep: true
     },
-    deep: true
-  },
-    page: function(playerInfo) {
-      this.getMatches(playerInfo)
-    }
   },
   methods: {
     loadPlayers: function() {
-      let db = firebase.firestore().collection('matches');
+      /*let db = firebase.firestore().collection('matches');
       db.get().then((querySnapshot) => {
         let p1Names = querySnapshot.docs.map(doc => doc.data().p1);
         let p2Names = querySnapshot.docs.map(doc => doc.data().p2);
@@ -159,6 +152,7 @@ export default {
         }
         console.log(this.players);
       })
+      rewriting*/
 
     },
     getMatches: function (playerInfo) {
@@ -174,50 +168,28 @@ export default {
         } else {
           this.error = true;
           this.errorMsg = `${response.status}: ${response.statusText}`
+          console.log(this.errorMsg);
           this.loading = false;
         }
       })
-        /* sort by timestamp */
-        /*db.limit(5).get()
-          .then((querySnapshot) => {
-            /* maps objects so they don't display as [Object object] */
-           /* this.lastVisible = querySnapshot.docs[querySnapshot.docs.length-1];
-            this.matches = querySnapshot.docs.map(doc => doc.data());
-            
-          })*/
     },
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     },
-    selectCharacter: function (character, index) {
-            /*let characterQuery = ''
-            if (this.query[`p${playerNumber}chars`]) {
-                let characters = this.query[`p${playerNumber}chars`].split(',')
-                characters[characterPosition - 1] = characterId
-                characterQuery = characters.filter((character) => character).join(',')
-            } else {
-                characterQuery = characterId
-            }
-            let query = Object.assign({}, this.query)
-            query[`p${playerNumber}chars`] = characterQuery
-            delete query.page
-            this.$router.push({ path: '/', query: query })*/
-
-            const i = index + 1;
-            if (character.id !== this.playerInfo[`p${i}`].character.id) {
+    selectCharacter: function (character, i) {
+            if (character.id !== this.query.playerInfo[`p${i}`].character.id) {
               this.$set(
-                this.playerInfo[`p${i}`],
+                this.query.playerInfo[`p${i}`],
                 'character',
                 JSON.parse(JSON.stringify(character))
               );
             }
         },
-    selectPlayers(index) {
-      const i = index + 1;
+    selectPlayers(i) {
       console.log(
         "P" + i + " name updated.\n"
         + "P" + i + " Name:",
-        JSON.parse(JSON.stringify(this.playerInfo[`p${i}`].name))
+        JSON.parse(JSON.stringify(this.query.playerInfo[`p${i}`].name))
       );
     }
   }

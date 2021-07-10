@@ -16,7 +16,6 @@ let matchesMethods = {
 }
 let matchesRes = Vue.resource(`${uri}/matches/`, {}, matchesMethods)
 
-
 Vue.prototype.$version = 2;
 Vue.prototype.$characters = [
   {name: 'Any Character', devName: '', id: 0},

@@ -41,6 +41,10 @@ export default {
   width: 100%;
 }
 
+::v-deep .v-menu__content.player-select-menu {
+  max-width: 0% !important;
+}
+
 ::v-deep .v-application--wrap {
     max-width: inherit !important;
   }

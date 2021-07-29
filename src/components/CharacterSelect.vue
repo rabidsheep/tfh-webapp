@@ -1,29 +1,44 @@
 <template>
     <v-menu
-    max-height="400px"
+    max-height="300px"
     transition="slide-y-transition"
     offset-y>
         <!-- char select button -->
         <template v-slot:activator="{ on, attrs }">
-            <v-btn :disabled="!selectionEnabled" :ripple="false" class="char-select" v-bind="attrs" v-on="on" height="auto" icon>
-                <v-avatar v-if="!selectedChar" height="100%" tile>
-                    <img :src="require(`../assets/img/sel/0.png`)" />
-                </v-avatar>
-
-                <v-avatar v-if="selectedChar" height="100%" tile>
-                    <img :src="require(`../assets/img/sel/${selectedChar.id}.png`)" />
+            <v-btn
+            :disabled="!selectionEnabled"
+            :ripple="false"
+            class="icon"
+            v-bind="attrs"
+            v-on="on"
+            height="auto"
+            icon>
+                <v-avatar
+                height="100%"
+                tile>
+                    <img v-if="!currentCharacter"
+                    :src="require(`../assets/img/sel/0.png`)" />
+                    
+                    <img v-else-if="currentCharacter"
+                    :src="require(`../assets/img/sel/${currentCharacter.id}.png`)" />
                 </v-avatar>
             </v-btn>
         </template>
         <!-- /char select button -->
         
         <!-- char select list -->
-        <v-list v-if="selectionEnabled" width="200px">
+        <v-list
+        class="character-menu"
+        v-if="selectionEnabled"
+        width="210px">
             <v-list-item
             v-for="(character, id) in $characters"
             :key="id"
             @click="selectCharacter(character)">
-                <v-avatar class="mb-2 mr-2" height="100%" tile>
+                <v-avatar
+                class="icon"
+                height="100%"
+                tile>
                     <img :src="require(`../assets/img/sel/${character.id}.png`)">
                 </v-avatar>
                 {{ character.name }}
@@ -37,35 +52,28 @@
 export default {
   name: 'CharacterSelect',
   props: {
-    selectedChar: Object,
+    currentCharacter: [ Object, null ],
     selectionEnabled: Boolean,
-  },
-  data: () => ({
-      selectedCharacter: null,
-  }),
-  watch: {
-      /* automatically changes character icons for UploadForm page if replay file
-      name is in default format */
-      selectedChar: function(newValue) {
-          this.selectedCharacter = newValue;
-      }
   },
   methods: {
         /* passes selected character up to parent */ 
         selectCharacter: function (selected) {
-            this.$emit('character-select', selected)
-            this.selectedCharacter = selected;
+            if (selected.id === 0) {
+                selected = null
+            }
+            
+            if (this.currentCharacter && selected && selected.id === this.currentCharacter.id) {
+                return null
+            } else {
+                this.$emit('character-select', selected)
+            }
         }
-  }
+    }
 }
 </script>
 
 <style scoped>
-.char-select:hover::before {
-    opacity: 0;
-}
-
 .v-btn::before {
-    background-color: transparent;
+    background-color: transparent
 }
 </style>

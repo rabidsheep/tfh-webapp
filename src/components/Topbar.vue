@@ -1,7 +1,7 @@
 <template>
     <v-toolbar style="width: 100%;" dense :light="$vuetify.theme.lightPrimary" :dark="!$vuetify.theme.lightPrimary" color="primary">
         <!-- replace <a> with <router-link> eventually -->
-        <router-link to="/">
+        <router-link to="/" @click.native="$emit('force-rerender')">
             <img class="logo" src="../assets/img/pixel/1.png" />
         </router-link>
         <v-toolbar-title>fortnite gaming</v-toolbar-title>

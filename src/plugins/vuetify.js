@@ -9,6 +9,14 @@ export default new Vuetify({
     icons: {
       iconfont: 'mdi'
     },
+    breakpoint: {
+      thresholds: {
+        xs: 720,
+        sm: 860,
+        md: 960,
+        lg: 1280,
+      },
+    },
     theme: {
       dark: true,
       options: {customProperties: true},

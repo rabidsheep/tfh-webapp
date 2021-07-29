@@ -1,96 +1,36 @@
 <template>
   <div v-scroll="onScroll">
-    <!--<Filters
-    @filter-characters="updateCharacters($event)"
-    @filter-players="updatePlayers($event)" />-->
-
-    <v-layout id="filter" style="position:relative;">
-        <v-btn
-        id="filter-toggle"
-        @click="hidden = !hidden">
-        {{ hidden ? 'Show filters' : 'Hide filters'}}
-        </v-btn>
-
-        <v-expand-transition>
-            <div id="search" v-show="!hidden">
-                <v-layout filters :column="$vuetify.breakpoint.xsOnly">
-                    <!-- player filters -->
-                    <v-layout pfilter v-for="i in [1, 2]" :key=i :reverse="i === 1 && !$vuetify.breakpoint.xsOnly"> 
-                        <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
-                            <CharacterSelect
-                            :selectedChar="query.playerInfo[`p${i}`].character !== null ? query.playerInfo[`p${i}`].character : $characters[0]"
-                            :selectionEnabled="true"
-                            @character-select="selectCharacter($event, i)"/>
-                        </div>
-
-                        <!-- player select -->
-                      <div style="width:100%;">
-                        <v-combobox
-                                clearable
-                                v-model="query.playerInfo[`p${i}`].name"
-                                append-icon=""
-                                :menu-props="{ contentClass: 'player-select-menu', bottom: true, offsetY: true, maxHeight: '200' }"
-                                :label="`Player ${i}`"
-                                :items="players"
-                                :search-input.sync="search[`p${i}`]"
-                                @change = "selectPlayers(i)"
-                            >
-                            <template v-slot:no-data>
-                                <v-list-item>
-                                  <v-list-item-content>
-                                      <v-list-item-title>
-                                          No results matching "<strong>{{ search[`p${i}`] }}</strong>".
-                                      </v-list-item-title>
-                                  </v-list-item-content>
-                                </v-list-item>
-                            </template>
-                        </v-combobox>
-                        </div>
-
-                        <!-- /player select-->
-                    </v-layout>
-                    <!-- /player filters -->
-
-                    <v-flex v-if="$vuetify.breakpoint.smAndUp">
-                        <div class="vstxt">
-                          <v-btn
-                          color="primary"
-                          @click="swap()"><v-icon>mdi-swap-horizontal</v-icon></v-btn>
-                        </div>
-                    </v-flex>
-                </v-layout>
-
-                <center>
-                  <v-btn color="primary" @click="clear()">Clear All</v-btn>
-                </center>
-            </div>
-        </v-expand-transition>
-    </v-layout>
-
+    <!-- filters box -->
+    <Filters
+    @update-filter="filters = $event" />
     
     <!-- matches table -->
     <div class="loading" style="margin: 20% 0" v-if="loading">
       <v-progress-linear indeterminate v-show="loading"/>
     </div>
-    <div id="matches" v-if="!loading">
-      <v-layout column>
+
+      <v-layout
+      id="matches"
+      column
+      v-if="!loading">
         <MatchRow
           v-for="(match, i) in matches"
           :key="i"
           v-bind="match"
         />
       </v-layout>
-    </div>
-    <!-- /matches table -->
 
-<!-- pagination-->
+    <!-- pagination -->
     <v-layout v-if="!loading && !(resultsCount <= this.$config.itemsPerPage)" class="mt-3">
       <v-spacer/>
       <v-pagination
-        v-model="query.page"
-        :length="Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
-        :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
-        circle
+      v-model="page"
+      :length="resultsCount % this.$config.itemsPerPage === 0 ?
+                Math.floor(resultsCount / this.$config.itemsPerPage) :
+                Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
+      :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
+      @input="getMatches(filters, page)"
+      circle
       />
       <v-spacer/>
     </v-layout>
@@ -101,121 +41,104 @@
 
 <script>
 import MatchRow from '../components/MatchRow.vue'
-import CharacterSelect from './../components/CharacterSelect.vue';
-//import Filters from '../components/Filters.vue'
+import Filters from '../components/Filters.vue'
 
 export default {
   name: 'Matches',
   components: {
     MatchRow,
-    //Filters,
-    CharacterSelect
+    Filters,
   },
   data: () => {
     return {
-      players: [],
-      search: {'p1': null, 'p2': null},
       showToTop: false,
       hidden: false,
-      showCompatible: true,
+      filters: [
+        {name: null, character: null},
+        {name: null, character: null}
+      ],
+      matches: [],
+      headers: {
+        unique: [
+          { title: 'ID', code: 'id' },
+          { title: 'Upload Date', code: 'date' },
+        ],
+        general: {
+          players: [
+            { title: 'P1', code: 'p1' },
+            { title: 'P2', code: 'p2' },
+          ],
+          links: [
+            { title: 'File', code: 'file' },
+            { title: 'YouTube', code: 'yt' },
+          ]
+        }
+      },
       resultsCount: null,
+      page: 1,
+      lastVisible: null,
       loading: false,
       error: false,
       errorMessage: '',
-      query: {
-        playerInfo: {
-              p1: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
-              p2: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
-        },
-        page: 0,
-      },
-      matches: [],
-      lastVisible: null,
     }
   },
   mounted: function() {
-    this.getMatches(this.query)
-    this.loadPlayers()
+    this.getMatches(this.filters, 1)
   },
   watch: {
-    query: {
+    'filters': {
       handler: function() {
-        this.getMatches(this.query);
+        this.getMatches(this.filters, 1)
+        // move paginate back to page 1 after changing filters
+        this.page = 1
       },
       deep: true
     },
   },
+  computed: {
+    setWidth() {
+      if (this.$vuetify.breakpoint.xsOnly) {
+        return 'xs'
+      
+      } else {
+        return ''
+      }
+    }
+  },
   methods: {
-    loadPlayers: function() {
+    getMatches: function (filters, page) {
+      this.loading = true
 
-      this.$players.get()
+      this.$matches.get({filters, page})
       .then((response) => {
         if (response.ok) {
-          this.error = false;
-          this.players = response.body.players;
-          this.loading = false;
+          this.error = false
+          this.matches = response.body.matches
+          this.resultsCount = response.body.count
         } else {
-          this.error = true;
+          this.error = true
           this.errorMsg = `${response.status}: ${response.statusText}`
-          console.log(this.errorMsg);
-          this.loading = false;
+          console.log("Error retrieving matches.\n", this.errorMsg)
         }
-      })
 
-    },
-    getMatches: function (playerInfo) {
-      this.loading = true;
-
-      this.$matches.get(playerInfo)
-      .then((response) => {
-        if (response.ok) {
-          this.error = false;
-          this.matches = response.body.matches;
-          this.resultsCount = response.body.count;
-          this.loading = false;
-        } else {
-          this.error = true;
-          this.errorMsg = `${response.status}: ${response.statusText}`
-          console.log(this.errorMsg);
-          this.loading = false;
-        }
+        this.loading = false
       })
     },
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     },
-    selectCharacter: function (character, i) {
-            if (character.id !== this.query.playerInfo[`p${i}`].character.id) {
-              this.$set(
-                this.query.playerInfo[`p${i}`],
-                'character',
-                JSON.parse(JSON.stringify(character))
-              );
-            }
-        },
-    selectPlayers(i) {
-      console.log(
-        "P" + i + " name updated.\n"
-        + "P" + i + " Name:",
-        JSON.parse(JSON.stringify(this.query.playerInfo[`p${i}`].name))
-      );
-    },
-    swap() {
-      // do nothing if filters are the same on both sides
-      if (JSON.stringify(this.query.playerInfo['p1']) !== JSON.stringify(this.query.playerInfo['p2'])) {
-        // swap filters if not
-        var temp = this.query.playerInfo['p1'];
-        this.query.playerInfo['p1'] = this.query.playerInfo['p2'];
-        this.query.playerInfo['p2'] = temp;
-      }
-    },
-    clear() {
-      // resets filters
-      this.query.playerInfo = {
-              p1: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
-              p2: {name: null, character: {name: 'Any Character', devName: '', id: 0}},
-        }
-    }
   }
 }
 </script>
+
+<style scoped>
+.table-headers {
+  display: grid;
+  width: 100%;
+  text-align: center;
+}
+
+.table-headers .v-btn {
+  width: 100%;
+}
+</style>

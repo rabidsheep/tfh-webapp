@@ -1,106 +1,168 @@
 <template>
-    <v-layout id="filter">
-        <v-btn id="filter-toggle" @click="hidden = !hidden">{{ hidden ? 'Show filters' : 'Hide filters'}}</v-btn>
-        <v-expand-transition>
-            <div id="search" v-show="!hidden">
-                <v-layout filters :column="$vuetify.breakpoint.xsOnly">
-                    <!-- player filters -->
-                    <v-layout pfilter v-for="i in [0, 1]" :key=i :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"> 
-                        <div :style="!$vuetify.breakpoint.xsOnly ? `padding-left: 20px; padding-right: 20px;` : `padding-right: 10px;` ">
-                            <CharacterSelect
-                            :ripple = "false"
-                            :selectedChar="playerInfo[i].characters"
-                            :index="i"
-                            @character-select="selectCharacter($event, i)"/>
-                        </div>
+    <v-layout id="filters" style="position:relative;">
+        <v-btn
+        id="filters__toggle"
+        @click="hidden = !hidden">
+        {{ hidden ? 'Show filters' : 'Hide filters'}}
+        </v-btn>
 
-                        <!-- player select -->
-                      <div style="width:100%;">
+        <v-expand-transition>
+            <div id="filters__main" v-show="!hidden">
+                <v-layout players :column="$vuetify.breakpoint.xsOnly">
+                    <!-- player filters -->
+                    <v-layout
+                    :class="`player p${i + 1}`"
+                    v-for="(player, i) in playerInfo"
+                    :key="i"
+                    :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"> 
+
+                        <CharacterSelect
+                        :currentCharacter="playerInfo[i].character"
+                        :selectionEnabled="true"
+                        @character-select="selectCharacter($event, i)"/>
+
                         <v-combobox
-                                clearable
-                                append-icon=""
-                                v-model="playerInfo[i].name"
-                                :menu-props="{bottom: true, offsetY: true}"
-                                :label="`Player ${i + 1}`"
-                                :items="players"
-                                :search-input.sync="search[i]"
-                                @change = "selectPlayers"
-                            >
+                        clearable
+                        v-model="playerInfo[i].name"
+                        append-icon=""
+                        :menu-props="{
+                            contentClass: 'player-select-menu',
+                            bottom: true,
+                            offsetY: true,
+                            maxHeight: '200'
+                            }"
+                        :label="`Player ${i + 1}`"
+                        :items="players"
+                        :search-input.sync="search[i]"
+                        :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"
+                        @change = "selectPlayer(playerInfo[i].name, i)">
                             <template v-slot:no-data>
                                 <v-list-item>
-                                <v-list-item-content>
-                                    <v-list-item-title>
-                                        No results matching "<strong>{{ search[i] }}</strong>".
-                                    </v-list-item-title>
-                                </v-list-item-content>
+                                    <v-list-item-content>
+                                        <v-list-item-title>
+                                            No results matching "<strong>{{ search[i] }}</strong>".
+                                        </v-list-item-title>
+                                    </v-list-item-content>
                                 </v-list-item>
                             </template>
                         </v-combobox>
-                        </div>
-
                         <!-- /player select-->
                     </v-layout>
                     <!-- /player filters -->
 
-                    <v-flex v-if="$vuetify.breakpoint.smAndUp">
-                        <div class="vstxt">vs.</div>
-                    </v-flex>
+
+                    <v-btn
+                    class="swap"
+                    color="primary"
+                    @click="swap()">
+                        <v-icon>
+                            {{ $vuetify.breakpoint.smAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
+                        </v-icon>
+                    </v-btn>
                 </v-layout>
+
+                <center>
+                    <v-btn
+                    color="primary"
+                    @click="clear()">
+                        Clear All
+                    </v-btn>
+                </center>
             </div>
         </v-expand-transition>
     </v-layout>
 </template>
 
 <script>
-import CharacterSelect from './CharacterSelect.vue';
-
-function initialState () {
-    return {
-        hidden: false,
-        showToTop: false,
-        playerInfo: [
-            {name: null, characters: {name: 'Any Character', devName: '', id: 0}},
-            {name: null, characters: {name: 'Any Character', devName: '', id: 0}}
-        ],
-        players: ["player 1", "player 2", "player 3", "player 4"],
-        search: [null, null],
-    }
-}
+import CharacterSelect from './CharacterSelect.vue'
 
 export default {
-  components: { CharacterSelect },
     name: 'Filters',
-    props: {
-        query: Object
+    components: {
+        CharacterSelect,
     },
-    data: function(){
-        return initialState();
+    data: () => {
+        return {
+            playerInfo: [
+                {name: null, character: null},
+                {name: null, character: null}
+            ],
+            search: [],
+            hidden: false,
+            players: []
+        }
+    },
+    watch: {
+        'playerInfo': {
+            handler: function(newVal) {
+                this.$emit('update-filter', newVal)
+            },
+            deep: true
+        },
+    },
+    mounted: function() {
+        this.loadPlayers()
     },
     methods: {
-        selectCharacter: function (character, index) {
-            this.$set(this.playerInfo[index], 'characters', JSON.parse(JSON.stringify(character)));
-            console.log(JSON.parse(JSON.stringify(this.playerInfo))); 
+        loadPlayers: function() {
+
+            this.$players.get()
+            .then((response) => {
+                if (response.ok) {
+                    this.error = false
+                    this.players = response.body.players
+                } else {
+                    this.error = true
+                    this.errorMsg = `${response.status}: ${response.statusText}`
+                    console.log("Error retrieving player list.\n", this.errorMsg)
+                }
+            })
+
         },
-        selectPlayers() {
-            console.log(JSON.parse(JSON.stringify(this.playerInfo)));
-        }
-    }
+        selectCharacter: function (character, i) {
+            if (character !== this.playerInfo[i].character) {
+                this.$set(this.playerInfo[i], 'character', character)
+            }
+        },
+        selectPlayer: function (player, i) {
+            if (player !== this.playerInfo[i].name) {
+                this.$set(this.playerInfo[i], 'name', player)
+            }
+        },
+        swap() {
+            // do nothing if filters are the same on both sides
+            if (JSON.stringify(this.playerInfo[0]) !== JSON.stringify(this.playerInfo[1])) {
+                // swap filters if not
+                var temp = this.playerInfo[0]
+                this.$set(this.playerInfo, 0, this.playerInfo[1])
+                this.$set(this.playerInfo, 1, temp)
+            }
+        },
+        clear() {
+            // check if objects for each player contain only null values or not
+            let p1 = Object.values(this.playerInfo[0]).every( e => e === null)
+            let p2 = Object.values(this.playerInfo[1]).every( e => e === null)
+
+            // if either players have a filter set, clear the filter (this prevents unnecessary calls to the server)
+            if (!p1 || !p2) {
+                this.playerInfo = [
+                    {name: null, character: null},
+                    {name: null, character: null}
+                ]
+            }
+
+        },
+    },
 }
 </script>
 
-
 <style scoped>
-.v-input >>> .v-input__slot::before {
-    border-color: #b21d45 !important;
-  }
-
-.v-input >>> .v-input__slot::after {
-    border-color: #d29da0 !important;
+.wide .p1 >>> .v-input__append-inner {
+    padding-left: 0px;
+    padding-right: 4px;
 }
 
-#search >>> .v-btn {
-    border: none;
-    border-radius: 0px;
-    width: 100%;
+#filters .players >>> .v-input__slot::before {
+    width: calc(100% - 1px);
 }
 </style>

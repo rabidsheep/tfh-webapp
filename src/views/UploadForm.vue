@@ -1,470 +1,505 @@
 <template>
-    <v-container id="upload-form__page">
-        <v-overlay v-if="loading">
+    <v-container id="uploads">
+        <v-overlay v-show="uploading || showError || finished">
             <v-container fluid fill-height>
-                <v-layout justify-center align-center>
-                    <v-progress-circular indeterminate/>
-                </v-layout>
-            </v-container>
-        </v-overlay>
+                <v-layout column justify-center align-center>
+                    <template v-if="showError && !uploading">
+                        <h1>Error</h1>
 
-        <v-overlay v-if="error">
-            <v-container fluid fill-height>
-            <v-layout justify-center align-center>
-                <v-card width="50%">
-                    <v-card-title>Upload Failed</v-card-title>
-                    <v-card-subtitle>Error: {{ this.errorMsg }}</v-card-subtitle>
-                    <v-card-text>Your file could not be submitted.
-                        If you believe this to be a problem on the application's end,
-                        please contact us at [devContact].
-                    </v-card-text>
-                    <v-card-actions>
+                        <div
+                        v-for="(error, i) in activeErrors"
+                        :key="i">
+                            <template>
+                                {{ error.message}}
+
+                                <ul v-if="error.files.length > 0">
+                                    <li
+                                    v-for="(file, j) in error.files"
+                                    :key="j">
+                                        {{ file }}
+                                    </li>
+                                </ul>
+                            </template>
+                        </div>
+
                         <v-btn
-                        @click="error=false"
-                        color="primary"
-                        style="margin: auto">OK</v-btn>
-                    </v-card-actions>
-                </v-card>
-            </v-layout>
+                        @click="clearErrors()"
+                        color="primary">
+                            OK
+                        </v-btn>
+                    </template>
+
+                    <template v-if="uploading">
+                        <h1>Uploading...</h1>
+
+                        <v-progress-linear
+                        v-model="progress"
+                        height="20px"
+                        :buffer-value="100" />
+
+                        <p>
+                            <span style="color:green;">{{ succeeded }}</span>
+                             | 
+                             <span style="color:red;">{{ failed }}</span>
+                        </p>
+                    </template>
+
+                    <template v-if="finished">
+                        <v-icon>
+                            <template v-if="succeeded > 0">
+                                mdi-check-circle
+                            </template>
+
+                            <template v-else>
+                                mdi-close-circle
+                            </template>
+                        </v-icon>
+
+                        <h1>
+                            {{ succeeded > 0 ? 'Success!' : 'Upload Failed' }}
+                        </h1>
+
+                        <template v-if="succeeded > 0">
+                            Uploaded {{ succeeded }} out of {{ matches.length }} file(s).
+                        </template>
+                        
+                        <template v-if="failed > 0">
+                            {{ failed }} file(s) failed to upload.
+                        </template>
+
+                        <v-btn
+                        @click="resetPage()"
+                        color="primary">
+                            OK
+                        </v-btn>
+                    </template>
+                </v-layout>
             </v-container>
         </v-overlay>
 
-            
+        <v-stepper v-model="step" flat>
+            <v-stepper-items>
+                <v-stepper-header>
+                    <v-stepper-step step="1"
+                    :complete="step > 1">
+                        Sign In
+                    </v-stepper-step>
 
-        <v-form 
-        class="upload-form__container"
-        ref="form"
-        v-model="valid">
-        
-        <!--FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
-            
-            <div class="tab-content">
+                    <v-divider />
 
-            <vue-dropzone
-            :options="dropzoneOptions"
-            :include-styling="false"
-            :useCustomSlot="true"
-            @vdropzone-file-added="vfileAdded"
-            @vdropzone-success="vsuccess"
-            @vdropzone-error="verror"
-            @vdropzone-success-multiple="vsuccessMuliple"
-            @vdropzone-drop="vddrop"
-            id="custom-dropzone">
-            <div class="dropzone-custom-content">
-                Upload Files
-            </div>
-            <div class="dropzone-custom-details">
-                </div>
-            </vue-dropzone>
-
-            <input
-                style="display: none;"
-                ref="uploadBtn"
-                type="file"
-                id="match-upload"
-                accept=".tfhr"
-                @change="readFileData"
-                required />
-        </div>
-        
-        -->
-            <div align-center>
-                <v-btn
-                @click="onButtonClick">
-                Upload File
-                </v-btn>
-
-                <label class="file-name">{{ fileName ? fileName : 'No file chosen' }}</label>
-
-                <input
-                style="display: none;"
-                ref="uploadBtn"
-                type="file"
-                id="match-upload"
-                accept=".tfhr"
-                @change="readFileData"
-                required />
-            </div>
-
-            <!--<v-layout>
-                <v-card><v-card-title>Tips</v-card-title>
+                    <v-stepper-step step="2"
+                    :complete="step > 2">
+                        Upload File
+                    </v-stepper-step>
+                </v-stepper-header>
                 
-                <v-card-text>If a player was using a screen name you know differs from their most well-known alias, you can edit the player names here to make finding all their matches easier.</v-card-text></v-card>
-            </v-layout>-->
+                <!-- sign in -->
+                <v-stepper-content step="1">
+                    <v-progress-linear
+                    indeterminate
+                    v-show="$firebase.auth().currentUser"/>
+                    <div class="sign-in">
+                        <v-btn
+                        height="50"
+                        v-show="!$firebase.auth().currentUser"
+                        @click="signIn('google')">
+                            <v-icon left>mdi-google</v-icon> Google
+                        </v-btn>
+                        <!--<v-btn height="50" v-show="!$firebase.auth().currentUser" @click="signIn('twitter')">
+                            <v-icon left>mdi-twitter</v-icon> Twitter
+                        </v-btn>-->
+                    </div>
+                </v-stepper-content>
 
-            <div>
-                <v-layout v-for="i in [0, 1]" :key=i>
-                    <div
-                    class="character-select"
-                    :style="!$vuetify.breakpoint.xsOnly ? `padding-right: 20px;` : `padding-right: 20px;` ">
-                        <CharacterSelect
-                        :selectedChar="playerInfo[i].character"
-                        :index = "i"
-                        :selectionEnabled="false"
-                        @character-select="selectCharacter($event, i)"/>
+                <!-- upload form -->
+                <v-stepper-content step="2">
+                    <v-form
+                    id="uploads__form"
+                    ref="form"
+                    v-model="valid">
+                        
 
-                        <v-select
+                        <!--
+                            <label class="file-name">{{ fileName ? fileName : 'No file chosen' }}</label>
+                        -->
+                        <input
                         style="display: none;"
-                        v-model="playerInfo[i].character"
-                        :rules="rules.characters"
-                        :items="$characters"
-                        :item-text="'name'"
-                        ref="characterSelect"
-                        required
-                        />
-                    </div>
-                    
-                    <div style="width: 100%;">
-                        <v-text-field
-                        v-model="playerInfo[i].name"
-                        :rules="rules.names"
-                        :label="`Player ${i + 1}`"
-                        required
-                        />
-                    </div>
-                </v-layout>
+                        ref="uploadBtn"
+                        type="file"
+                        accept=".tfhr"
+                        multiple
+                        @change="openFiles"
+                        required />
 
-                <v-text-field
-                v-model="ytUrl"
-                label="YouTube Link (Optional)"
-                />
+                        <v-layout
+                        v-if="matches.length > 0"
+                        class="files"
+                        column>
+                            <UploadPreview
+                            v-for="(match, i) in matches"
+                            :key="i"
+                            :index="i + 1"
+                            v-bind="match"
+                            :uploading="uploading"
+                            @remove-file="matches.splice(i, 1)"/>
+                        </v-layout>
+                        <!-- should we allow users to add comments to their uploads? -->
 
-                <v-text-field
-                v-model="version"
-                label="Version Number"
-                disabled
-                />
-            </div>
 
-            <!-- should we allow users to add comments to their uploads? -->
-                <center>
-                    <v-btn :disabled="!valid" @click="create">Upload</v-btn>
-                </center>
-        </v-form>
+
+                        <v-layout
+                        class="status"
+                        column
+                        justify-center>
+                            <div
+                            :style="matches.length >= uploadLimit ? 'color: red;' : ''">
+                                {{ matches.length >= uploadLimit ?
+                                'Maximum file limit reached' :
+                                (uploadLimit - matches.length) + ' slots remaining' }}
+                            </div>
+
+                        </v-layout>
+
+                        <v-layout
+                        class="buttons"
+                        justify-center
+                        >
+                            <v-btn
+                            rounded
+                            :ripple="false"
+                            :disabled="matches.length >= uploadLimit"
+                            @click="selectFiles">
+                                Upload Files
+                            </v-btn>
+
+                            <v-btn
+                            rounded
+                            :ripple="false"
+                            color = "primary"
+                            :disabled="!valid || matches.length <= 0"
+                            @click="submitFiles">
+                                Submit
+                            </v-btn>
+                        </v-layout>
+                    </v-form>
+                </v-stepper-content>
+            </v-stepper-items>
+        </v-stepper>
     </v-container>
 </template>
 
 <script>
-import CharacterSelect from '../components/CharacterSelect.vue';
-import firebase from 'firebase';
-import 'firebase/storage';
-//import vue2Dropzone from 'vue2-dropzone'
-//import 'vue2-dropzone/dist/vue2Dropzone.min.css'
+import UploadPreview from '../components/UploadPreview.vue'
+import firebase from 'firebase'
+import 'firebase/storage'
+
+function initializeErrors() {
+    return [
+            {
+                code: 'limit',
+                set: false,
+                message: null,
+            },
+            {
+                code: 'parse',
+                set: false,
+                message: 'The following files could not be parsed:',
+                files: [],
+            },
+            {
+                code: 'upload',
+                set: false,
+                message: 'The following files could not be uploaded:',
+                files: [],
+            },
+            {
+                code: 'type',
+                set: false,
+                message: 'The following files use an invalid extension:',
+                files: [],
+            },
+            {
+                code: 'duplicate',
+                set: false,
+                message: 'The following files have already been selected:',
+                files: [],
+            }
+        ]
+}
+
+function initializeData(step) {
+    return {
+        hidden: true,
+        valid: false,
+        isSelecting: false,
+        uploading: false,
+        progress: 0,
+        succeeded: 0,
+        failed: 0,
+        step: step,
+        finished: false,
+        loading: false,
+        loginError: false,
+        uploadValue: 0,
+        files: [],
+        matches: [],
+        uploadLimit: 8,
+        errors: initializeErrors(),
+        showError: false,
+    }
+}
 
 export default {
-    components: { /*vueDropzone: vue2Dropzone,*/ CharacterSelect },
+    components: { UploadPreview },
     name: 'UploadForm',
-    data() {
-       return {
-           dropzoneOptions: {
-               url: 'https://httpbin.org/post',
-               dictDefaultMessage: "Drop Files",
-           },
-            hidden: true,
-            valid: false,
-            playerInfo: [
-                    {name: '', character: {name: 'Any Character', devName: '', id: 0}},
-                    {name: '', character: {name: 'Any Character', devName: '', id: 0}}
-            ],
-            matches: [],
-            ytUrl: null,
-            version: null,
-            rules: {
-                names: [ v => !!v || 'Required' ],
-                characters: [ v => v.name != 'Any Character' && v.name != null ]
-            },
-            fileName: null,
-            fileData: null,
-            fileUrl: null,
-            isSelecting: false,
-            loading: false,
-            error: false,
-            errorMsg: '',
-            uploadValue: 0,
-            fileAdded: false,
-            filesAdded: false,
-            fileSuccess: false,
-            fileError: false,
-            successMultiple: false,
-            dDrop: false,
-       }
+    data: function() {
+        this.uid = null
+        return initializeData(1)
+    },
+    mounted: function () {
+        this.$firebase.auth().onAuthStateChanged((user) => {
+            this.loading = true;
+
+            if (user) {
+                console.log('Signed in')
+                //console.log(user)
+                this.uid = user.uid
+
+                this.step = 2
+            } else {
+                console.log('Signed out')
+            }
+
+            this.loading = false;
+        })
+    },
+    computed: {
+        activeErrors: function() {
+            return [this.errors.find(e => e.set === true)]
+        }
     },
     methods: {
+        signIn: function (providerName) {
+            this.loading = true
+            this.$firebase.auth()
+            .signInWithPopup(this.$providers[providerName])
+            .then(() => {
+                /*var token = credential.accessToken
+                var user = result.user*/
+                this.loading = false
+            })
+            .catch((error) => {
+                /*var errorCode = error.code
+                var errorMsg = error.message
+                var email = error.email
+                var credential = error.credential*/
+                console.log(error)
+                this.loading = false
+            })
+        },
         /* makes visible upload button act like html file upload button */
-        onButtonClick() {
+        selectFiles() {
             this.isSelecting = true
+
             window.addEventListener('focus', () => {
                 this.isSelecting = false
             }, { once: true })
 
             this.$refs.uploadBtn.click()
-            },
-        /* updates character info */
-        selectCharacter: function (character, index) {
-            this.$set(this.playerInfo[index], 'character', JSON.parse(JSON.stringify(character)));
         },
         /* first uploads file to storage and retrieves download url,
-        then posts file info to Firestore Database */
-        create() {
-            this.loading = true;
+        then posts file info to database */
+        submitFiles() {
+            this.uploading = true
 
-            const storageRef = firebase.storage()
-            .ref(`${this.fileData.name}`)
-            .put(this.fileData);
-            
-            storageRef.on(`state_changed`,
+            for (let i = 0; i < this.matches.length; i++) {
+                const storageRef = firebase.storage()
+                .ref(`${this.files[i].name}`)
+                .put(this.files[i])
+
+                // upload file to storage
+                storageRef.on(`state_changed`,
                 snapshot => {
-                    this.uploadValue = (snapshot.bytesTransferred/snapshot.totalBytes) * 100;
+                    // keep track of file upload progress
+                    this.progress = (this.progress + (snapshot.bytesTransferred/snapshot.totalBytes)) * (100 * this.matches.length)
                 },
                 error => {
+                    this.failed += 1
+                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
                     console.log(error.message)
                 },
                 () => {
-                    this.uploadValue = 100;
-                    storageRef.snapshot.ref.getDownloadURL().then((url) => {
-                    this.fileUrl = url;
+                    this.succeeded += 1
+                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
+                    storageRef.snapshot.ref
+                    .getDownloadURL()
+                    .then((url) => {
+                        this.matches[i].fileUrl = url;
+                        this.matches[i].timestamp = new Date();
 
-                    var data = {
-                        fileUrl: this.fileUrl,
-                        fileName: this.fileName,
-                        p1: this.playerInfo[0].name,
-                        p1Chara: this.playerInfo[0].character,
-                        p2: this.playerInfo[1].name,
-                        p2Chara: this.playerInfo[1].character,
-                        players: this.playerInfo,
-                        version: this.version,
-                        timestamp: new Date(),
-                        ytUrl: this.ytUrl,
-                    };
-
-                    
-                    this.$matches.save(data).then((response) => {
-                        if (response.ok) {
-                            console.log('Successfully uploaded document (ID: ' + response.body.docId + ')');
-                            this.$refs.form.reset();
-                            this.fileName = null;
-                        } else {
-                            this.error = true;
-                            this.errorMsg = `${response.status}: ${response.statusText}`;
-                            console.log(this.errorMsg);
-                        }
-
-                            this.loading = false;
-                        }
-                    );
-                    /*
-                    IGNORE
-                    FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
-                    var db = firebase.firestore();
-
-                    db.collection("matches").add({
-                        data
+                        // upload match info to db
+                        this.$matches
+                        .save(this.matches[i])
+                        .then((response) => {
+                            if (response.ok) {
+                                console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
+                                if (i === this.matches.length - 1) {
+                                    this.uploading = false
+                                    this.finished = true
+                                }
+                            } else {
+                                this.errorList.upload.files.push(this.files[i].name)
+                                this.errorList.upload.status = `${response.status}: ${response.statusText}`
+                                this.showError = true
+                            }
+                        })
                     })
-                    .then((docRef) => {
-                        console.log("Doc written with ID: ", docRef.id);
-                    })
-                    .catch((error) => {
-                        console.error("Error adding doc: ", error);
-                        this.errorMsg = error;
-                        return this.error = true;
-                    })
-                    IGNORE
-                    */
-
                 })
-            })
-
-        },
-        /*** reads data from file and decodes substrings ***/
-        readFileData(event) {
-            /*
-            IGNORE
-            FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
-            this.fileName = event.name;
-            var reader = new FileReader();
-
-            reader.onload = (e) => {
-                var result = e.target.result;
-                this.version = (result).charCodeAt(146);
-                var playerNames = (result).substring(8, 137)
-                                        .replace(/\0{1,65}/g, '\n')
-                                        .split('\n', 2);
-                var characterNames = (result).substring(198,213)
-                                            .match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
-                this.retrievePlayerInfo(playerNames, characterNames);
             }
             
-            reader.readAsText(event, "UTF-8");
-            IGNORE
-            */
-
-            this.fileData = event.target.files[0];
-            this.fileName = this.fileData.name;
-            var reader = new FileReader();
-
-            reader.onload = (e) => {
-                console.log(e);
-                var result = e.target.result;
-                /*
-                p1 - offset 8-72
-                p2 - offset 73-137
-                characters - 199-213 (max)
-                
-                default filename regex:
-                [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}\_[A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}\.tfhr
-                [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2} = ####-##-##_##-##-##
-                [A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8} = [character]_vs_[character]
-                */
-                this.version = (result).charCodeAt(146);
-                var playerNames = (result).substring(8, 137)
-                                        .replace(/\0{1,65}/g, '\n')
-                                        .split('\n', 2);
-                var characterNames = (result).substring(198,213)
-                                            .match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
-                this.retrievePlayerInfo(playerNames, characterNames);
-            }
-            
-            reader.readAsText(event.target.files[0], "UTF-8");
         },
-        retrievePlayerInfo(playerNames, characterNames) {
-            for (const i in playerNames) {
-                this.$set(this.playerInfo[i], 'name', playerNames[i]);
-            }
-
-            for (const i in characterNames) {
-                var character = (this.$characters).find(c => c.devName == characterNames[i]);
-                this.$set(this.playerInfo[i], 'character', character);
-            }
-
-            /*
-            IGNORE
-            FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
-            console.log('Matches', this.matches);
-            console.log('PlayerInfo', this.playerInfo);
-            this.matches.push(this.playerInfo);
-            console.log('New Matches', this.matches[0]);
-            IGNORE
-            */
-        },
-        /*
-        IGNORE
-        FOR LATER EXPERIMENTING WITH MULTI-FILE UPLOAD
-        vfileAdded(file) {
-            this.fileAdded = true
-            this.readFileData(file);
-            // window.toastr.info('', 'Event : vdropzone-file-added')
-        },
-        vfilesAdded() {
-            this.filesAdded = true
-            // window.toastr.info('', 'Event : vdropzone-files-added')
-        },
-        vsuccess() {
-            this.success = true
-            // window.toastr.success('', 'Event : vdropzone-success')
-        },
-        vsuccessMuliple() {
-            this.successMultiple = true
-            // window.toastr.success('', 'Event : vdropzone-success-multiple')
-        },
-        verror() {
-            this.error = true
-            // window.toastr.error(file.upload.filename, 'Event : vdropzone-error - ' + file.status)
-        },
-            vddrop() {
-            this.dDrop = true
-        },
-    },
-    watch: {
-        fileAdded() {
-            let that = this
-            setTimeout(function() {
-            that.fileAdded = false
-            }, 2000)
-        },
-        filesAdded() {
-            let that = this
-            setTimeout(function() {
-            that.filesAdded = false
-            }, 2000)
-        },
-        success() {
-            let that = this
-            setTimeout(function() {
-            that.success = false
-            }, 2000)
-        },
-        error() {
-            let that = this
-            setTimeout(function() {
-            that.error = false
-            }, 2000)
-        },
-        successMultiple() {
-            let that = this
-            setTimeout(function() {
-            that.successMultiple = false
-            }, 2000)
-        },
-        isMounted() {
-            let that = this
-            setTimeout(function() {
-            that.isMounted = false
-            }, 2000)
-        },
-        dDrop() {
-            let that = this
-            setTimeout(function() {
-            that.dDrop = false
-            }, 2000)
-        },
-        IGNORE
+        /**
+         * begins parsing files one by one
+         * it checks to make sure each file is a valid replay file,
+         * and if it's not, it will move on to the next file until 
+         * it reaches the end of the current file list
         */
+        openFiles(event) {
+            var currentFiles = Array.from(event.target.files)
+            var slotsLeft = this.uploadLimit - this.matches.length
+
+            // stop user from adding more matches if file count exceeds limit
+            if (this.matches.length >= this.uploadLimit) {
+                console.log("limit error")
+                this.errors[0].set = true
+                this.errors[0].message = `You may only upload ${this.uploadLimit} files at a time.`
+                this.showError = true
+            } else {
+                // alert user of file limit
+                if (currentFiles.length > slotsLeft) {
+                    this.errors[0].set = true
+                    this.errors[0].message = `The amount of files selected exceeds the upload limit.`
+                    + ` Only the first ${this.uploadLimit} new files will be parsed.`
+                }
+
+                this.readFiles(currentFiles, 0)
+            }
+        },
+        /**
+         * generates reader for each file
+         */
+        readFiles(files, i) {
+            (function (that, files, i) {
+                var file = files[i];
+
+                var reader = new FileReader()
+
+                reader.onload = function(e) {
+                    if (that.matches.length < that.uploadLimit) {
+                        that.parseFileData(e.target.result, file.name, files, i)
+                    }
+                }
+
+                reader.readAsText(file, "UTF-8")
+            })(this, files, i)
+        },
+        /**
+         * parses file data
+         * regex stuff for future reference:
+         * full filename (YYYY-MM-DD_HH-mm-ss_Character1_Character2.tfhr)
+         * [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}\_[A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}\.tfhr
+         * date & time only:
+         * [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}
+         * characters only:
+         * [A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}
+         * 
+         * p1 hex @ offset 8-72
+         * p2 hex @ offset 73-137
+         * character hexes @ 197-213 (max)
+         */
+        parseFileData(result, fileName, files, i) {
+            // error if file uses non-.tfhr extension
+            if (fileName.substring(fileName.length - 5, fileName.length) !== '.tfhr') {
+                console.log("type error")
+                
+                this.setErrors(3, fileName)
+            } else if (this.matches.find(m => m.fileName === fileName)) {
+                console.log("duplicate error")
+                this.setErrors(4, fileName)
+            }
+            else {
+                
+                let playerNames = result.substring(8, 137).replace(/\0{1,65}/g, '\n').split('\n', 2)
+                let characterNames = result.substring(197,213).match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
+
+                // error if player or character names cannot be parsed
+                if ( playerNames.length !== 2 || characterNames.length !== 2) {
+                    console.log("parse error")
+                    this.setErrors(1, fileName)
+                } else {
+                    let players = [{
+                        name: playerNames[0],
+                        character: (this.$characters).find(c => c.devName == characterNames[0])
+                    },
+                    {
+                        name: playerNames[1],
+                        character: (this.$characters).find(c => c.devName == characterNames[1])
+                    }]
+
+                    this.files.push(files[i])
+
+                    this.matches.push({
+                        fileName: fileName,
+                        version: result.charCodeAt(146),
+                        players: players
+                    })
+                }
+            }
+
+            if (i < files.length - 1) {
+                this.readFiles(files, i + 1)
+            } else {
+                for (let i = 0; i < this.errors.length; i++) {
+                    if (this.errors[i].set === true) {
+                        console.log(this.errors[i].code)
+                        this.showError = true
+                        break
+                    }
+                }
+            }
+        },
+        /**
+         * re-initializes data
+         */
+        resetPage() {
+            this.$refs.form.reset()
+            Object.assign(this.$data, initializeData(2))
+            this.finished = false
+            console.log(this.uid)
+        },
+        /**
+         * sets errors array for display once files finish being read
+         */
+        setErrors(i, file) {
+            this.errors[i].set = true
+
+            if (!this.errors[i].files.includes(file)) {
+                this.errors[i].files.push(file)
+            }
+        },
+        /**
+         * clears errors array
+         */
+        clearErrors() {
+           this.errors = initializeErrors()
+           this.showError = false
+        },
     }
 }
 </script>
 
 <style scoped>
-    .file-name {
-        margin-left: 15px;
-        font-size: 20px;
-    }
-
-    .upload-box--active {
-        border-color: #b21d45;
-    }
-
-    #custom-dropzone {
-    background-color: rgb(41,41,41);
-    border-style: dashed;
-    border-width: 3px;
-    border-radius: 15px;
-    font-family: 'Arial', sans-serif;
-    letter-spacing: 0.2px;
-    color: #777;
-    transition: .2s linear;
-    height: 200px;
-    margin-bottom: 20px;
-  }
-
-  .upload-form__container {
-      display: grid;
-      grid-template-rows: 0fr 0fr 0fr;
-      grid-row-gap: 30px;
-  }
-
-  #custom-dropzone.dz-drag-hover {
-      border-color: #b21d45;
-  }
-
-  #custom-dropzone >>> .dz-message {
-    width: auto;
-    display: flex;
-    justify-content: center;
-    height: 100%;
-  }
-
-  .dropzone-custom-content {
-      font-size: 26px;
-      margin: auto;
+  .v-stepper >>> .v-stepper__wrapper {
+      overflow: visible !important;
   }
 </style>

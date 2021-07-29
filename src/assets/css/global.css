@@ -312,7 +312,7 @@ img.logo {
 }
 
 
-#uploads .files {
+#uploads .files__body {
     padding: 20px 0px;
 }
 
@@ -382,7 +382,6 @@ img.logo {
     width: 100%;
 }
 
-
 .wide #uploads .back {
     position: absolute;
     margin: auto;
@@ -391,11 +390,24 @@ img.logo {
     top: 0;
 }
 
+#uploads #youtube-form, #uploads .youtube__body {
+    width: 100%;
+}
+
+#uploads .youtube__body {
+    padding-bottom: 20px;
+}
+
+
+#uploads .youtube__body .url {
+    max-width: 50%;
+}
+
 #uploads #step__upload .buttons :not(:last-child) {
     margin-right: 20px;
 }
 
-#uploads .form .status > div {
+#uploads .form .message > div {
     margin: auto;
 }
 

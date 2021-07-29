@@ -1,73 +1,73 @@
 <template>
-       <v-form
-        class="form"
-        ref="form"
-        v-model="valid">
-
+    <v-form
+    id="files-form"
+    class="form"
+    ref="form"
+    v-model="valid">
+        <v-layout
+        column
+        class="files__wrapper">
             <v-layout
+            v-if="matches.length > 0"
+            class="files__body"
+            column>
+                <UploadPreview
+                v-for="(match, i) in matches"
+                :key="i"
+                :index="i"
+                v-bind="match"
+                :uploading="uploading"
+                @remove-file="$emit('remove', $event)" />
+            </v-layout>
+            <!-- should we allow users to add comments to their uploads? -->
+
+        
+            <v-layout
+            class="message"
             column
-            class="files__wrapper">
-                <v-layout
-                v-if="matches.length > 0"
-                class="files"
-                column>
-                    <UploadPreview
-                    v-for="(match, i) in matches"
-                    :key="i"
-                    :index="i"
-                    v-bind="match"
-                    :uploading="uploading"
-                    @remove-file="$emit('remove', $event)" />
-                </v-layout>
-                <!-- should we allow users to add comments to their uploads? -->
-
-            
-                <v-layout
-                class="status"
-                column
-                justify-center>
-                    <div
-                    :style="matches.length >= uploadLimit ? 'color: red;' : ''">
-                        {{ matches.length >= uploadLimit ?
-                        'Maximum file limit reached' :
-                        (uploadLimit - matches.length) + ' slots remaining' }}
-                    </div>
-                </v-layout>
+            justify-center>
+                <div
+                :style="matches.length >= uploadLimit ? 'color: red;' : ''">
+                    {{ matches.length >= uploadLimit ?
+                    'Maximum file limit reached' :
+                    (uploadLimit - matches.length) + ' slots remaining' }}
+                </div>
             </v-layout>
+        </v-layout>
 
-            <v-layout
-            class="buttons"
-            justify-center
-            align-center>
-                <v-btn
-                rounded
-                :ripple="false"
-                :disabled="matches.length >= uploadLimit"
-                @click="selectFiles">
-                    Upload Files
-                </v-btn>
+        <v-layout
+        class="buttons"
+        justify-center
+        align-center>
+            <v-btn
+            rounded
+            :ripple="false"
+            :disabled="matches.length >= uploadLimit"
+            @click="selectFiles">
+                Upload Files
+            </v-btn>
 
-                <!-- just here to make upload files
-                button open file viewer -->
-                <input
-                style="display: none;"
-                ref="uploadFilesBtn"
-                type="file"
-                accept=".tfhr"
-                multiple
-                @change="openFiles"
-                required />
+            <!-- just here to make upload files
+            button open file viewer -->
+            <input
+            style="display: none;"
+            ref="uploadFilesBtn"
+            type="file"
+            accept=".tfhr"
+            multiple
+            @change="openFiles"
+            required />
 
-                <v-btn
-                rounded
-                :ripple="false"
-                color = "primary"
-                :disabled="!valid || matches.length <= 0"
-                @click="submitFiles()">
-                    Submit
-                </v-btn>
-            </v-layout>
-        </v-form>
+            <v-btn
+            rounded
+            :ripple="false"
+            color = "primary"
+            :disabled="!valid || matches.length <= 0"
+            @click="submitFiles()">
+                Submit
+            </v-btn>
+        </v-layout>
+    </v-form>
 </template>
 
 <script>

@@ -202,7 +202,10 @@
                         @files-upload="filesUpload()" />
 
                         <YoutubeUploads
-                        v-else-if="uploadType === 'youtube'" />
+                        v-else-if="uploadType === 'youtube'"
+                        :matches="matches"
+                        :errors="errorList"
+                        @yt-upload="youtubeUpload()" />
                     </v-layout>
                 </v-stepper-content>
             </v-stepper-items>
@@ -278,8 +281,8 @@ export default {
         return {
         uid: null,
         hidden: true,
-        step: 1,
-        uploadType: null,
+        step: 3,
+        uploadType: 'youtube',
         errorList: initializeErrorList(),
         ...initializeData()
         }
@@ -292,7 +295,7 @@ export default {
                 console.log('Signed in')
                 //console.log(user)
                 this.uid = user.uid
-                this.step = 2
+                this.step = 3
             } else {
                 console.log('Signed out')
             }
@@ -323,15 +326,17 @@ export default {
             this.uploadType = type
             this.step = 3
         },
-        youtubeUpload(matches) {
-            for (let i = 0; i < matches.length; i++) {
+        youtubeUpload() {
+            this.uploading = true
+
+            for (let i = 0; i < this.matches.length; i++) {
                 // upload match info to db
                 this.$matches
-                .save(matches[i])
+                .save(this.matches[i])
                 .then((response) => {
                     if (response.ok) {
                         console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
-                        if (i === matches.length - 1) {
+                        if (i === this.matches.length - 1) {
                             this.uploading = false
                             this.finished = true
                         }

@@ -307,6 +307,11 @@ img.logo {
     width: 100%;
 }
 
+#uploads .v-stepper__content {
+    padding: 24px;
+}
+
+
 #uploads .files {
     padding: 20px 0px;
 }
@@ -316,52 +321,24 @@ img.logo {
     margin: auto;
 }
 
-#uploads .sign-in {
-    display: grid;
-    width: 200px;
-    grid-row-gap: 20px;
-    margin: auto;
-}
-
-#uploads .sign-in .v-btn {
-    height: 100px;
-}
-
-#uploads .upload:not(:last-child) {
+#uploads .preview:not(:last-child) {
     border-bottom: 1px solid white;
     padding-bottom: 20px;
 }
 
-#uploads .upload:not(:first-child) {
+#uploads .preview:not(:first-child) {
     padding-top: 20px;
 }
 
-#uploads .upload {
+#uploads .preview {
     width: 100%;
-}
-
-#uploads__form .buttons .v-btn {
-    max-width: min-content;
-    flex-wrap: wrap;
-    height: 50px;
-}
-
-
-#uploads__form .buttons {
-    margin-top: 10px;
-}
-#uploads__form .buttons :not(:last-child) {
-    margin-right: 20px;
-}
-
-#uploads__form {
-    display: flex;
-    flex-direction: column;
 }
 
 #uploads .v-overlay .v-progress-linear {
     margin: 20px 0px;
     height: 50px;
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
 }
 
 #uploads .v-overlay__content {
@@ -373,64 +350,100 @@ img.logo {
     margin-top: 10px;
 }
 
-#uploads__form .status {
-    justify-content: center;
+#uploads .form {
+    display: flex;
     flex-direction: column;
 }
 
-#uploads .v-overlay .v-progress-linear {
-    border-radius: 10px;
+#uploads .files__wrapper {
+    padding: 20px 0px;
 }
 
-#uploads__form .status > div {
+#uploads .step .v-btn:not(.back):not(.remove) {
+    max-width: min-content;
+    flex-wrap: wrap;
+    height: 50px;
+}
+
+#uploads #step__sign-in .v-progress-linear {
+    margin-top: 10px;
+}
+
+#uploads #step__select .v-btn:not(:last-child) {
+    margin-bottom: 20px;
+}
+
+#uploads .step > .body {
+    margin-top: 10px;
+}
+
+#uploads #step__upload .heading {
+    position: relative;
+    width: 100%;
+}
+
+
+.wide #uploads .back {
+    position: absolute;
+    margin: auto;
+    left: 15px;
+    bottom: 0;
+    top: 0;
+}
+
+#uploads #step__upload .buttons :not(:last-child) {
+    margin-right: 20px;
+}
+
+#uploads .form .status > div {
     margin: auto;
 }
 
 /** uploadpreview.vue **/
 
 /* general */
-.upload__name {
+.preview__name {
     padding: 0px 0px 20px 0px;
 }
 
-.upload__name h4 {
+.preview__name h4 {
     white-space: nowrap;
     text-overflow: ellipsis;
     max-width: 100%;
     overflow: clip;
 }
 
-.upload__data {
+.preview__data {
     flex-wrap: nowrap;
     justify-content: center;
 }
 
-.upload__match {
+.preview__match {
     max-width: 85%;
 }
 
-.upload__remove {
+.preview .remove {
     margin-right: 10px;
 }
 
 /* desktop */
-.wide .upload__match .p1 {
+.wide .preview__match .p1 {
     padding-right: 10px;
 }
 
-.wide .upload__match .p2 {
+.wide .preview__match .p2 {
     padding-left: 10px;
 }
 
-.wide .upload__match .p1 {
+.wide .preview__match .p1 {
     order: 1
 }
 
-.wide .upload__match .p2 {
+.wide .preview__match .p2 {
     order: 3
 }
 
-.wide .upload__match .vs {
+.wide .preview__match .vs {
     order: 2;
     margin: auto;
 }

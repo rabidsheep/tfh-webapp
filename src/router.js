@@ -1,7 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import Matches from './views/Matches.vue'
-import UploadForm from './views/UploadForm.vue'
+import Uploads from './views/Uploads.vue'
 Vue.use(Router)
 
 export default new Router({
@@ -17,7 +17,7 @@ export default new Router({
     {
       path: '/upload',
       name: 'upload',
-      component: UploadForm,
+      component: Uploads,
       props: (route) => ({
         v: route.query.v
       })

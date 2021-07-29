@@ -1,30 +1,32 @@
 <template>
-    <v-layout justify-center row class="upload">
+    <v-layout justify-center row class="preview">
         <v-layout
-        class="upload__name"
+        class="preview__name"
         align-center
         row>
             <v-btn
             :ripple="false"
-            class="upload__remove"
+            class="remove"
             fab
-            x-small
+            height="25px"
+            width="25px"
+            
             @click="remove()"
             color="primary">
-                <v-icon>
+                <v-icon size="15px">
                     mdi-close-thick
                 </v-icon>
             </v-btn>
             <h4>
-                {{ index }}. {{ fileName }}
+                {{ index + 1 }}. {{ fileName }}
             </h4>
         </v-layout>
 
         <v-layout
-        class="upload__data"
+        class="preview__data"
         row>
             <v-layout
-            class="upload__match"
+            class="preview__match"
             :column="$vuetify.breakpoint.xsOnly"
             :row="!$vuetify.breakpoint.xsOnly">
                     <v-layout

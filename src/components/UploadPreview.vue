@@ -1,8 +1,8 @@
 <template>
-    <v-layout justify-center row class="preview">
+    <v-layout :justify-center="!$vuetify.breakpoint.xsOnly" row class="preview">
         <v-layout
         class="preview__name"
-        align-center
+        :align-center="!$vuetify.breakpoint.xsOnly"
         row>
             <v-btn
             :ripple="false"
@@ -10,7 +10,6 @@
             fab
             height="25px"
             width="25px"
-            
             @click="remove()"
             color="primary">
                 <v-icon size="15px">
@@ -42,7 +41,6 @@
                                         
                         <v-text-field
                         v-model="player.name"
-                        :rules="rules.names"
                         :label="`Player ${i + 1}`"
                         :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"
                         required
@@ -55,13 +53,35 @@
                         vs.
                     </div>
             </v-layout>
+
+            <v-layout
+            class="yt"
+            row>
+                <v-text-field
+                v-model="userUrl"
+                
+                :error-messages="urlErrors"
+                @input="$v.url.$touch()"
+                class="link"
+                :dense="!$vuetify.breakpoint.xsOnly"
+                label="YouTube Link (Optional)"
+                prepend-icon="mdi-youtube" />
+
+                <v-text-field
+                v-model="youtube.ts"
+                :disabled="!userUrl"
+                prepend-icon="mdi-timer-outline"
+                class="timestamp"
+                :dense="!$vuetify.breakpoint.xsOnly"
+                label="Timestamp"/>
+            </v-layout>
         </v-layout>
     </v-layout>
 </template>
 
 <script>
 import CharacterSelect from './CharacterSelect.vue';
-
+import { url } from 'vuelidate/lib/validators'
 
 export default {
     components: { CharacterSelect },
@@ -74,17 +94,78 @@ export default {
         progress: Number,
         uploading: Boolean,
     },
-    data: () => ({
+    data: () => {
+        return {
+        userUrl: null,
+        timestamp: null,
+        youtube: {},
+        re: {
+            yt: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
+            id: /(?<=\?v=)[^#\&\?]*/,
+            ts: /(?<=t=)\d+m\d+s|\d+m|\d+s/,
+        },
         hidden: true,
         valid: false,
-        rules: {
-            names: [ v => !!v || 'Required' ],
-            characters: [ v => v.name != 'Any Character' && v.name != null ]
-        },
-    }),
+        }
+    },
+    validations: {
+        url: { url }
+    },
+    computed: {
+        urlErrors() {
+            const errors = []
+            if (!this.$v.url.$dirty || !this.userUrl) return errors
+
+            !this.$v.url.url && errors.push('Must be valid URL')
+
+            var yt = {}
+
+            if (this.re.yt.test(this.userUrl)) {
+                yt['id'] = this.userUrl.match(this.re.id)
+                
+                if (this.re.ts.test(this.userUrl)) {
+                    yt['ts'] = this.userUrl.match(this.re.ts)
+                }
+            } else {
+                errors.push('Invalid URL format')
+            }
+
+            this.youtube = yt
+
+            this.$emit('set-youtube', { yt: this.youtube, index: this.index })
+
+            return errors
+        }
+    },
+    watch: {
+        url: function() {
+            
+        }
+    },
     methods: {
         remove: function() {
             this.$emit('remove-file', this.index)
+        },
+        urlCheck: () => {
+            const ytRe = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/
+            const idRe = /(?<=\?v=)[^#\&\?]*/
+            const timeRe = /(?<=t=)\d+m\d+s|\d+m|\d+s/
+            var yt = {}
+            console.log('1')
+            if (ytRe.test(this.userUrl)) {
+                console.log('2')
+                yt['id'] = this.userUrl.match(idRe)
+                
+                
+                if (timeRe.test(this.userUrl)) {
+                    console.log('3')
+                    yt['ts'] = this.userUrl.match(timeRe)
+                }
+
+                return true
+            } else {
+                return false
+            }
         }
     }
 }

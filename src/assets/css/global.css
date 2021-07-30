@@ -296,7 +296,7 @@ img.logo {
 
 
 .small .match .links {
-    justify-content: right;
+    justify-content: space-evenly;
     flex: 0 auto;
 }
 
@@ -308,7 +308,7 @@ img.logo {
 }
 
 #uploads .v-stepper__content {
-    padding: 24px;
+    padding: 0px;
 }
 
 
@@ -353,10 +353,19 @@ img.logo {
 #uploads .form {
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
 #uploads .files__wrapper {
     padding: 20px 0px;
+}
+
+#uploads .step > .body {
+    margin-top: 10px;
+}
+
+#uploads .step {
+    padding: 24px;
 }
 
 #uploads .step .v-btn:not(.back):not(.remove) {
@@ -373,9 +382,6 @@ img.logo {
     margin-bottom: 20px;
 }
 
-#uploads .step > .body {
-    margin-top: 10px;
-}
 
 #uploads #step__upload .heading {
     position: relative;
@@ -395,7 +401,7 @@ img.logo {
 }
 
 #uploads .youtube__body {
-    padding-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 
@@ -411,17 +417,24 @@ img.logo {
     margin: auto;
 }
 
+#uploads .preview__match {
+    flex-wrap: nowrap;
+}
+
 /** uploadpreview.vue **/
 
 /* general */
+
 .preview__name {
+    max-width: 100%;
+    flex-wrap: nowrap !important;
     padding: 0px 0px 20px 0px;
 }
 
 .preview__name h4 {
+    max-width: 85%;
     white-space: nowrap;
     text-overflow: ellipsis;
-    max-width: 100%;
     overflow: clip;
 }
 
@@ -430,15 +443,36 @@ img.logo {
     justify-content: center;
 }
 
-.preview__match {
-    max-width: 85%;
-}
+
 
 .preview .remove {
     margin-right: 10px;
 }
 
+.preview .yt {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+}
+
+.small .preview .yt {
+    flex-wrap: wrap;
+}
+
+.small .preview .yt .link {
+    max-width: 100%;
+}
+
+.small .preview .yt .timestamp {
+    max-width: 100%;
+    padding-top: 0px;
+    margin-top: 0px;
+}
+
 /* desktop */
+.wide .preview {
+    max-width: 85%;
+}
+
 .wide .preview__match .p1 {
     padding-right: 10px;
 }
@@ -458,4 +492,16 @@ img.logo {
 .wide .preview__match .vs {
     order: 2;
     margin: auto;
+}
+
+.wide .yt.row {
+    justify-content: space-between;
+}
+
+.wide .yt .link {
+    max-width: 60%;
+}
+
+.wide .yt .timestamp {
+    max-width: 25%;
 }

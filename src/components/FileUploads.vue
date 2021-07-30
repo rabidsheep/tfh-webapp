@@ -10,14 +10,17 @@
             <v-layout
             v-if="matches.length > 0"
             class="files__body"
-            column>
+            column
+            justify-center
+            align-center>
                 <UploadPreview
                 v-for="(match, i) in matches"
                 :key="i"
                 :index="i"
                 v-bind="match"
                 :uploading="uploading"
-                @remove-file="$emit('remove', $event)" />
+                @remove-file="$emit('remove', $event)"
+                @set-youtube="$emit('set-youtube', $event)" />
             </v-layout>
             <!-- should we allow users to add comments to their uploads? -->
 
@@ -181,6 +184,7 @@ export default {
                 } else {
                     let match = {
                         fileName: fileName,
+                        fileUrl: null,
                         version: result.charCodeAt(146),
                         players: [{
                             name: playerNames[0],

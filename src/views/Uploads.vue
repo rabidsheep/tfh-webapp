@@ -197,6 +197,7 @@
                         :errors="errorList"
                         :uploadLimit="uploadLimit"
                         @remove="removeFile($event)"
+                        @set-youtube="addYoutubeLink($event.yt, $event.index)"
                         @update="updateFiles($event.match, $event.file)"
                         @show-errors="showErrors($event)"
                         @files-upload="filesUpload()" />
@@ -281,7 +282,7 @@ export default {
         return {
         uid: null,
         hidden: true,
-        step: 3,
+        step: 1,
         uploadType: 'youtube',
         errorList: initializeErrorList(),
         ...initializeData()
@@ -295,7 +296,7 @@ export default {
                 console.log('Signed in')
                 //console.log(user)
                 this.uid = user.uid
-                this.step = 3
+                this.step = 2
             } else {
                 console.log('Signed out')
             }
@@ -403,7 +404,19 @@ export default {
                     })
                 })
             }
-            
+        },
+        addYoutubeLink(ytObj, i) {
+            if (Object.keys(ytObj).length > 0) {
+                this.matches[i].yt = ytObj
+                this.matches[i].ytUrl = "https://youtu.be/watch?v=" + ytObj.id
+
+                if (ytObj.ts) {
+                    this.matches[i].ytUrl += '&t=' + ytObj.ts
+                }
+            } else {
+                 delete this.matches[i].yt
+                 delete this.matches[i].ytUrl
+            }
         },
         setErrors(i, fileName) {
             this.errorList[i].set = true

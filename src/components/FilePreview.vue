@@ -1,9 +1,7 @@
 <template>
-    <v-layout :justify-center="!$vuetify.breakpoint.xsOnly" row class="preview">
-        <v-layout
-        class="preview__name"
-        :align-center="!$vuetify.breakpoint.xsOnly"
-        row>
+    <v-row class="preview">
+        <v-row
+        class="header">
             <v-btn
             :ripple="false"
             class="remove"
@@ -16,18 +14,19 @@
                     mdi-close-thick
                 </v-icon>
             </v-btn>
+            
             <h4>
-                {{ index + 1 }}. {{ fileName }}
+                {{ index + 1 }}. {{ file.name }}
             </h4>
-        </v-layout>
+        </v-row>
 
-        <v-layout
-        class="preview__data"
-        row>
-            <v-layout
-            class="preview__match"
-            :column="$vuetify.breakpoint.xsOnly"
-            :row="!$vuetify.breakpoint.xsOnly">
+        <v-container 
+        class="data"
+        fill-height>
+            <v-col
+            class="players">
+                <v-row
+                class="players__data">
                     <v-layout
                     :class="`player p${i+1}`"
                     v-for="(player, i) in players"
@@ -37,7 +36,8 @@
                         :currentCharacter ="player.character"
                         :index = "i"
                         :selectionEnabled="false"
-                        @character-select="selectCharacter($event, i)"/>
+                        :anyEnabled="false"
+                        @character-select="$emit('update-character', { character: $event, pIndex: i })"/>
                                         
                         <v-text-field
                         v-model="player.name"
@@ -46,48 +46,57 @@
                         required
                         />
                     </v-layout>
-
-                    <div
+                    
+                    <v-layout
+                    align-center
+                    justify-center
                     class="vs"
                     v-if="!$vuetify.breakpoint.xsOnly">
                         vs.
-                    </div>
-            </v-layout>
+                    </v-layout>
+                </v-row>
+            </v-col>
 
-            <v-layout
-            class="yt"
-            row>
-                <v-text-field
-                v-model="userUrl"
-                
-                :error-messages="urlErrors"
-                @input="$v.url.$touch()"
-                class="link"
-                :dense="!$vuetify.breakpoint.xsOnly"
-                label="YouTube Link (Optional)"
-                prepend-icon="mdi-youtube" />
+            <v-col
+            class="youtube"
+            :cols="$vuetify.breakpoint.xsOnly ? 4 : 4 ">
+                    <v-row
+                    class="link">
+                            <v-text-field
+                            :dense="!$vuetify.breakpoint.xsOnly"
+                            v-model="userUrl"
+                            :error-messages="urlErrors"
+                            @input="$v.url.$touch()"
+                            @blur="$v.url.$touch()"
+                            label="YouTube Link (Optional)"
+                            prepend-icon="mdi-youtube" />
+                    </v-row>
 
-                <v-text-field
-                v-model="youtube.ts"
-                :disabled="!userUrl"
-                prepend-icon="mdi-timer-outline"
-                class="timestamp"
-                :dense="!$vuetify.breakpoint.xsOnly"
-                label="Timestamp"/>
-            </v-layout>
-        </v-layout>
-    </v-layout>
+                    <v-row
+                    class="timestamp">
+                            <v-text-field
+                            :dense="!$vuetify.breakpoint.xsOnly"
+                            v-model="youtube.ts"
+                            :disabled="!userUrl"
+                            prepend-icon="mdi-timer-outline"
+                            label="Timestamp"/>
+                    </v-row>
+            </v-col>
+        </v-container>
+    </v-row>
 </template>
 
 <script>
-import CharacterSelect from './CharacterSelect.vue';
+import CharacterSelect from './CharacterSelect.vue'
 import { url } from 'vuelidate/lib/validators'
 
 export default {
     components: { CharacterSelect },
-    name: 'UploadPreview',
+    name: 'FilePreview',
     props: {
-        fileName: String,
+        file: {
+            name: String,
+        },
         players: Array,
         version: Number,
         index: Number,
@@ -137,36 +146,10 @@ export default {
             return errors
         }
     },
-    watch: {
-        url: function() {
-            
-        }
-    },
     methods: {
         remove: function() {
             this.$emit('remove-file', this.index)
         },
-        urlCheck: () => {
-            const ytRe = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/
-            const idRe = /(?<=\?v=)[^#\&\?]*/
-            const timeRe = /(?<=t=)\d+m\d+s|\d+m|\d+s/
-            var yt = {}
-            console.log('1')
-            if (ytRe.test(this.userUrl)) {
-                console.log('2')
-                yt['id'] = this.userUrl.match(idRe)
-                
-                
-                if (timeRe.test(this.userUrl)) {
-                    console.log('3')
-                    yt['ts'] = this.userUrl.match(timeRe)
-                }
-
-                return true
-            } else {
-                return false
-            }
-        }
     }
 }
 </script>

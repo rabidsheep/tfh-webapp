@@ -31,18 +31,33 @@
         class="character-menu"
         v-if="selectionEnabled"
         width="210px">
-            <v-list-item
-            v-for="(character, id) in $characters"
-            :key="id"
-            @click="selectCharacter(character)">
-                <v-avatar
-                class="icon"
-                height="100%"
-                tile>
-                    <img :src="require(`../assets/img/sel/${character.id}.png`)">
-                </v-avatar>
-                {{ character.name }}
-            </v-list-item>
+            <template v-for="character in $characters">
+                <v-list-item
+                v-if="!anyEnabled && character.id > 0"
+                :key="character.id"
+                @click="selectCharacter(character)">
+                        <v-avatar
+                        class="icon"
+                        height="100%"
+                        tile>
+                            <img :src="require(`../assets/img/sel/${character.id}.png`)">
+                        </v-avatar>
+                        {{ character.name }}
+                </v-list-item>
+
+                <v-list-item
+                v-if="anyEnabled"
+                :key="character.id"
+                @click="selectCharacter(character)">
+                        <v-avatar
+                        class="icon"
+                        height="100%"
+                        tile>
+                            <img :src="require(`../assets/img/sel/${character.id}.png`)">
+                        </v-avatar>
+                        {{ character.name }}
+                </v-list-item>
+            </template>
         </v-list>
         <!-- /char select list -->
     </v-menu>
@@ -54,6 +69,8 @@ export default {
   props: {
     currentCharacter: [ Object, null ],
     selectionEnabled: Boolean,
+    index: Number,
+    anyEnabled: Boolean,
   },
   methods: {
         /* passes selected character up to parent */ 

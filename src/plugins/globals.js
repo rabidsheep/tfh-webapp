@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueResource from 'vue-resource'
 import config from './config'
 import firebase from 'firebase'
+import 'firebase/auth'
 
 Vue.prototype.$config = config;
 
@@ -21,6 +22,12 @@ let matchesMethods = {
 }
 let matchesRes = Vue.resource(`${uri}/matches/`, {}, matchesMethods)
 
+let filesMethods = {
+  save: { method: 'PUT' }
+}
+
+let filesRes = Vue.resource(`${uri}/files`, {}, filesMethods)
+
 let playerMethods = {
   get: { method: 'GET' },
 }
@@ -32,21 +39,22 @@ let usersMethods = {
 }
 let usersRes = Vue.resource(`${uri}/users/`, {}, usersMethods)
 
-let filesMethods = {
-  save: { method: 'PUT' },
+
+let youtubeMethods = {
+  get: { method: 'GET' }
 }
-let filesRes = Vue.resource(`${uri}/files/`, {}, filesMethods)
+let youtubeDataRes = Vue.resource(`${uri}/youtube-data/`, {}, youtubeMethods)
 
 Vue.prototype.$version = 2;
 Vue.prototype.$characters = [
-  {name: 'Any Character', devName: '', id: 0},
-  {name: 'Arizona', devName: 'Cow', id: 1},
-  {name: 'Oleander', devName: 'Uni', id: 2},
-  {name: 'Paprika', devName: 'Paca', id: 3},
-  {name: 'Pom', devName: 'Pom', id: 4},
-  {name: 'Shanty', devName: 'Shanty', id: 5},
-  {name: 'Tianhuo', devName: 'Tianhuo', id: 6},
-  {name: 'Velvet', devName: 'Velvet', id: 7}
+  {name: 'Any Character', devName: '', id: 0, names: ['Any Character', 'Any']},
+  {name: 'Arizona', devName: 'Cow', id: 1, names: ['Arizona', 'Ari', 'Cow']},
+  {name: 'Oleander', devName: 'Uni', id: 2, names: ['Oleander', 'Ole', 'Uni']},
+  {name: 'Paprika', devName: 'Paca', id: 3, names: ['Paprika', 'Pap', 'Paca']},
+  {name: 'Pom', devName: 'Pom', id: 4, names: ['Pom']},
+  {name: 'Shanty', devName: 'Shanty', id: 5, names: ['Shanty']},
+  {name: 'Tianhuo', devName: 'Tianhuo', id: 6, names: ['Tianhuo', 'Tian']},
+  {name: 'Velvet', devName: 'Velvet', id: 7, names: ['Velvet', 'Vel']}
 ]
 
 Vue.use({
@@ -61,6 +69,10 @@ Vue.use({
 
     Object.defineProperty(Vue.prototype, '$users', {
       get () { return usersRes }
+    })
+
+    Object.defineProperty(Vue.prototype, '$youtubeData', {
+      get () { return youtubeDataRes }
     })
 
     Object.defineProperty(Vue.prototype, '$files', {

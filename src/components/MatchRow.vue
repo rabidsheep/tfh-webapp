@@ -101,18 +101,38 @@
           <v-tooltip
           v-model="show"
           top
-          :disabled="this.$version === version"
+          :disabled="this.$version === version || !version"
           color="primary">
             <template v-slot:activator="{on, attrs}">
-                <a :href="fileUrl">
-                  <v-icon
-                  v-bind="attrs"
-                  v-on="on"
-                  large
-                  color="#171717">
-                    mdi-download
-                  </v-icon>
-                </a>
+                <template v-if="file">
+                  <a :href="file.url">
+                    <v-icon
+                    v-bind="attrs"
+                    v-on="on"
+                    large
+                    color="#171717">
+                      mdi-download
+                    </v-icon>
+                  </a>
+                </template>
+
+                <template v-else-if="!file">
+                  <div
+                  style="position: relative;">
+                    <v-icon
+                    large
+                    color="#5e5e5e">
+                      mdi-download
+                    </v-icon>
+
+                    <div
+                    class="yt-unavail">
+                      <v-icon>
+                        mdi-slash-forward
+                      </v-icon>
+                  </div>
+                  </div>
+                </template>
             </template>
 
             <div class="tooltip msg">
@@ -126,7 +146,7 @@
 
           <div
           style="position: relative;">
-            <template v-if="!ytUrl">
+            <template v-if="!video">
                 <v-icon
                 large
                 color="#5e5e5e">
@@ -134,7 +154,7 @@
                 </v-icon>
 
                 <div
-                v-if="!ytUrl"
+                v-if="!video"
                 class="yt-unavail">
                   <v-icon>
                     mdi-slash-forward
@@ -143,8 +163,8 @@
             </template>
 
             <a
-            v-else-if="ytUrl"
-            :href="ytUrl">
+            v-else-if="video.url"
+            :href="video.timestamp ? `${video.url}&t=${video.timestamp}` : `${video.url}`">
               <v-icon
               large
               color="#d52726">
@@ -174,8 +194,15 @@ export default {
     version: Number,
     timestamp: String,
     players: Array,
-    fileUrl: String,
-    ytUrl: String,
+    file: {
+      url: String,
+      name: String,
+    },
+    video: {
+      url: String,
+      timestamp: String,
+    },
+    uploaded: String,
   },
   data: () => {
     return {
@@ -188,8 +215,8 @@ export default {
  created() {
       /* convert timestamp to date and format it */
       /*var date = (this.timestamp).toDate();*/
-      this.uploadDate = moment(this.timestamp).format('MM/DD/YYYY');
-      this.uploadTime = moment(this.timestamp).utc().format('HH:mm:ss');
+      this.uploadDate = moment(this.uploaded).format('MM/DD/YYYY');
+      this.uploadTime = moment(this.uploaded).utc().format('HH:mm:ss');
   }
 }
 </script>

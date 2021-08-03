@@ -19,6 +19,7 @@
                         <CharacterSelect
                         :currentCharacter="playerInfo[i].character"
                         :selectionEnabled="true"
+                        :anyEnabled="true"
                         @character-select="selectCharacter($event, i)"/>
 
                         <v-combobox

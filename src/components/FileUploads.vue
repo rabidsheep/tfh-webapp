@@ -1,24 +1,26 @@
 <template>
     <v-form
-    id="files-form"
+    id="files"
     class="form"
     ref="form"
     v-model="valid">
         <v-layout
         column
-        class="files__wrapper">
+        class="wrapper">
             <v-layout
             v-if="matches.length > 0"
-            class="files__body"
+            class="body"
             column
             justify-center
             align-center>
-                <UploadPreview
+                <FilePreview
                 v-for="(match, i) in matches"
                 :key="i"
                 :index="i"
                 v-bind="match"
                 :uploading="uploading"
+                :uploadType="'files'"
+                @update-character="$emit('update-character', { event: $event, mIndex: i })"
                 @remove-file="$emit('remove', $event)"
                 @set-youtube="$emit('set-youtube', $event)" />
             </v-layout>
@@ -74,10 +76,10 @@
 </template>
 
 <script>
-import UploadPreview from '../components/UploadPreview.vue'
+import FilePreview from './FilePreview.vue'
 
 export default {
-    components: { UploadPreview },
+    components: { FilePreview },
     name: 'FileUploads',
     props: {
         errors: Array,
@@ -183,8 +185,10 @@ export default {
                     this.setErrors(1, fileName)
                 } else {
                     let match = {
-                        fileName: fileName,
-                        fileUrl: null,
+                        file: {
+                            url: null,
+                            name: fileName
+                        },
                         version: result.charCodeAt(146),
                         players: [{
                             name: playerNames[0],

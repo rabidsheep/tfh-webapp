@@ -45,7 +45,7 @@
                     </template>
 
                     <template v-if="finished">
-                        <v-icon>
+                        <!--<v-icon>
                             <template v-if="succeeded > 0">
                                 mdi-check-circle
                             </template>
@@ -53,18 +53,18 @@
                             <template v-else>
                                 mdi-close-circle
                             </template>
-                        </v-icon>
+                        </v-icon>-->
 
                         <h1>
-                            {{ succeeded > 0 ? 'Success!' : 'Upload Failed' }}
+                            Upload Finished
                         </h1>
 
                         <template v-if="succeeded > 0">
-                            Uploaded {{ succeeded }} out of {{ matches.length }} file(s).
+                            Uploaded {{ succeeded }} out of {{ matches.length }} match(es).
                         </template>
                         
                         <template v-if="failed > 0">
-                            {{ failed }} file(s) failed to upload.
+                            {{ failed }} match(es) failed to upload.
                         </template>
 
                         <v-btn
@@ -152,14 +152,14 @@
                             rounded
                             @click="setUploadType('files')">
                                 <v-icon left>mdi-file</v-icon>
-                                Upload by File
+                                TFHR File
                             </v-btn>
 
                             <v-btn
                             rounded
                             @click="setUploadType('youtube')">
                                 <v-icon left>mdi-youtube</v-icon>
-                                Upload by YouTube Video
+                                YouTube Link
                             </v-btn>
                         </v-layout>
                     </v-layout>
@@ -196,16 +196,21 @@
                         :files="files"
                         :errors="errorList"
                         :uploadLimit="uploadLimit"
+                        :uploadType="'files'"
                         @remove="removeFile($event)"
                         @set-youtube="addYoutubeLink($event.yt, $event.index)"
                         @update="updateFiles($event.match, $event.file)"
+                        @update-character="updateCharacter($event)"
                         @show-errors="showErrors($event)"
                         @files-upload="filesUpload()" />
 
                         <YoutubeUploads
                         v-else-if="uploadType === 'youtube'"
+                        :uploadType="'youtube'"
                         :matches="matches"
                         :errors="errorList"
+                        @update="updateMatches($event)"
+                        @update-character="updateCharacter($event)"
                         @yt-upload="youtubeUpload()" />
                     </v-layout>
                 </v-stepper-content>
@@ -284,13 +289,42 @@ export default {
         hidden: true,
         step: 1,
         uploadType: 'youtube',
+        authEmulator: null,
         errorList: initializeErrorList(),
         ...initializeData()
         }
     },
     mounted: function () {
         this.$firebase.auth().onAuthStateChanged((user) => {
-            this.loading = true;
+
+            if (!user) {
+                this.step = 1
+                return
+            }
+
+            /** can't authorize token right now for some reason
+            this.setAuthToken()
+            .then(() => this.$users.get({ uid: user.uid }))
+            .then((response) => {
+                let userData = response.body[0]
+                if (userData) {
+                    this.isAdmin = userData.admin
+                } else {
+                    let newUser = {
+                    uid: user.uid,
+                    email: user.email,
+                    admin: false
+                    }
+                    this.$users.save(newUser)
+                }
+
+                this.step = 2
+
+                this.loading = false
+            })
+            .catch((error) => {
+                console.log(error)
+            })*/
 
             if (user) {
                 console.log('Signed in')
@@ -306,31 +340,37 @@ export default {
     },
     methods: {
         signIn: function (providerName) {
-            this.loading = true
             this.$firebase.auth()
             .signInWithPopup(this.$providers[providerName])
             .then(() => {
-                /*var token = credential.accessToken
-                var user = result.user*/
                 this.loading = false
             })
             .catch((error) => {
-                /*var errorCode = error.code
-                var errorMsg = error.message
-                var email = error.email
-                var credential = error.credential*/
                 console.log(error)
                 this.loading = false
             })
         },
+        /*
+        setAuthToken: function () {
+            return this.$firebase.auth().currentUser.getIdToken()
+                .then((token) => {
+                return this.$httpInterceptors.push((request) => {
+                    request.headers.set('Authorization', token)
+                })
+            })
+        },*/
+        /** determines what upload form to use */
         setUploadType(type) {
             this.uploadType = type
             this.step = 3
         },
+        /** upload youtube-only object */
         youtubeUpload() {
             this.uploading = true
 
             for (let i = 0; i < this.matches.length; i++) {
+                this.matches[i].uploaded = new Date()
+
                 // upload match info to db
                 this.$matches
                 .save(this.matches[i])
@@ -347,13 +387,18 @@ export default {
                 })
             } 
         },
+        /** remove data from file upload objects */
         removeFile(i) {
             this.matches.splice(i, 1)
             this.files.splice(i, 1)
         },
+        /** add data to file uplod objects */
         updateFiles(match, file) {
             this.matches.push(match)
             this.files.push(file)
+        },
+        updateMatches(matches) {
+            this.matches = matches
         },
         /* first uploads file to storage and retrieves download url,
         then posts file info to database */
@@ -361,6 +406,26 @@ export default {
             this.uploading = true
 
             for (let i = 0; i < this.matches.length; i++) {
+                this.matches[i].file.url = '/';
+                this.matches[i].uploaded = new Date();
+
+                // upload match info to db
+                this.$matches
+                .save(this.matches[i])
+                .then((response) => {
+                    if (response.ok) {
+                        console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
+                        if (i === this.matches.length - 1) {
+                            this.uploading = false
+                            this.finished = true
+                        }
+                    } else {
+                        this.setErrors(3, this.files[i].name)
+                        this.showErrors(this.errorList)
+                    }
+                })
+                    
+                /*disable until i can figure out how to use storage emulator
                 const storageRef = firebase.storage()
                 .ref(`${this.files[i].name}`)
                 .put(this.files[i])
@@ -402,22 +467,22 @@ export default {
                             }
                         })
                     })
-                })
+                })*/
             }
         },
+        /** add youtube link to file upload objects */
         addYoutubeLink(ytObj, i) {
             if (Object.keys(ytObj).length > 0) {
-                this.matches[i].yt = ytObj
-                this.matches[i].ytUrl = "https://youtu.be/watch?v=" + ytObj.id
+                this.matches[i].video.url = "https://youtu.be/watch?v=" + ytObj.id
 
                 if (ytObj.ts) {
-                    this.matches[i].ytUrl += '&t=' + ytObj.ts
+                    this.matches[i].video.timestamp = ytObj.ts
                 }
             } else {
-                 delete this.matches[i].yt
-                 delete this.matches[i].ytUrl
+                 delete this.matches[i].video
             }
         },
+        /** set errors to display  */
         setErrors(i, fileName) {
             this.errorList[i].set = true
             if (!this.errorList[i].files.includes(fileName)) {
@@ -444,6 +509,13 @@ export default {
         clearForm() {
             this.finished = false
             Object.assign(this.$data, initializeData())
+        },
+        updateCharacter(e) {
+            let match = e.mIndex
+            let player = e.event.pIndex
+            let character = e.event.character
+
+            this.matches[match].players[player].character = character
         }
     }
 }

@@ -1,12 +1,20 @@
+
+
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
+const firebase = require('firebase')
 
 admin.initializeApp()
+firebase.initializeApp()
+
 
 const express = require('express')
 const cors = require('cors')({ origin: true })
 const api = express()
 api.use(cors)
+
+const youtubeKey = 'AIzaSyAj1s0aonNthdACc4Q30rdGUjhnqPv_MFw'
+const axios = require('axios')
 
 const MongoClient = require('mongodb').MongoClient
 const { response } = require('express')
@@ -17,7 +25,7 @@ const itemsPerPage = 5
 * API CALLS *
 ************/
 
-// retrieve match count and filter results
+/** retrieve match count and filter results */
 api.get('/matches', (req, res) => {
     let query = {
         'players.0.name': null,
@@ -50,7 +58,7 @@ api.get('/matches', (req, res) => {
                 /* get the matches that will display
                 based on current page position */
                 db
-                .sort({timestamp: -1})
+                .sort({uploaded: -1})
                 .skip(skip)
                 .limit(itemsPerPage)
                 .toArray((error, matches) => {
@@ -64,7 +72,7 @@ api.get('/matches', (req, res) => {
     })
 })
 
-// upload matches
+/** upload matches to db */
 api.put('/matches', (req, res) => {
     let players = [req.body.players[0].name, req.body.players[1].name]
 
@@ -82,7 +90,7 @@ api.put('/matches', (req, res) => {
                 
                 // adds new entries to player collection
                 for (i in players) {
-                    console.log('Updating player list...')
+                    console.log('Checking player list for', players[i])
 
                     db
                     .collection('players')
@@ -100,6 +108,7 @@ api.put('/matches', (req, res) => {
     })
 })
 
+/** get list of currently existing players in db */
 api.get('/players', (req, res) => {
     MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
         if (error) {
@@ -123,68 +132,82 @@ api.get('/players', (req, res) => {
     })
 })
 
+/** authorize & verify user
+ * verifyIdToken not currently working in dev environment???
+*/
 api.get('/users', (req, res) => {
-
- if (!req.headers.authorization) {
-    res.status(403).send('Unauthorized')
-  }
-
-  admin.auth().verifyIdToken(req.headers.authorization)
-  .then((token) => {
-      console.log(token)
-      return null
-  })
-  .catch((error) => {
-      console.log(error)
-  })
-
-})
-
-api.put('/users', (req, res) => {
-
-    console.log('putting')
-})
-
-/*api.put('/files', (req, res) => {
-    const uploads = req.body.uploads
-    for (let i = 0; i < uploads.length; i++) {
-        var data = uploads[i].uploadData
-        
-        storageName = `${data.uploaderId}_`
-        + `${data.players[0].character.name}_vs_${data.players[1].character.name}_`
-        + `${Date.now().toString()}.tfhr`
-        uploads[i].uploadData.storageName = storageName
-        console.log('Storage Name:', storageName)
-
-        const storageRef = admin.storage()
-        .ref(`${uploads[i].fileData.name}`)
-        .put(uploads[i].fileData)
-        
-        storageRef
-        .on(`state_changed`,
-            error => {
-                console.log(error.message)
-            },
-            () => {
-                storageRef.snapshot.ref
-                .getDownloadURL((url, error) => {
-                    if (error) throw error
-                    uploads[i].uploadData.fileUrl = url
-                    this
-                    .$matches
-                    .save(uploads[i].uploadData, (error) => {
-                        if (error) throw error
-                        console.log('Match saved')
-                    })
-            })
-            .catch((error) => {
-                response.status(400).send(error.toString())
-            })
-        })
+    //console.log(admin.auth())
+    if (!req.headers.authorization) {
+        res.status(403).send('Unauthorized')
     }
+    admin.auth().verifyIdToken(req.headers.authorization)
+    .then((token) => {
+        console.log(token)
+        return null
+    })
+    .catch((error) => {
+        console.log(error)
+    })
 
-    return res.status((200))
-})*/
+})
+
+/** save user info to user table in db */
+api.put('/users', (req, res) => {
+    // call to save user info to user table
+})
+
+/** retrieve youtube video info */
+api.get('/youtube-data', (req, res) => {
+    /*this breaks the function
+    need to implement id verification first
+    if (!req.headers.authorization) {
+      res.status(403).send('Unauthorized')
+    }*/
+
+    console.log(req.query)
+
+    let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.v}&key=${youtubeKey}`
+    return axios.get(url)
+      .then((youtube) => {
+        if (youtube.data.items.length > 0) {
+            console.log(youtube.data.items)
+            res.status(200).json({
+                id: req.query.v[0],
+                title: youtube.data.items[0].snippet.title,
+                date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
+                description: youtube.data.items[0].snippet.description,
+                channel: {
+                  id: youtube.data.items[0].snippet.channelId,
+                  name: youtube.data.items[0].snippet.channelTitle
+                }
+              })
+        }
+      })
+      .catch((error) => res.status(400).send(error.toString()))
+
+/*admin.auth().verifyIdToken(request.headers.authorization).then(() => {
+    let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${request.query.v}&key=${youtubeKey}`
+    return axios.get(url)
+      .then((youtube) => {
+        if (youtube.data.items.length > 0) {
+          response.status(200).json({
+            id: request.query.v,
+            title: youtube.data.items[0].snippet.title,
+            date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
+            description: youtube.data.items[0].snippet.description,
+            channel: {
+              id: youtube.data.items[0].snippet.channelId,
+              name: youtube.data.items[0].snippet.channelTitle
+            }
+          })
+        } else {
+          response.status(400).send('Invalid video')
+        }
+      })
+      .catch((error) => response.status(400).send(error.toString()))
+  }).catch((error) => response.status(400).send(error.toString()))*/
+})
+
 
 exports.api = functions.https.onRequest(api)
 

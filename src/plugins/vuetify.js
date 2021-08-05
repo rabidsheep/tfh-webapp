@@ -11,11 +11,12 @@ export default new Vuetify({
     },
     breakpoint: {
       thresholds: {
-        xs: 720,
-        sm: 860,
+        xs: 350,
+        sm: 800,
         md: 960,
         lg: 1280,
       },
+      mobileBreakpoint: 740,
     },
     theme: {
       dark: true,

@@ -1,24 +1,22 @@
-
-
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
-const firebase = require('firebase')
-
 admin.initializeApp()
-firebase.initializeApp()
-
 
 const express = require('express')
 const cors = require('cors')({ origin: true })
+const MongoClient = require('mongodb').MongoClient
+const axios = require('axios')
 const api = express()
 api.use(cors)
 
-const youtubeKey = 'AIzaSyAj1s0aonNthdACc4Q30rdGUjhnqPv_MFw'
-const axios = require('axios')
-
-const MongoClient = require('mongodb').MongoClient
-const { response } = require('express')
-const url = 'mongodb://127.0.0.1:27017/'
+/** you need to set up .runtimeconfig.json to use functions.config()
+ * from root folder:
+ * 1. cd functions
+ * 2. firebase functions:config:get > .runtimeconfig.json
+ * 3. add respective keys to .runtimeconfig.json
+ */
+const url = functions.config().mongodb
+const youtubeKey = functions.config().youtube.key
 const itemsPerPage = 5
 
 /************
@@ -83,6 +81,8 @@ api.put('/matches', (req, res) => {
             console.log('Connected.\nUploading match...')
             let db = client.db('tfhr')
 
+            if (error) throw error
+
             db
             .collection('matches')
             .insertOne(req.body, (error, result) => {
@@ -106,6 +106,7 @@ api.put('/matches', (req, res) => {
             })
         }
     })
+
 })
 
 /** get list of currently existing players in db */
@@ -152,9 +153,9 @@ api.get('/users', (req, res) => {
 })
 
 /** save user info to user table in db */
-api.put('/users', (req, res) => {
+/*api.put('/users', (req, res) => {
     // call to save user info to user table
-})
+})*/
 
 /** retrieve youtube video info */
 api.get('/youtube-data', (req, res) => {
@@ -164,13 +165,11 @@ api.get('/youtube-data', (req, res) => {
       res.status(403).send('Unauthorized')
     }*/
 
-    console.log(req.query)
-
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.v}&key=${youtubeKey}`
     return axios.get(url)
-      .then((youtube) => {
+    .then((youtube) => {
+
         if (youtube.data.items.length > 0) {
-            console.log(youtube.data.items)
             res.status(200).json({
                 id: req.query.v[0],
                 title: youtube.data.items[0].snippet.title,
@@ -182,6 +181,8 @@ api.get('/youtube-data', (req, res) => {
                 }
               })
         }
+
+        return res
       })
       .catch((error) => res.status(400).send(error.toString()))
 

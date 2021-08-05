@@ -1,6 +1,5 @@
 /** main html stuff **/
 #app {
-    overflow: auto;
 }
 
 #app .v-application--wrap {
@@ -33,10 +32,6 @@ img.logo {
 /* display width */
 #router-view.small {
     width: 80%;
-}
-
-#router-view.xs {
-    width: 90%;
 }
   
 
@@ -129,12 +124,8 @@ img.logo {
 /* matches.vue */
 
 /* general */
-#matches > .row:not(:last-child) {
+#matches > .match:not(:last-child) {
     border-bottom: 2px solid;
-}
-
-#matches > .row {
-    padding: 0px 10px;
 }
 
 /*#matches > .row:nth-child(2n - 1) {
@@ -143,161 +134,217 @@ img.logo {
 
 /** matchrow.vue **/
 
-/* general */
 .match {
-    flex-wrap: nowrap;
-    height: auto;
-    width: 100%;
-    padding: 5px 0px;
+    padding: 10px 0px;
 }
 
-.match .player__name {
-    overflow: clip;
-    text-overflow: ellipsis;
+.match .col {
+    padding: 0px;
+}
+
+.match .unique .edit .v-icon {
+    margin-top: -2px;
+    padding-right: 5px;
 }
 
 .match .p1 {
     order: 1;
 }
-  
+
 .match .p2 {
     order: 3;
 }
 
 .match .vs {
-    display: flex;
-    align-items: center;
-    width: 20%;
-    justify-content: center;
     order: 2;
+    display: flex;
+    justify-content: center;
+    margin: 0px 10px;
 }
 
-.match .links .mdi::before,
-.match .links .mdi::after {
-    font-size: 46px;
+.match .character-icon {
+    width: 45px;
 }
 
-.match .links a {
-    text-decoration: none;
-    color: inherit;
-}
-  
-.match .cutoff {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.wide .match .links .link {
+    max-width: min-content;
 }
 
-.match .yt-unavail {
+.match .player {
+    display: flex;
+    align-content: center;
+}
+
+.match .player .name {
+    margin: 0px;
+    height: min-content;
+    flex-wrap: nowrap;
+}
+
+.match .links > .row {
+    justify-content: space-between;
+    align-content: space-between;
+}
+
+.match .slash {
     position: absolute;
-    top: 2px;
-}
-
-.match .yt-unavail .mdi::before,
-.match .yt-unavail .mdi::after {
+    top: -1px;
     -webkit-transform: rotateZ(118deg);
     transform: rotateZ(118deg) scaleY(1.4);
     text-shadow: -2px 0px #3a3939;
-    color: #5e5e5e;
 }
 
-.match .links.column {
-    justify-content: space-evenly;
+.match .links .v-icon {
+    color: #d52726;
 }
 
-.match .links .v-btn__content {
-    width: max-content;
+.match .links .disabled .v-icon {
+    color: #5e5e5e
 }
 
-.match .tooltip.msg {
-    text-align: center;
+.match .players .player,
+.match .players .vs {
+    align-items: center;
 }
 
 /* desktop */
-.wide .match {
-    width: 100%;
-    padding: 10px 0px;
-}
-
 .wide .match .unique {
-    width: 1%;
-}
-
-.wide .match .unique .timestamp {
     text-align: center;
 }
 
-
-.wide .match .general {
-    width: 60%;
-}
-
 .wide .match .players {
-    width: 35%;
-    padding: 0 5px;
+    width: 50%;
 }
 
-.wide .match .player {
-    min-width: 100px;
-    width: 80%;
+.wide .match .p1 {
+    text-align: right;
+    justify-content: flex-end;
 }
 
-.wide .match .vs {
-    width: 5%;
-    padding: 0px 30px;
+.wide .match .p1 .character-icon {
+    order: 2;
 }
 
-.wide .match .player__name {
-    max-width: 150px;
-    overflow: hidden;
+.wide .match .p1 .character-icon {
+    margin-left: 15px;
+}
+
+.wide .match .p2 .character-icon {
+    margin-right: 15px;
+}
+
+.wide .match .players .name {
+    word-break: break-all;
+    overflow: clip;
     text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.wide .match .links {
-    justify-content: space-between;
-    width: 1%;
-    padding-left: 10px;
-
-}
-
-.wide .match .links .v-btn {
-    justify-content: center;
-    height: 100%;
-    
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 /* mobile */
+.small .match {
+}
+
 .small .match .unique {
-    flex-wrap: nowrap;
-    flex: 100%;
-}
-
-.small .match .unique .column {
-    flex: 0 1 auto;
-    justify-content: center;
-}
-
-.small .match .unique .v-icon::before,
-.small .match .unique .v-icon::after {
-    font-size: 24px;
-}
-
-.small .players {
-    justify-content: space-evenly;
-}
-
-.small .player__name {
     width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space:nowrap;
+    border-bottom: 1px dashed grey;
+    padding-bottom: 10px;
+    min-width: max-content;
+    flex-wrap: nowrap;
+    min-width: 100%;
+    overflow: clip;
+    
 }
 
+.small .match .date,
+.small .match .time {
+    margin-top: 2px;
+}
+
+.small .match .time {
+    white-space: nowrap;
+    overflow: clip;
+    text-overflow: ellipsis;
+    line-height: 1;
+    min-width: 1%;
+}
+
+.small .match .players {
+    width: 80%;
+}
 
 .small .match .links {
-    justify-content: space-evenly;
-    flex: 0 auto;
+    width: 20%;
+}
+
+.small .match {
+    justify-content: space-between;
+}
+
+.small .match .character-icon {
+    margin-right: 15px;
+}
+
+.small .match .edit {
+    max-height: 24px;
+}
+
+.small .match .divider {
+    display: inline-block;
+}
+
+
+.small .match .player,
+.small .match .link {
+    padding-top: 10px;
+}
+
+.small .match .player .character {
+    padding-right: 10px;
+}
+
+.small .match .link > *,
+.small .match .player {
+    min-height: 52px;
+}
+
+.small .match .players > .row {
+    max-width: 100%;
+}
+
+.small .match .player {
+    max-width: 80%;
+}
+
+.small .match .name {
+    overflow: clip;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    word-break: break-all;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+
+.small .match .link .btn > * {
+    align-self: center;
+}
+
+.small .match .link .btn {
+    display: flex;
+}
+
+.small .match .links {
+    max-width: max-content;
+}
+
+.small .match .links > .row {
+    max-width: min-content; 
+}
+
+.small .match .links > .row > .link {
+    max-width: max-content;
 }
 
 /** uploadform.vue **/
@@ -305,6 +352,10 @@ img.logo {
 /* general */
 #uploads {
     width: 100%;
+}
+
+#uploads h1 {
+    text-align: center;
 }
 
 #uploads .v-stepper__content {
@@ -328,9 +379,6 @@ img.logo {
     border-bottom: 1px solid white;
 }
 
-#uploads .preview:not(:first-child) {
-    
-}
 
 #uploads .preview {
     width: 100%;
@@ -403,6 +451,10 @@ img.logo {
 
 #uploads .preview__match {
     flex-wrap: nowrap;
+}
+
+#uploads #files .body .preview:not(:first-child) {
+    padding-top: 15px;
 }
 
 /** youtubeuploads.vue **/

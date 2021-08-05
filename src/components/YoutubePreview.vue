@@ -2,14 +2,14 @@
     <v-row class="preview">
         <v-col
         class="players"
-        :cols="!$vuetify.breakpoint.xsOnly ? 10 : 8">
+        :cols="!$vuetify.breakpoint.smAndDown ? 10 : 8">
             <v-row
             align-self="center">
                 <v-layout
                 :class="`player p${i+1}`"
                 v-for="(player, i) in players"
                 :key="i"
-                :reverse="i === 0 && !$vuetify.breakpoint.xsOnly">
+                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
                     <CharacterSelect
                     :currentCharacter ="player.character"
                     :index = "i"
@@ -20,7 +20,7 @@
                     <v-text-field
                     v-model="player.name"
                     :label="`Player ${i + 1}`"
-                    :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"
+                    :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
                     required
                     />
                 </v-layout>
@@ -29,7 +29,7 @@
                 align-center
                 justify-center
                 class="vs"
-                v-if="!$vuetify.breakpoint.xsOnly">
+                v-if="!$vuetify.breakpoint.smAndDown">
                     vs.
                 </v-layout>
             </v-row>
@@ -47,7 +47,6 @@
 
 <script>
 import CharacterSelect from './CharacterSelect.vue'
-// youtube test video url: https://www.youtube.com/watch?v=uciAaVk3xaE
 
 export default {
     components: { CharacterSelect },

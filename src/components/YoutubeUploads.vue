@@ -114,6 +114,7 @@
 import YoutubePreview from './YoutubePreview.vue'
 import { required, url, helpers } from 'vuelidate/lib/validators'
 const youtubeUrl = helpers.regex('youtubeUrl', /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/)
+// youtube test video url: https://www.youtube.com/watch?v=uciAaVk3xaE
 
 export default {
     components: { YoutubePreview },

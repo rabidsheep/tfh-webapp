@@ -8,13 +8,13 @@
 
         <v-expand-transition>
             <div id="filters__main" v-show="!hidden">
-                <v-layout players :column="$vuetify.breakpoint.xsOnly">
+                <v-layout players :column="$vuetify.breakpoint.smAndDown">
                     <!-- player filters -->
                     <v-layout
                     :class="`player p${i + 1}`"
                     v-for="(player, i) in playerInfo"
                     :key="i"
-                    :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"> 
+                    :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"> 
 
                         <CharacterSelect
                         :currentCharacter="playerInfo[i].character"
@@ -35,7 +35,7 @@
                         :label="`Player ${i + 1}`"
                         :items="players"
                         :search-input.sync="search[i]"
-                        :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"
+                        :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
                         @change = "selectPlayer(playerInfo[i].name, i)">
                             <template v-slot:no-data>
                                 <v-list-item>

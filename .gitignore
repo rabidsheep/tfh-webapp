@@ -3,7 +3,8 @@ node_modules
 /dist
 /old
 /src/serviceAccountKey.json
-
+.env.*
+/functions/.runtimeconfig.json
 
 # local env files
 .env.local

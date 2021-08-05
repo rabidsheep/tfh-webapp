@@ -1,6 +1,4 @@
 import firebase from 'firebase'
-import 'firebase/firestore'
-import 'firebase/auth'
 
 const configs = {
     apiKey: "AIzaSyDTFNrPqlFJ4M4b5S-PTB-l5Nbo4M8CLTk",
@@ -12,15 +10,7 @@ const configs = {
     appId: "1:456057828264:web:dc5cc67f2c0807df29639d"
   }
 
-firebase.initializeApp(configs);
+firebase.initializeApp(configs)
+const itemsPerPage = 5
 
-const itemsPerPage = 5;
-const db = firebase.firestore();
-const auth = firebase.auth();
-const matches = db.collection('matches');
-
-export default {
-  itemsPerPage,
-  db,
-  auth,
-  matches }
+export default { itemsPerPage }

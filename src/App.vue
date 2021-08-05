@@ -5,7 +5,7 @@
           <Topbar
           @force-rerender="componentKey = forceRerender()"/>
           <div id="router-view"
-          :class="$vuetify.breakpoint.xsOnly ? 'small' : 'wide'">
+          :class="$vuetify.breakpoint.smAndDown ? 'small' : 'wide'">
             <router-view :key="componentKey" />
           </div>
       </v-layout>
@@ -49,10 +49,5 @@ export default {
 ::v-deep .v-menu__content.player-select-menu {
   max-width: 0% !important;
 }
-
-::v-deep .v-application--wrap {
-    max-width: inherit !important;
-  }
-
 
 </style>

@@ -13,11 +13,17 @@
       id="matches"
       column
       v-if="!loading">
+      <template v-if="matches.length > 0">
         <MatchRow
           v-for="(match, i) in matches"
           :key="i"
           v-bind="match"
         />
+      </template>
+
+      <template v-else>
+      <v-layout align-center justify-center>No matches found!</v-layout>
+      </template>
       </v-layout>
 
     <!-- pagination -->

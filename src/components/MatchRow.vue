@@ -1,188 +1,159 @@
 <template>
-  <v-row>
-    <v-layout
-    match
-    :align-center="!$vuetify.breakpoint.xsOnly"
-    :align-content-center="!$vuetify.breakpoint.xsOnly"
-    :row="$vuetify.breakpoint.xsOnly">
-      <v-layout
-      unique
-      :row="$vuetify.breakpoint.xsOnly">
-        <v-layout
-        column
-        uploadId
-        :justify-center="!$vuetify.breakpoint.xsOnly">
-          <template v-if="$vuetify.breakpoint.xsOnly">
-            <span><b>ID</b>: {{ id }}</span>
-          </template>
+    <v-row class="match" align="center">
+      <v-layout unique row align-center>
+        <v-icon
+        :size="$vuetify.breakpoint.smAndDown ? '22px' : '32px'"
+        color="primary">
+          mdi-square-edit-outline
+        </v-icon>
 
-          <template v-else-if="!$vuetify.breakpoint.xsOnly">
-            {{ id }}
-          </template>
-        </v-layout>
-        
-        <v-layout
-        column
-        v-if="$vuetify.breakpoint.xsOnly"
-        style="margin: auto 10px;">
-          ||
-        </v-layout>
+        <div
+        v-show="$vuetify.breakpoint.smAndDown"
+        :class="$vuetify.breakpoint.smAndDown ? `divider mr-2 ml-2` : `divider`">
+        ||
+        </div>
 
-        <!-- timestamp -->
-        <v-layout
-        column
-        timestamp
-        :justify-center="!$vuetify.breakpoint.xsOnly">
-            {{ uploadDate }}
-        </v-layout>
-        <!-- /timestamp -->
-        
-        <a
-        v-if="$vuetify.breakpoint.xsOnly"
-        href="/">
-          <v-icon
-          large
-          color="#171717">
-            mdi-square-edit-outline
-          </v-icon>
-        </a>
+        <div
+        :class="$vuetify.breakpoint.smAndDown ? `date` : `date mr-3 ml-3`">
+          {{ uploadDate }}
+        </div>
+
+
+        <div
+        v-show="$vuetify.breakpoint.smAndDown"
+        :class="$vuetify.breakpoint.smAndDown ? `divider mr-2 ml-2` : `divider`">
+          @
+        </div>
+
+        <div
+        :class="$vuetify.breakpoint.smAndDown ? `time` : `time mr-3`">
+          {{ uploadTime }} UTC
+        </div>
       </v-layout>
 
-        <v-layout general>
-        <!-- players -->
-        <v-layout
-        players
-        :column="$vuetify.breakpoint.xsOnly"
-        :align-center="!$vuetify.breakpoint.xsOnly">
-          <div
+      <v-layout players>
+        <v-row>
+          <v-col
+          :cols="$vuetify.breakpoint.smAndDown ? 12 : 5"
           :class="`player p${i+1}`"
           v-for="(player, i) in players"
-          :key=i
-          :style="$vuetify.breakpoint.xsOnly ? `margin-bottom: 10px;` : ``">
-            <v-layout
-            content
-            align-center
-            :reverse="i === 0 && $vuetify.breakpoint.smAndUp">
-              <div
-              class="player__icon icon">
-                  <v-avatar
-                  tile
-                  height="100%"
-                  >
-                  <!--:class="$vuetify.breakpoint.smAndUp ? `mr-5 ml-5` : `mr-5`"-->
-                    <img
-                    :src="require(`../assets/img/sel/${player.character.id}.png`)"
-                    :alt="`player.character.name`"
-                    :title="`player.character.name`" />
-                  </v-avatar>
-              </div>
+          :key="i">
+            <img
+            class="character-icon"
+            :src="require(`../assets/img/sel/${player.character.id}.png`)"
+            :alt="`player.character.name`"
+            :title="`player.character.name`" />
+            <p class="name">{{ player.name }}</p>
+          </v-col>
 
-              <div
-              class="player__name">
-                {{ player.name }}
-              </div>
-            </v-layout>
-          </div>
-
-          <div
-          class="vs"
-          v-if="$vuetify.breakpoint.smAndUp">
-            vs.
-          </div>
-        </v-layout>
-        <!-- /players -->
-
-        <!-- links -->
-        <v-layout
-        links
-        :column="$vuetify.breakpoint.xsOnly"
-        align-center>
-          <!-- display tooltip if replay is not compatible with current patch -->
-          <v-tooltip
-          v-model="show"
-          top
-          :disabled="this.$version === version || !version"
-          color="primary">
-            <template v-slot:activator="{on, attrs}">
-                <template v-if="file">
-                  <a :href="file.url">
-                    <v-icon
-                    v-bind="attrs"
-                    v-on="on"
-                    large
-                    color="#171717">
-                      mdi-download
-                    </v-icon>
-                  </a>
-                </template>
-
-                <template v-else-if="!file">
-                  <div
-                  style="position: relative;">
-                    <v-icon
-                    large
-                    color="#5e5e5e">
-                      mdi-download
-                    </v-icon>
-
-                    <div
-                    class="yt-unavail">
-                      <v-icon>
-                        mdi-slash-forward
-                      </v-icon>
-                  </div>
-                  </div>
-                </template>
-            </template>
-
-            <div class="tooltip msg">
-              <strong>WARNING</strong>
-              <br />
-              This file contains an outdated replay version stamp.
-              <br />
-              It may no longer be compatible with the in-game replay system.
-            </div>
-          </v-tooltip>
-
-          <div
-          style="position: relative;">
-            <template v-if="!video">
-                <v-icon
-                large
-                color="#5e5e5e">
-                  mdi-youtube
-                </v-icon>
-
-                <div
-                v-if="!video"
-                class="yt-unavail">
-                  <v-icon>
-                    mdi-slash-forward
-                  </v-icon>
-                </div>
-            </template>
-
-            <a
-            v-else-if="video.url"
-            :href="video.timestamp ? `${video.url}&t=${video.timestamp}` : `${video.url}`">
-              <v-icon
-              large
-              color="#d52726">
-                mdi-youtube
-              </v-icon>
-            </a>
-          </div>
-
-          <a v-if="!$vuetify.breakpoint.xsOnly" href="/">
-            <v-icon large color="#171717">
-              mdi-square-edit-outline
-            </v-icon>
-          </a>
-        </v-layout>
-      <!-- /links -->
+          <v-col
+          :cols="1"
+          v-show="!$vuetify.breakpoint.smAndDown"
+          class="vs">
+          vs
+          </v-col>
+        </v-row>
       </v-layout>
-    </v-layout>
-  </v-row>
+
+      <v-layout
+      links>
+        <v-row>
+          <v-col
+          :cols="$vuetify.breakpoint.smAndDown? 12 : undefined"
+          :class="i === 1 ? 'file link' : 'video link'"
+          v-for="i in 2"
+          :key="i">
+            <template v-if="i === 1">
+              <v-tooltip
+              v-model="show"
+              top
+              :disabled="!version || $version === version"
+              color="primary">
+                <template v-slot:activator="{on, attrs}">
+                  <div
+                  :class="file ? 'btn' : 'btn disabled'"
+                  style="position: relative;">
+                    <template v-if="file">
+                      <a :href="file.url">
+                        <v-icon
+                        v-bind="attrs"
+                        v-on="on"
+                        x-large
+                        color="#171717">
+                          mdi-download
+                        </v-icon>
+                      </a>
+                    </template>
+
+                    <template v-else-if="!file">
+                      <v-icon
+                      class="base"
+                      x-large>
+                        mdi-download
+                      </v-icon>
+
+                      <div
+                      class="slash">
+                        <v-icon
+                        x-large>
+                          mdi-slash-forward
+                        </v-icon>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <div class="tooltip msg">
+                  <center>
+                    <strong>WARNING</strong>
+                    <br />
+                    This file contains an outdated replay version stamp.
+                    <br />
+                    It may no longer be compatible with the in-game replay system.
+                  </center>
+                </div>
+              </v-tooltip>
+            </template>
+
+            <template v-else>
+              <div
+              :class="video ? 'btn' : 'btn disabled'">
+              <div style="position: relative;">
+                <template v-if="!video">
+                  <v-icon
+                  class="base"
+                  x-large>
+                    mdi-youtube
+                  </v-icon>
+
+                  <div
+                  v-if="!video"
+                  class="slash">
+                    <v-icon
+                    x-large>
+                      mdi-slash-forward
+                    </v-icon>
+                  </div>
+                </template>
+
+                <a
+                v-else-if="video.url"
+                :href="video.timestamp ?
+                `${video.url}&t=${video.timestamp}` :
+                `${video.url}`">
+                  <v-icon
+                  class="base"
+                  x-large>
+                    mdi-youtube
+                  </v-icon>
+                </a>
+                </div>
+              </div>
+            </template>
+          </v-col>
+        </v-row>
+      </v-layout>
+    </v-row>
 </template>
 
 <script>
@@ -206,7 +177,6 @@ export default {
   },
   data: () => {
     return {
-      id: '0001',
       show: false,
       uploadDate: null,
       uploadTime: null,
@@ -220,9 +190,3 @@ export default {
   }
 }
 </script>
-
-<style scoped lang="scss">
-.theme--dark .match .v-btn.v-btn--disabled .v-icon {
-  color: #5e5e5e !important;
-}
-</style>

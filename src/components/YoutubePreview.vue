@@ -1,5 +1,22 @@
 <template>
     <v-row class="preview">
+
+        <v-col
+        class="remove__wrapper">
+            <v-btn
+            :ripple="false"
+            class="remove"
+            fab
+            height="25px"
+            width="25px"
+            @click="remove()"
+            color="primary">
+                <v-icon size="15px">
+                    mdi-close-thick
+                </v-icon>
+            </v-btn>
+        </v-col>
+
         <v-col
         class="players"
         :cols="!$vuetify.breakpoint.smAndDown ? 10 : 8">
@@ -19,6 +36,7 @@
                                     
                     <v-text-field
                     v-model="player.name"
+                    :rules="rules.name"
                     :label="`Player ${i + 1}`"
                     :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
                     required
@@ -40,7 +58,9 @@
         >
             <v-text-field
             v-model="video.timestamp"
-            label="Timestamp" />
+            :rules="!timestampRequired ? rules.timestamp.req : rules.timestamp.noReq"
+            label="Timestamp"
+            :required="timestampRequired" />
         </v-col>
     </v-row>
 </template>
@@ -60,7 +80,8 @@ export default {
         video: {
             timestamp: String,
             url: String,
-        }
+        },
+        timestampRequired: Boolean,
     },
     data: () => {
         return {
@@ -71,6 +92,20 @@ export default {
             },
             hidden: true,
             valid: false,
+            rules: {
+                name: [
+                    v => !!v || 'Required'
+                ],
+                timestamp: {
+                    req: [
+                        v => !!v || 'Required',
+                        v => /\d+h\d+m\d+s|\d+h|\d+m|\d+s/.test(v) || 'Invalid format'
+                    ],
+                    noReq: [
+                        v => !v || /\d+h\d+m\d+s|\d+h|\d+m|\d+s/.test(v) || 'Invalid format'
+                    ]
+                },
+            }
         }
     },
     methods: {
@@ -84,14 +119,6 @@ export default {
 <style scoped>
 .upload .player >>> .v-input__slot::before {
     width: calc(100% - 1px);
-}
-
-.upload__data {
-    flex-wrap: nowrap;
-}
-
-.wide .upload__match {
-    flex-wrap: nowrap;
 }
 
 .wide .p1 >>> .v-input__append-inner {

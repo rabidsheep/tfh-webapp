@@ -26,21 +26,26 @@
                     required
                     />
 
-                    <v-btn
+                    <!--<v-btn
                     rounded
                     :ripple="false"
                     color = "primary"
                     :disabled="$v.url.$invalid"
                     @click="validateYoutubeID()">
                         Go
-                    </v-btn>
+                    </v-btn>-->
                 </v-row>
 
                 <v-progress-circular
                     indeterminate
                     v-if="loading" />
+                
+                <template v-if="invalidId">
+                    No video found under ID '{{ youtube.id[0] }}'
+                </template>
 
                 <v-layout
+                v-if="Object.keys(video).length"
                 column
                 justify-center
                 align-center
@@ -55,7 +60,7 @@
                             v-model="video.title" />
 
                             <v-text-field
-                            class="upload"
+                            class="date"
                             readonly
                             disabled
                             label="Date Uploaded"
@@ -65,8 +70,6 @@
                         <v-textarea
                         class="desc"
                         width="85%"
-                        readonly
-                        disabled
                         label="Description"
                         v-model="video.description" />
 
@@ -80,16 +83,29 @@
                     </template>
                 </v-layout>
 
-                <template v-if="matches.length > 0">
+                <template v-if="matches.length > 0 && !$v.url.$invalid && parsed">
                         <YoutubePreview
                         v-for="(match, i) in matches"
                         :key="i"
                         :index="i"
                         v-bind="match"
                         :uploadType="'youtube'"
+                        :timestampRequired="matches.length > 1 ? false : true"
                         @remove-file="$emit('remove', $event)"
                         @update-character="$emit('update-character', { event: $event, mIndex: i })" />
                 </template>
+
+                <template v-if="matches.length <= 0 && !$v.url.$invalid && parsed">
+                    <center><br />No matches found!<br /></center>
+                </template>
+
+                <v-btn
+                v-show="parsed"
+                :disabled="matches.length > 16"
+                @click="addBlankMatch()"
+                plain>
+                    <v-icon left>mdi-plus-thick</v-icon> Add Match
+                </v-btn>
             </v-layout>
 
             <v-layout
@@ -141,6 +157,9 @@ export default {
             hidden: true,
             valid: false,
             validUrl: false,
+            matchesFound: false,
+            parsed: false,
+            invalidId: false,
         }
     },
     validations: {
@@ -154,23 +173,30 @@ export default {
         urlErrors() {
             const errors = []
             
+            this.video = {}
+            this.youtube = {}
+            this.parsed = false
+            this.invalidId = false
+            
             if (!this.$v.url.$dirty) return errors 
             !this.url && errors.push('Required')
             !this.$v.url.url && errors.push('Must be valid URL')
-
-            var yt = {}
-
-            if (!this.$v.url.$invalid) {
-                yt['id'] = this.url.match(this.re.id)
+            
+            if (this.url.match(this.re.id)[0].length !== 11) {
+                errors.push ('Video ID must be 11 characters')
+            } else if (!this.$v.url.$invalid) {
+                this.youtube['id'] = this.url.match(this.re.id)
                 
                 if (this.re.ts.test(this.url)) {
-                    yt['ts'] = this.url.match(this.re.ts)
+                    this.youtube['ts'] = this.url.match(this.re.ts)
                 }
+
+                this.validateYoutubeID()
+
             } else {
                 errors.push('Invalid URL format')
             }
 
-            this.youtube = yt
             this.$emit('set-youtube', { yt: this.youtube, index: this.index })
 
             return errors
@@ -179,6 +205,7 @@ export default {
     methods: {
         validateYoutubeID: function () {
             this.loading = true
+            
             this.video = {}
 
             this.$youtubeData.get({ v: this.youtube.id })
@@ -187,14 +214,13 @@ export default {
                 this.error = false
                 if (response.ok) {
                         this.video = response.body
-                        console.log(JSON.parse(JSON.stringify(this.video)))
                 }
-             })
-            /*.catch((response) => {
-                this.step = 2
+            })
+            .catch(() => {
+                this.invalidId = true
                 this.loading = false
-                this.displayError(`${response.bodyText} (${this.link})`)
-            })*/
+
+            })
         },
         parseVideoDescription(desc) {
             let matches = []
@@ -245,7 +271,17 @@ export default {
             console.log(JSON.parse(JSON.stringify(matches)))
             this.$emit('update', matches)
 
+            this.parsed = true
+
             this.showSubmit = true
+        },
+        addBlankMatch() {
+            console.log(this.video)
+            this.matches.push({
+                players: [{}, {}],
+                index: this.matches.length,
+                video: this.video})
+            console.log(JSON.parse(JSON.stringify(this.matches)))
         },
         submitMatches() {
             this.$emit('yt-upload', this.matches)

@@ -15,9 +15,18 @@ api.use(cors)
  * 2. firebase functions:config:get > .runtimeconfig.json
  * 3. add respective keys to .runtimeconfig.json
  */
-const url = functions.config().mongodb
+
+var url = null
+
+if (process.env.FUNCTIONS_EMULATOR === 'true') {
+    url = functions.config().dev.mongodb
+} else {
+    url = functions.config().prod.mongodb
+}
+
 const youtubeKey = functions.config().youtube.key
 const itemsPerPage = 5
+
 
 /************
 * API CALLS *
@@ -31,8 +40,11 @@ api.get('/matches', (req, res) => {
         'players.1.name': null,
         'players.1.character.name': null
     }
+
     let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
+
     console.log(req.query)
+
     if (req.query.filters) {
         query = formatQuery(query, req.query.filters)
     }
@@ -56,7 +68,7 @@ api.get('/matches', (req, res) => {
                 /* get the matches that will display
                 based on current page position */
                 db
-                .sort({uploaded: -1})
+                .sort({uploadDate: -1, uploadTime: -1})
                 .skip(skip)
                 .limit(itemsPerPage)
                 .toArray((error, matches) => {
@@ -72,20 +84,25 @@ api.get('/matches', (req, res) => {
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
-    let players = [req.body.players[0].name, req.body.players[1].name]
+    let match = req.body
+    let players = [match.players[0].name, match.players[1].name]
 
     MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
         if (error) {
             console.log('Unable to connect: ', error)
         } else {
             console.log('Connected.\nUploading match...')
+            let timestamp = ((new Date()).toISOString()).split('T')
             let db = client.db('tfhr')
 
             if (error) throw error
 
             db
             .collection('matches')
-            .insertOne(req.body, (error, result) => {
+            .insertOne({
+                uploadDate: timestamp[0],
+                uploadTime: timestamp[1],
+                ...match}, (error, result) => {
                 if (error) throw error
                 
                 // adds new entries to player collection
@@ -166,25 +183,35 @@ api.get('/youtube-data', (req, res) => {
     }*/
 
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.v}&key=${youtubeKey}`
-    return axios.get(url)
-    .then((youtube) => {
+    
+    try {
+        return axios.get(url)
+        .then((youtube, error) => {
 
-        if (youtube.data.items.length > 0) {
-            res.status(200).json({
-                id: req.query.v[0],
-                title: youtube.data.items[0].snippet.title,
-                date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
-                description: youtube.data.items[0].snippet.description,
-                channel: {
-                  id: youtube.data.items[0].snippet.channelId,
-                  name: youtube.data.items[0].snippet.channelTitle
+            if (error) throw error
+
+
+                if (youtube.data.items.length > 0) {
+                    res.status(200).json({
+                        id: req.query.v[0],
+                        title: youtube.data.items[0].snippet.title,
+                        date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
+                        description: youtube.data.items[0].snippet.description,
+                        channel: {
+                        id: youtube.data.items[0].snippet.channelId,
+                        name: youtube.data.items[0].snippet.channelTitle
+                        }
+                    })
+                } else {
+                    res.status(400).send(error)
                 }
-              })
-        }
 
-        return res
-      })
-      .catch((error) => res.status(400).send(error.toString()))
+            return res
+        })
+        .catch((error) => res.status(400).send(error.toString()))
+    } catch(e) {
+          console.log(e)
+      }
 
 /*admin.auth().verifyIdToken(request.headers.authorization).then(() => {
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${request.query.v}&key=${youtubeKey}`

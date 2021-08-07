@@ -2,13 +2,8 @@
 node_modules
 /dist
 /old
-/src/serviceAccountKey.json
-.env.*
+/src/views/Edit.vue
 /functions/.runtimeconfig.json
-
-# local env files
-.env.local
-.env.*.local
 
 # Log files
 npm-debug.log*

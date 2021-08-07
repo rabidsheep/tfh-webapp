@@ -57,7 +57,7 @@
                     color="primary"
                     @click="swap()">
                         <v-icon>
-                            {{ $vuetify.breakpoint.smAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
+                            {{ $vuetify.breakpoint.mdAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
                         </v-icon>
                     </v-btn>
                 </v-layout>

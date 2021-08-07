@@ -209,6 +209,7 @@
                         :uploadType="'youtube'"
                         :matches="matches"
                         :errors="errorList"
+                        @remove="removeFile($event)"
                         @update="updateMatches($event)"
                         @update-character="updateCharacter($event)"
                         @yt-upload="youtubeUpload()" />
@@ -369,8 +370,6 @@ export default {
             this.uploading = true
 
             for (let i = 0; i < this.matches.length; i++) {
-                this.matches[i].uploaded = new Date()
-
                 // upload match info to db
                 this.$matches
                 .save(this.matches[i])
@@ -390,7 +389,9 @@ export default {
         /** remove data from file upload objects */
         removeFile(i) {
             this.matches.splice(i, 1)
-            this.files.splice(i, 1)
+            if (this.files.length > 0) {
+                this.files.splice(i, 1)
+            }
         },
         /** add data to file uplod objects */
         updateFiles(match, file) {
@@ -407,7 +408,6 @@ export default {
 
             for (let i = 0; i < this.matches.length; i++) {
                 this.matches[i].file.url = '/';
-                this.matches[i].uploaded = new Date();
 
                 // upload match info to db
                 this.$matches
@@ -515,7 +515,7 @@ export default {
             let player = e.event.pIndex
             let character = e.event.character
 
-            this.matches[match].players[player].character = character
+            this.$set(this.matches[match].players[player], 'character', character)
         }
     }
 }

@@ -234,7 +234,7 @@ img.logo {
 }
 
 .wide .match .players .name {
-    word-break: break-all;
+    word-break: break-word;
     overflow: clip;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -550,4 +550,14 @@ img.logo {
 /* general */
 #youtube .preview .timestamp {
     padding-left: 0px;
+}
+#youtube .preview .remove__wrapper {
+    flex-grow: 0;
+    padding: 0px;
+    align-self: center;
+}
+
+/* desktop */
+.wide #youtube .preview .vs {
+    min-width: 10%;
 }

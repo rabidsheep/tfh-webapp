@@ -15,7 +15,7 @@
 
         <div
         :class="$vuetify.breakpoint.smAndDown ? `date` : `date mr-3 ml-3`">
-          {{ uploadDate }}
+          {{ date }}
         </div>
 
 
@@ -27,7 +27,7 @@
 
         <div
         :class="$vuetify.breakpoint.smAndDown ? `time` : `time mr-3`">
-          {{ uploadTime }} UTC
+          {{ time }} UTC
         </div>
       </v-layout>
 
@@ -157,13 +157,12 @@
 </template>
 
 <script>
-import moment from 'moment';
+import moment from 'moment'
 
 export default {
   name: 'MatchRow',
   props: {
     version: Number,
-    timestamp: String,
     players: Array,
     file: {
       url: String,
@@ -173,20 +172,21 @@ export default {
       url: String,
       timestamp: String,
     },
-    uploaded: String,
+    uploadDate: String,
+    uploadTime: String,
   },
   data: () => {
     return {
       show: false,
-      uploadDate: null,
-      uploadTime: null,
+      date: null,
+      time: null,
     }
   },
  created() {
       /* convert timestamp to date and format it */
       /*var date = (this.timestamp).toDate();*/
-      this.uploadDate = moment(this.uploaded).format('MM/DD/YYYY');
-      this.uploadTime = moment(this.uploaded).utc().format('HH:mm:ss');
+      this.date = moment(this.uploadDate).format('MM/DD/YYYY');
+      this.time = moment(this.uploadDate + 'T' + this.uploadTime).utc().format('HH:mm:ss');
   }
 }
 </script>

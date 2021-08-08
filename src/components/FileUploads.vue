@@ -4,6 +4,19 @@
     class="form"
     ref="form"
     v-model="valid">
+        <StatusOverlay
+        v-bind="{
+            error,
+            uploading,
+            finished,
+            progress,
+            succeeded,
+            failed
+            }"
+        :errors="errors"
+        @clear-errors="clearErrors()"
+        @close="resetForm()" />
+
         <v-layout
         column
         class="wrapper">
@@ -20,9 +33,9 @@
                 v-bind="match"
                 :uploading="uploading"
                 :uploadType="'files'"
-                @update-character="$emit('update-character', { event: $event, mIndex: i })"
-                @remove-file="$emit('remove', $event)"
-                @set-youtube="$emit('set-youtube', $event)" />
+                @update-character="updateCharacter($event.character, $event.index, i)"
+                @remove="removeMatch(i)"
+                @set-youtube="setYoutubeLink($event, i)" />
             </v-layout>
             <!-- should we allow users to add comments to their uploads? -->
 
@@ -77,22 +90,30 @@
 
 <script>
 import FilePreview from './FilePreview.vue'
+import StatusOverlay from './StatusOverlay.vue'
 
 export default {
-    components: { FilePreview },
+    components: { FilePreview, StatusOverlay },
     name: 'FileUploads',
     props: {
-        errors: Array,
-        files: Array,
-        matches: Array,
-        uploadLimit: Number,
-        uploading: Boolean,
+        uid: String,
     },
     data: function() {
         return {
             hidden: true,
             valid: false,
             isSelecting: false,
+            files: [],
+            matches: [],
+            uploadLimit: 8,
+            error: false,
+            uploading: false,
+            finished: false,
+            matchCount: 0,
+            succeeded: 0,
+            failed: 0,
+            progress: 0,
+            errors: []
         }
     },
     methods: {
@@ -108,7 +129,77 @@ export default {
         },
         /** tell parent component to begin uploading files */
         submitFiles() {
-            this.$emit('files-upload')
+            //this.$emit('files-upload')
+
+            this.uploading = true
+
+            for (let i = 0; i < this.matches.length; i++) {
+                this.matches[i].file.url = '/';
+
+                // upload match info to db
+                this.$matches
+                .save(this.matches[i])
+                .then((response) => {
+                    if (response.ok) {
+                        console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
+                    } else {
+                        this.setErrors('upload', this.files[i].name)
+                    }
+
+                    if (i === this.matches.length - 1) {
+                        this.uploading = false
+                        this.finished = true
+                        
+                        if (this.errors.length > 0) {
+                            this.error = true
+                        }
+                    }
+                })
+                    
+                /*disable until i can figure out how to use storage emulator
+                const storageRef = firebase.storage()
+                .ref(`${this.files[i].name}`)
+                .put(this.files[i])
+
+                // upload file to storage
+                storageRef.on(`state_changed`,
+                snapshot => {
+                    // keep track of file upload progress
+                    this.progress = (this.progress + (snapshot.bytesTransferred/snapshot.totalBytes)) * (100 * this.matches.length)
+                },
+                error => {
+                    this.failed += 1
+                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
+                    this.setErrors(3, this.files[i].name)
+                    console.log(error.message)
+                },
+                () => {
+                    this.succeeded += 1
+                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
+                    storageRef.snapshot.ref
+                    .getDownloadURL()
+                    .then((url) => {
+                        this.matches[i].fileUrl = url;
+                        this.matches[i].timestamp = new Date();
+
+                        // upload match info to db
+                        this.$matches
+                        .save(this.matches[i])
+                        .then((response) => {
+                            if (response.ok) {
+                                console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
+                                if (i === this.matches.length - 1) {
+                                    this.uploading = false
+                                    this.finished = true
+                                }
+                            } else {
+                                this.setErrors(3, this.files[i].name)
+                                this.showErrors(this.errorList)
+                            }
+                        })
+                    })
+                })*/
+            }
         },
         /**
          * begins parsing files one by one
@@ -122,16 +213,11 @@ export default {
 
             // stop user from adding more matches if file count exceeds limit
             if (this.matches.length >= this.uploadLimit) {
-                console.log("limit error")
-                this.errors[0].set = true
-                this.errors[0].message = `You may only upload ${this.uploadLimit} files at a time.`
-                this.$emit('show-errors', this.errors)
+                this.setErrors('limit', '')
             } else {
                 // alert user of file limit
                 if (currentFiles.length > slotsLeft) {
-                    this.errors[0].set = true
-                    this.errors[0].message = `The amount of files selected exceeds the upload limit.`
-                    + ` Only the first ${this.uploadLimit} new files will be parsed.`
+                   this.setErrors('limit', '')
                 }
 
                 this.readFiles(currentFiles, 0)
@@ -170,21 +256,19 @@ export default {
         parseFileData(result, fileName, files, i) {
             // error if file uses non-.tfhr extension
             if (fileName.substring(fileName.length - 5, fileName.length) !== '.tfhr') {
-                this.setErrors(3, fileName)
+                this.setErrors('extension', fileName)
             } else if (this.matches.find(m => m.fileName === fileName)) {
-                this.setErrors(4, fileName)
-            }
-            else {
-                
+                this.setErrors('duplicate', fileName)
+            } else {  
                 let playerNames = result.substring(8, 137).replace(/\0{1,65}/g, '\n').split('\n', 2)
                 let characterNames = result.substring(197,213).match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
 
                 // error if player or character names cannot be parsed
                 if ( playerNames.length !== 2 || characterNames.length !== 2) {
-                    console.log("parse error")
-                    this.setErrors(1, fileName)
+                    this.setErrors('parse', fileName)
                 } else {
                     let match = {
+                        userId: this.uid,
                         file: {
                             url: null,
                             name: fileName
@@ -200,32 +284,64 @@ export default {
                         }]
                     }
 
-                    this.$emit('update', {match: match, file: files[i]})
+                    this.matches.push(match)
+                    this.files.push(files[i])
                 }
             }
 
-            if (i < files.length - 1) {
+            if (i < files.length - 1 && this.matches.length < this.uploadLimit) {
                 this.readFiles(files, i + 1)
             } else {
-                for (let i = 0; i < this.errors.length; i++) {
-                    if (this.errors[i].set === true) {
-                        this.$emit('show-errors', this.errors)
-                        break
-                    }
+                if (this.errors.length > 0) {
+                    this.error = true               
                 }
             }
         },
         /** sets errors array for display once files finish being read */
-        setErrors(i, file) {
-            this.errors[i].set = true
+        setErrors(type, file) {
+            
+            let index = this.errors.findIndex(e => e.type == type)
 
-            if (!this.errors[i].files.includes(file)) {
-                this.errors[i].files.push(file)
+            if (index === -1) {
+                if (type === 'limit') {
+                    this.errors.push({type: type})
+                } else {
+                    this.errors.push({type: type, files: [file]})
+                }
+            } else if (type !== 'limit') {
+                this.errors[index].files.push(file)
             }
         },
         /**
          * clears errors array
          */
+        clearErrors() {
+           this.errors = []
+           this.error = false
+        },
+        resetForm() {
+            this.matches = []
+            this.files = []
+            this.finished = false
+        },
+        removeMatch(i) {
+            this.matches.splice(i, 1)
+            this.files.splice(i, 1)
+        },
+        updateCharacter(character, j, i) {
+            this.matches[i].players[j].character = character
+        },
+        setYoutubeLink(v, i) {
+            if (Object.keys(v).length > 0) {
+                this.matches[i].video.url = "https://youtu.be/watch?v=" + v.id
+
+                if (v.ts) {
+                    this.matches[i].video.timestamp = v.ts
+                }
+            } else {
+                 delete this.matches[i].video
+            }
+        }
         
     }
 }

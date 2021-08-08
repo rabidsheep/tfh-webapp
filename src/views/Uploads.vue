@@ -1,82 +1,5 @@
 <template>
     <v-container id="uploads">
-        <v-overlay v-show="uploading || showError || finished">
-            <v-container fluid fill-height>
-                <v-layout column justify-center align-center>
-                    <template v-if="showError && !uploading">
-                        <h1>Error</h1>
-
-                        <div
-                        v-for="(error, i) in errors"
-                        :key="i">
-                            <template>
-                                {{ error.message}}
-
-                                <ul v-if="error.files.length > 0">
-                                    <li
-                                    v-for="(file, j) in error.files"
-                                    :key="j">
-                                        {{ file }}
-                                    </li>
-                                </ul>
-                            </template>
-                        </div>
-
-                        <v-btn
-                        @click="clearErrors()"
-                        color="primary">
-                            OK
-                        </v-btn>
-                    </template>
-
-                    <template v-if="uploading">
-                        <h1>Uploading...</h1>
-
-                        <v-progress-linear
-                        v-model="progress"
-                        height="20px"
-                        :buffer-value="100" />
-
-                        <p>
-                            <span style="color:green;">{{ succeeded }}</span>
-                             | 
-                             <span style="color:red;">{{ failed }}</span>
-                        </p>
-                    </template>
-
-                    <template v-if="finished">
-                        <!--<v-icon>
-                            <template v-if="succeeded > 0">
-                                mdi-check-circle
-                            </template>
-
-                            <template v-else>
-                                mdi-close-circle
-                            </template>
-                        </v-icon>-->
-
-                        <h1>
-                            Upload Finished
-                        </h1>
-
-                        <template v-if="succeeded > 0">
-                            Uploaded {{ succeeded }} out of {{ matches.length }} match(es).
-                        </template>
-                        
-                        <template v-if="failed > 0">
-                            {{ failed }} match(es) failed to upload.
-                        </template>
-
-                        <v-btn
-                        @click="clearForm()"
-                        color="primary">
-                            OK
-                        </v-btn>
-                    </template>
-                </v-layout>
-            </v-container>
-        </v-overlay>
-
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>
@@ -192,27 +115,11 @@
                         
                         <FileUploads
                         v-if="uploadType === 'files'"
-                        :matches="matches"
-                        :files="files"
-                        :errors="errorList"
-                        :uploadLimit="uploadLimit"
-                        :uploadType="'files'"
-                        @remove="removeFile($event)"
-                        @set-youtube="addYoutubeLink($event.yt, $event.index)"
-                        @update="updateFiles($event.match, $event.file)"
-                        @update-character="updateCharacter($event)"
-                        @show-errors="showErrors($event)"
-                        @files-upload="filesUpload()" />
+                        :uid="uid" />
 
                         <YoutubeUploads
                         v-else-if="uploadType === 'youtube'"
-                        :uploadType="'youtube'"
-                        :matches="matches"
-                        :errors="errorList"
-                        @remove="removeFile($event)"
-                        @update="updateMatches($event)"
-                        @update-character="updateCharacter($event)"
-                        @yt-upload="youtubeUpload()" />
+                        :uid="uid"/>
                     </v-layout>
                 </v-stepper-content>
             </v-stepper-items>
@@ -226,58 +133,6 @@ import YoutubeUploads from '../components/YoutubeUploads.vue'
 import firebase from 'firebase'
 import 'firebase/storage'
 
-function initializeErrorList() {
-    return [
-        {
-            code: 'limit',
-            set: false,
-            message: null,
-        },
-        {
-            code: 'parse',
-            set: false,
-            message: 'The following files could not be parsed:',
-            files: [],
-        },
-        {
-            code: 'upload',
-            set: false,
-            message: 'The following files could not be uploaded:',
-            files: [],
-        },
-        {
-            code: 'type',
-            set: false,
-            message: 'The following files use an invalid extension:',
-            files: [],
-        },
-        {
-            code: 'duplicate',
-            set: false,
-            message: 'The following files have already been selected:',
-            files: [],
-        }
-    ]
-}
-
-function initializeData() {
-    return {    
-        uploading: false,
-        progress: 0,
-        succeeded: 0,
-        failed: 0,
-        finished: false,
-        loading: false,
-        loginError: false,
-        uploadValue: 0,
-        uploadLimit: 8,
-        files: [],
-        matches: [],
-        errors: [],
-        showError: false
-    }
-}
-
 export default {
     components: {
         FileUploads,
@@ -286,13 +141,13 @@ export default {
     name: 'Uploads',
     data: () => {
         return {
-        uid: null,
-        hidden: true,
-        step: 1,
-        uploadType: 'youtube',
-        authEmulator: null,
-        errorList: initializeErrorList(),
-        ...initializeData()
+            uid: null,
+            hidden: true,
+            step: 1,
+            uploadType: null,
+            loading: false,
+            loginError: false,
+            uploadValue: 0,
         }
     },
     mounted: function () {
@@ -365,157 +220,10 @@ export default {
             this.uploadType = type
             this.step = 3
         },
-        /** upload youtube-only object */
-        youtubeUpload() {
-            this.uploading = true
-
-            for (let i = 0; i < this.matches.length; i++) {
-                // upload match info to db
-                this.$matches
-                .save(this.matches[i])
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
-                        if (i === this.matches.length - 1) {
-                            this.uploading = false
-                            this.finished = true
-                        }
-                    } else {
-                        this.showError = true
-                    }
-                })
-            } 
-        },
-        /** remove data from file upload objects */
-        removeFile(i) {
-            this.matches.splice(i, 1)
-            if (this.files.length > 0) {
-                this.files.splice(i, 1)
-            }
-        },
-        /** add data to file uplod objects */
-        updateFiles(match, file) {
-            this.matches.push(match)
-            this.files.push(file)
-        },
-        updateMatches(matches) {
-            this.matches = matches
-        },
-        /* first uploads file to storage and retrieves download url,
-        then posts file info to database */
-        filesUpload() {
-            this.uploading = true
-
-            for (let i = 0; i < this.matches.length; i++) {
-                this.matches[i].file.url = '/';
-
-                // upload match info to db
-                this.$matches
-                .save(this.matches[i])
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
-                        if (i === this.matches.length - 1) {
-                            this.uploading = false
-                            this.finished = true
-                        }
-                    } else {
-                        this.setErrors(3, this.files[i].name)
-                        this.showErrors(this.errorList)
-                    }
-                })
-                    
-                /*disable until i can figure out how to use storage emulator
-                const storageRef = firebase.storage()
-                .ref(`${this.files[i].name}`)
-                .put(this.files[i])
-
-                // upload file to storage
-                storageRef.on(`state_changed`,
-                snapshot => {
-                    // keep track of file upload progress
-                    this.progress = (this.progress + (snapshot.bytesTransferred/snapshot.totalBytes)) * (100 * this.matches.length)
-                },
-                error => {
-                    this.failed += 1
-                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
-                    this.setErrors(3, this.files[i].name)
-                    console.log(error.message)
-                },
-                () => {
-                    this.succeeded += 1
-                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
-                    storageRef.snapshot.ref
-                    .getDownloadURL()
-                    .then((url) => {
-                        this.matches[i].fileUrl = url;
-                        this.matches[i].timestamp = new Date();
-
-                        // upload match info to db
-                        this.$matches
-                        .save(this.matches[i])
-                        .then((response) => {
-                            if (response.ok) {
-                                console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
-                                if (i === this.matches.length - 1) {
-                                    this.uploading = false
-                                    this.finished = true
-                                }
-                            } else {
-                                this.setErrors(3, this.files[i].name)
-                                this.showErrors(this.errorList)
-                            }
-                        })
-                    })
-                })*/
-            }
-        },
-        /** add youtube link to file upload objects */
-        addYoutubeLink(ytObj, i) {
-            if (Object.keys(ytObj).length > 0) {
-                this.matches[i].video.url = "https://youtu.be/watch?v=" + ytObj.id
-
-                if (ytObj.ts) {
-                    this.matches[i].video.timestamp = ytObj.ts
-                }
-            } else {
-                 delete this.matches[i].video
-            }
-        },
-        /** set errors to display  */
-        setErrors(i, fileName) {
-            this.errorList[i].set = true
-            if (!this.errorList[i].files.includes(fileName)) {
-                this.errorList[i].files.push(fileName)
-            }
-        },
-        /** display errors */
-        showErrors(err) {
-            this.errors = [err.find(e => e.set === true)]
-            this.showError = true
-        },
-        /** clears errors array */
-        clearErrors() {
-           this.errorList = initializeErrorList()
-           this.errors = []
-           this.showError = false
-        },
         /** return to upload type selection step */
         goBack() {
-            this.clearForm()
             this.step = 2
             this.uploadType = null
-        },
-        clearForm() {
-            this.finished = false
-            Object.assign(this.$data, initializeData())
-        },
-        updateCharacter(e) {
-            let match = e.mIndex
-            let player = e.event.pIndex
-            let character = e.event.character
-
-            this.$set(this.matches[match].players[player], 'character', character)
         }
     }
 }

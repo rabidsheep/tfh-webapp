@@ -6,9 +6,9 @@
             :ripple="false"
             class="remove"
             fab
-            height="25px"
-            width="25px"
-            @click="remove()"
+            height="24px"
+            width="24px"
+            @click="$emit('remove')"
             color="primary">
                 <v-icon size="15px">
                     mdi-close-thick
@@ -37,12 +37,14 @@
                         :index = "i"
                         :selectionEnabled="false"
                         :anyEnabled="false"
-                        @character-select="$emit('update-character', { character: $event, pIndex: i })"/>
+                        @character-select="$emit('update-character', { character: $event, index: i})"/>
                                         
                         <v-text-field
                         v-model="player.name"
                         :label="`Player ${i + 1}`"
                         :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"
+                        maxLength="64"
+                        counter="64"
                         required
                         />
                     </v-layout>
@@ -141,7 +143,7 @@ export default {
 
             this.youtube = yt
 
-            this.$emit('set-youtube', { yt: this.youtube, index: this.index })
+            this.$emit('set-youtube', this.youtube)
 
             return errors
         }

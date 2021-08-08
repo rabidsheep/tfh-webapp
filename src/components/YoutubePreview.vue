@@ -7,9 +7,9 @@
             :ripple="false"
             class="remove"
             fab
-            height="25px"
-            width="25px"
-            @click="remove()"
+            height="24px"
+            width="24px"
+            @click="$emit('remove')"
             color="primary">
                 <v-icon size="15px">
                     mdi-close-thick
@@ -32,13 +32,15 @@
                     :index = "i"
                     :selectionEnabled="true"
                     :anyEnabled="false"
-                    @character-select="$emit('update-character', { character: $event, pIndex: i })"/>
+                    @character-select="$emit('update-character', { character: $event, index: i })"/>
                                     
                     <v-text-field
                     v-model="player.name"
                     :rules="rules.name"
                     :label="`Player ${i + 1}`"
                     :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
+                    maxLength="64"
+                    counter="64"
                     required
                     />
                 </v-layout>
@@ -109,9 +111,6 @@ export default {
         }
     },
     methods: {
-        remove: function() {
-            this.$emit('remove-file', this.index)
-        },
     }
 }
 </script>

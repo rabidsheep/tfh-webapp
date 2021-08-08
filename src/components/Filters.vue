@@ -36,6 +36,7 @@
                         :items="players"
                         :search-input.sync="search[i]"
                         :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
+                        counter
                         @change = "selectPlayer(playerInfo[i].name, i)">
                             <template v-slot:no-data>
                                 <v-list-item>

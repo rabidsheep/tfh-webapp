@@ -34,6 +34,10 @@ img.logo {
     width: 80%;
 }
   
+.v-btn {
+    min-width: min-content;
+    max-width: initial !important;
+}
 
 /* character select menu icons */
 .character-menu .icon {
@@ -362,14 +366,6 @@ img.logo {
     padding: 0px;
 }
 
-#uploads .form .wrapper {
-    padding: 20px 0px;
-}
-
-#uploads .form .body {
-    padding-bottom: 20px;
-}
-
 #uploads .v-file-input {
     width: 80%;
     margin: auto;
@@ -384,21 +380,6 @@ img.logo {
     width: 100%;
 }
 
-#uploads .v-overlay .v-progress-linear {
-    margin: 20px 0px;
-    height: 50px;
-    border-radius: 10px;
-    -webkit-border-radius: 10px;
-}
-
-#uploads .v-overlay__content {
-    width: 50%;
-    background-color: #171717
-}
-
-#uploads .v-overlay .v-btn {
-    margin-top: 10px;
-}
 
 #uploads .form {
     display: flex;
@@ -457,27 +438,126 @@ img.logo {
     padding-top: 15px;
 }
 
+/** statusoverlay.vue **/
+
+#uploads .v-overlay .v-progress-linear {
+    margin: 20px 0px;
+    height: 50px;
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+}
+
+#uploads .v-overlay__content {
+    background-color: #171717
+}
+
+#uploads .v-overlay__content .status > div {
+    width: 80%;
+}
+
+#uploads .v-overlay .v-btn {
+    margin-top: 10px;
+}
+
+/* desktop */
+.wide #uploads .v-overlay__content {
+    width: 50%;
+}
+
+/* mobile */
+.small #uploads .v-overlay__content {
+    width: 80%;
+}
+
 /** youtubeuploads.vue **/
 #youtube .body {
     width: 100%;
 }
 
 #youtube .body .data {
+    width: 80%;
+}
+
+.small #youtube .body .data {
     width: 100%;
 }
 
-#youtube .body .data .row {
+#youtube .body .data .row,
+#youtube .body .data  {
     justify-content: space-between;
 }
 
-#youtube .body .data .row > div {
+#youtube .body .data > .row {
+    width: 100%;
+}
+
+#youtube .datetitle > div {
     max-width: 40%;
 }
 
-#youtube .body .data .row,
-#youtube .body .data .desc {
-    width: 75%;
+.wide #youtube .desc {
+    min-height: 150px;
 }
+
+.wide #youtube .desc > .v-textarea {
+    max-width: 65%;
+}
+
+#youtube .desc > .v-textarea .v-messages {
+    max-width: max-content;
+}
+
+#youtube .desc > .v-textarea .v-text-field__details {
+    justify-content: end;
+}
+
+#youtube .desc-buttons {
+    padding: 0px;
+    display: flex;
+    
+}
+
+.wide #youtube .desc-buttons {
+    min-height: inherit;
+    align-content: space-evenly;
+    flex-wrap: wrap;
+    max-width: min-content;
+    padding-left: 10px;
+}
+
+#youtube .desc-buttons > .col {
+    padding: 0px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+}
+
+#youtube .url-input{
+    display: flex;
+    justify-content: space-around;
+}
+
+.wide #youtube .url-input {
+    width: 50%;
+}
+
+.small #youtube .url-input {
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.wide #youtube .url-input .v-input {
+    max-width: 80%;
+}
+
+.small #youtube .url-input .v-input {
+    max-width: 70%;
+}
+
+.small #youtube .desc-buttons {
+    flex-wrap: wrap;
+}
+
 
 /** filepreview.vue + videopreview.vue **/
 
@@ -555,6 +635,7 @@ img.logo {
     flex-grow: 0;
     padding: 0px;
     align-self: center;
+    max-height: min-content;
 }
 
 /* desktop */

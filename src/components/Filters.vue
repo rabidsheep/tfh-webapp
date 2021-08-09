@@ -33,10 +33,10 @@
                             maxHeight: '200'
                             }"
                         :label="`Player ${i + 1}`"
-                        :items="players"
+                        :items="playerList"
                         :search-input.sync="search[i]"
                         :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
-                        counter
+                        counter="64"
                         @change = "selectPlayer(playerInfo[i].name, i)">
                             <template v-slot:no-data>
                                 <v-list-item>
@@ -83,6 +83,9 @@ export default {
     components: {
         CharacterSelect,
     },
+    props: {
+        players: Array,
+    },
     data: () => {
         return {
             playerInfo: [
@@ -91,7 +94,7 @@ export default {
             ],
             search: [],
             hidden: false,
-            players: []
+            playerList: [],
         }
     },
     watch: {
@@ -103,6 +106,7 @@ export default {
         },
     },
     mounted: function() {
+        this.$emit('update-filter', this.playerInfo)
         this.loadPlayers()
     },
     methods: {
@@ -112,7 +116,7 @@ export default {
             .then((response) => {
                 if (response.ok) {
                     this.error = false
-                    this.players = response.body.players
+                    this.playerList = response.body.players
                 } else {
                     this.error = true
                     this.errorMsg = `${response.status}: ${response.statusText}`

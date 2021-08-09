@@ -43,10 +43,8 @@ api.get('/matches', (req, res) => {
 
     let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
 
-    console.log(req.query)
-
-    if (req.query.filters) {
-        query = formatQuery(query, req.query.filters)
+    if (req.query.players) {
+        query = formatQuery(query, req.query.players)
     }
 
     MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
@@ -141,12 +139,8 @@ api.get('/players', (req, res) => {
                 if (error) throw error
                 console.log('Returning players list.')
                 return res.status(200).send({ players: result })
-            }
-            )
+            })
         }
-
-
-
     })
 })
 
@@ -184,34 +178,30 @@ api.get('/youtube-data', (req, res) => {
 
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.v}&key=${youtubeKey}`
     
-    try {
-        return axios.get(url)
-        .then((youtube, error) => {
+    return axios.get(url)
+    .then((youtube, error) => {
 
-            if (error) throw error
+        if (error) throw error
 
 
-                if (youtube.data.items.length > 0) {
-                    res.status(200).json({
-                        id: req.query.v[0],
-                        title: youtube.data.items[0].snippet.title,
-                        date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
-                        description: youtube.data.items[0].snippet.description,
-                        channel: {
-                        id: youtube.data.items[0].snippet.channelId,
-                        name: youtube.data.items[0].snippet.channelTitle
-                        }
-                    })
-                } else {
-                    res.status(400).send(error)
-                }
+            if (youtube.data.items.length > 0) {
+                res.status(200).json({
+                    id: req.query.v[0],
+                    title: youtube.data.items[0].snippet.title,
+                    date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
+                    description: youtube.data.items[0].snippet.description,
+                    channel: {
+                    id: youtube.data.items[0].snippet.channelId,
+                    name: youtube.data.items[0].snippet.channelTitle
+                    }
+                })
+            } else {
+                res.status(400).send(error)
+            }
 
-            return res
-        })
-        .catch((error) => res.status(400).send(error.toString()))
-    } catch(e) {
-          console.log(e)
-      }
+        return res
+    })
+    .catch((error) => res.status(400).send(error.toString()))
 
 /*admin.auth().verifyIdToken(request.headers.authorization).then(() => {
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${request.query.v}&key=${youtubeKey}`
@@ -245,7 +235,6 @@ exports.api = functions.https.onRequest(api)
 
 // format query object for filtering matches
 function formatQuery(query, filters) {
-    console.log(filters)
     for (let i = 0; i < filters.length; i++) {
         if (filters[i].name && filters[i].name.length > 0) {
             query[`players.${i}.name`] = filters[i].name

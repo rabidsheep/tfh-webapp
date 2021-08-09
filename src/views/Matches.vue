@@ -2,29 +2,32 @@
   <div v-scroll="onScroll">
     <!-- filters box -->
     <Filters
-    @update-filter="filters = $event" />
+    :players="players"
+    @update-filter="players = $event" />
     
-    <!-- matches table -->
+    
     <div class="loading" style="margin: 20% 0" v-if="loading">
       <v-progress-linear indeterminate v-show="loading"/>
     </div>
-
-      <v-layout
-      id="matches"
-      column
-      v-if="!loading">
+    
+    <!-- matches table -->
+    <v-layout
+    id="matches"
+    column
+    v-if="!loading">
       <template v-if="matches.length > 0">
         <MatchRow
-          v-for="(match, i) in matches"
-          :key="i"
-          v-bind="match"
-        />
+        v-for="(match, i) in matches"
+        :key="i"
+        v-bind="match"
+        @update-character="updateCharacterFilter($event.character, $event.index)"
+        @update-name="updateNameFilter($event.name, $event.index)" />
       </template>
 
       <template v-else>
-      <v-layout align-center justify-center>No matches found!</v-layout>
+        <v-layout align-center justify-center>No matches found!</v-layout>
       </template>
-      </v-layout>
+    </v-layout>
 
     <!-- pagination -->
     <v-layout v-if="!loading && !(resultsCount <= this.$config.itemsPerPage)" class="mt-3">
@@ -35,13 +38,11 @@
                 Math.floor(resultsCount / this.$config.itemsPerPage) :
                 Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
       :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
-      @input="getMatches(filters, page)"
+      @input="getMatches(players, page)"
       circle
       />
       <v-spacer/>
     </v-layout>
-
-
   </div>
 </template>
 
@@ -59,27 +60,11 @@ export default {
     return {
       showToTop: false,
       hidden: false,
-      filters: [
+      players: [
         {name: null, character: null},
         {name: null, character: null}
       ],
       matches: [],
-      headers: {
-        unique: [
-          { title: 'ID', code: 'id' },
-          { title: 'Upload Date', code: 'date' },
-        ],
-        general: {
-          players: [
-            { title: 'P1', code: 'p1' },
-            { title: 'P2', code: 'p2' },
-          ],
-          links: [
-            { title: 'File', code: 'file' },
-            { title: 'YouTube', code: 'yt' },
-          ]
-        }
-      },
       resultsCount: null,
       page: 1,
       lastVisible: null,
@@ -88,34 +73,21 @@ export default {
       errorMessage: '',
     }
   },
-  mounted: function() {
-    this.getMatches(this.filters, 1)
-  },
   watch: {
-    'filters': {
+    'players': {
       handler: function() {
-        this.getMatches(this.filters, 1)
+        this.getMatches(this.players, 1)
         // move paginate back to page 1 after changing filters
         this.page = 1
       },
       deep: true
     },
   },
-  computed: {
-    setWidth() {
-      if (this.$vuetify.breakpoint.xsOnly) {
-        return 'xs'
-      
-      } else {
-        return ''
-      }
-    }
-  },
   methods: {
-    getMatches: function (filters, page) {
+    getMatches: function (players, page) {
       this.loading = true
 
-      this.$matches.get({filters, page})
+      this.$matches.get({players, page})
       .then((response) => {
         if (response.ok) {
           this.error = false
@@ -130,21 +102,19 @@ export default {
         this.loading = false
       })
     },
+    updateCharacterFilter(character, i) {
+      if (!this.players[i].character || this.players[i].character.name !== character.name) {
+        this.$set(this.players[i], 'character', character)
+      }
+    },
+    updateNameFilter(name, i) {
+      if (!this.players[i].name || this.players[i].name !== name) {
+        this.$set(this.players[i], 'name', name)
+      }
+    },
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     },
   }
 }
 </script>
-
-<style scoped>
-.table-headers {
-  display: grid;
-  width: 100%;
-  text-align: center;
-}
-
-.table-headers .v-btn {
-  width: 100%;
-}
-</style>

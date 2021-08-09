@@ -1,5 +1,5 @@
 <template>
-    <v-row class="match" align="center">
+    <v-row :id="_id" class="match" align="center">
       <v-layout unique row align-center>
         <v-icon
         :size="$vuetify.breakpoint.smAndDown ? '22px' : '32px'"
@@ -41,9 +41,16 @@
             <img
             class="character-icon"
             :src="require(`../assets/img/sel/${player.character.id}.png`)"
-            :alt="`player.character.name`"
-            :title="`player.character.name`" />
-            <p class="name">{{ player.name }}</p>
+            :alt="player.character.name"
+            :title="player.character.name"
+            @click="$emit('update-character', {character: player.character, index: i})" />
+
+            <p
+            class="name"
+            @click="$emit('update-name', {name: player.name, index: i})">
+              {{ player.name }}
+            </p>
+            
           </v-col>
 
           <v-col
@@ -127,7 +134,6 @@
                   </v-icon>
 
                   <div
-                  v-if="!video"
                   class="slash">
                     <v-icon
                     x-large>
@@ -142,6 +148,7 @@
                 `${video.url}&t=${video.timestamp}` :
                 `${video.url}`">
                   <v-icon
+                  color="#d52726"
                   class="base"
                   x-large>
                     mdi-youtube
@@ -162,6 +169,7 @@ import moment from 'moment'
 export default {
   name: 'MatchRow',
   props: {
+    _id: String,
     version: Number,
     players: Array,
     file: {

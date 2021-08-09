@@ -1,7 +1,4 @@
 /** main html stuff **/
-#app {
-}
-
 #app .v-application--wrap {
     max-width: inherit !important;
     flex: 1 1 auto;
@@ -27,6 +24,15 @@ img.logo {
     width: 90%;
     max-width: 960px;
     padding-bottom: 30px;
+}
+
+.wide .p1 > .v-input > .v-input__control > .v-text-field__details {
+    flex-direction: row-reverse;
+}
+
+.wide .p1 > .v-input > .v-input__control > .v-text-field__details .v-counter {
+    margin-left: 0px;
+    margin-right: 8px;
 }
 
 /* display width */
@@ -132,10 +138,6 @@ img.logo {
     border-bottom: 2px solid;
 }
 
-/*#matches > .row:nth-child(2n - 1) {
-    background-color: #292929;
-}*/
-
 /** matchrow.vue **/
 
 .match {
@@ -167,7 +169,8 @@ img.logo {
 }
 
 .match .character-icon {
-    width: 45px;
+    height: 52px;
+    cursor: pointer;
 }
 
 .wide .match .links .link {
@@ -180,6 +183,7 @@ img.logo {
 }
 
 .match .player .name {
+    cursor: pointer;
     margin: 0px;
     height: min-content;
     flex-wrap: nowrap;
@@ -190,16 +194,15 @@ img.logo {
     align-content: space-between;
 }
 
-.match .slash {
-    position: absolute;
-    top: -1px;
-    -webkit-transform: rotateZ(118deg);
-    transform: rotateZ(118deg) scaleY(1.4);
-    text-shadow: -2px 0px #3a3939;
+.match .links .video > .btn > div > .v-icon {
+    margin-top: -1px;
 }
 
-.match .links .v-icon {
-    color: #d52726;
+.match .slash {
+    position: absolute;
+    -webkit-transform: rotateZ(118deg);
+    transform: rotateZ(118deg) scaleY(1.4);
+    text-shadow: -3px 0px #3a3939;
 }
 
 .match .links .disabled .v-icon {
@@ -246,10 +249,15 @@ img.logo {
     -webkit-box-orient: vertical;
 }
 
-/* mobile */
-.small .match {
+.wide .match .video .slash {
+    top: -5%;
 }
 
+.wide .match .file .slash {
+    top: -2%;
+}
+
+/* mobile */
 .small .match .unique {
     width: 100%;
     border-bottom: 1px dashed grey;
@@ -349,6 +357,13 @@ img.logo {
 
 .small .match .links > .row > .link {
     max-width: max-content;
+}
+
+.small .match .video .slash {
+    top: -6%;
+}
+.small .match .file .slash {
+    top: 10%;
 }
 
 /** uploadform.vue **/

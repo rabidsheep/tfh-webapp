@@ -2,7 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 import Matches from './views/Matches.vue'
 import Uploads from './views/Uploads.vue'
-//import Edit from './views/Edit.vue'
+import Edit from './views/Edit.vue'
 
 Vue.use(Router)
 
@@ -18,10 +18,13 @@ export default new Router({
       name: 'upload',
       component: Uploads
     },
-    /*{
+    {
       path: '/edit',
       name: 'edit',
-      component: Edit
-    }*/
+      component: Edit,
+      props: (route) => ({
+        id: route.query.id
+      })
+    }
   ]
 })

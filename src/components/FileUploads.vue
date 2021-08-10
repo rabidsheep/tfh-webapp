@@ -4,6 +4,7 @@
     class="form"
     ref="form"
     v-model="valid">
+        <div v-show="matches.length > 0"><br /></div>
         <StatusOverlay
         v-bind="{
             error,
@@ -44,12 +45,16 @@
             class="message"
             column
             justify-center>
+                <div><br /></div>
+
                 <div
                 :style="matches.length >= uploadLimit ? 'color: red;' : ''">
                     {{ matches.length >= uploadLimit ?
                     'Maximum file limit reached' :
                     (uploadLimit - matches.length) + ' slots remaining' }}
                 </div>
+
+                <div><br /></div>
             </v-layout>
         </v-layout>
 
@@ -62,7 +67,7 @@
             :ripple="false"
             :disabled="matches.length >= uploadLimit"
             @click="selectFiles">
-                Upload Files
+                Select Files
             </v-btn>
 
             <!-- just here to make upload files
@@ -82,7 +87,7 @@
             color = "primary"
             :disabled="!valid || matches.length <= 0"
             @click="submitFiles()">
-                Submit
+                Upload
             </v-btn>
         </v-layout>
     </v-form>
@@ -333,6 +338,7 @@ export default {
         },
         setYoutubeLink(v, i) {
             if (Object.keys(v).length > 0) {
+                this.matches[i].video = {}
                 this.matches[i].video.url = "https://youtu.be/watch?v=" + v.id
 
                 if (v.ts) {

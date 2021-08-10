@@ -1,11 +1,13 @@
 <template>
-    <v-row :id="_id" class="match" align="center">
+    <v-row class="match" align="center">
       <v-layout unique row align-center>
+        <router-link :to="`edit?id=${_id}`">
         <v-icon
         :size="$vuetify.breakpoint.smAndDown ? '22px' : '32px'"
         color="primary">
           mdi-square-edit-outline
         </v-icon>
+        </router-link>
 
         <div
         v-show="$vuetify.breakpoint.smAndDown"

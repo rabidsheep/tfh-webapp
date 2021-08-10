@@ -170,7 +170,7 @@
                 color = "primary"
                 :disabled="!valid"
                 @click="youtubeUpload()">
-                    Submit
+                    Upload
                 </v-btn>
             </div>
         </v-layout>

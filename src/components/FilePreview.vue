@@ -1,6 +1,7 @@
 <template>
     <v-row class="preview">
-        <v-row
+        <v-col
+        cols="12"
         class="header">
             <v-btn
             :ripple="false"
@@ -18,73 +19,69 @@
             <h4>
                 {{ index + 1 }}. {{ file.name }}
             </h4>
-        </v-row>
+        </v-col>
 
-        <v-container 
-        class="data"
-        fill-height>
-            <v-col
-            class="players">
-                <v-row
-                class="players__data">
-                    <v-layout
-                    :class="`player p${i+1}`"
-                    v-for="(player, i) in players"
-                    :key="i"
-                    :reverse="i === 0 && !$vuetify.breakpoint.xsOnly">
-                        <CharacterSelect
-                        :currentCharacter ="player.character"
-                        :index = "i"
-                        :selectionEnabled="false"
-                        :anyEnabled="false"
-                        @character-select="$emit('update-character', { character: $event, index: i})"/>
-                                        
-                        <v-text-field
-                        v-model="player.name"
-                        :label="`Player ${i + 1}`"
-                        :reverse="i === 0 && !$vuetify.breakpoint.xsOnly"
-                        maxLength="64"
-                        counter="64"
-                        required
-                        />
-                    </v-layout>
-                    
-                    <v-layout
-                    align-center
-                    justify-center
-                    class="vs"
-                    v-if="!$vuetify.breakpoint.xsOnly">
-                        vs.
-                    </v-layout>
-                </v-row>
-            </v-col>
+        <div style="width:100%;"><br /></div>
 
-            <v-col
-            class="youtube"
-            :cols="$vuetify.breakpoint.xsOnly ? 4 : 4 ">
-                    <v-row
-                    class="link">
-                            <v-text-field
-                            :dense="!$vuetify.breakpoint.xsOnly"
-                            v-model="userUrl"
-                            :error-messages="urlErrors"
-                            @input="$v.url.$touch()"
-                            @blur="$v.url.$touch()"
-                            label="YouTube Link (Optional)"
-                            prepend-icon="mdi-youtube" />
-                    </v-row>
+        <v-col
+        :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
+        :class="`player p${i+1}`"
+        v-for="(player, i) in players"
+        :key="i"
+        :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
+            <CharacterSelect
+            :currentCharacter ="player.character"
+            :index = "i"
+            :selectionEnabled="false"
+            :anyEnabled="false"
+            @character-select="$emit('update-character', { character: $event, index: i})"/>
+                            
+            <v-text-field
+            v-model="player.name"
+            :label="`Player ${i + 1}`"
+            :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
+            maxLength="64"
+            counter="64"
+            required
+            />
+        </v-col>
+        
+        <v-col
+        cols="1"
+        align="center"
+        justify="center"
+        class="vs"
+        v-if="!$vuetify.breakpoint.smAndDown">
+            vs.
+        </v-col>
 
-                    <v-row
-                    class="timestamp">
-                            <v-text-field
-                            :dense="!$vuetify.breakpoint.xsOnly"
-                            v-model="youtube.ts"
-                            :disabled="!userUrl"
-                            prepend-icon="mdi-timer-outline"
-                            label="Timestamp"/>
-                    </v-row>
-            </v-col>
-        </v-container>
+        <v-col
+        class="youtube"
+        :cols="$vuetify.breakpoint.smAndDown ? 12 : 4 ">
+            <v-row
+            class="link">
+                <v-text-field
+                :dense="!$vuetify.breakpoint.smAndDown"
+                v-model="userUrl"
+                :error-messages="urlErrors"
+                @input="$v.url.$touch()"
+                @blur="$v.url.$touch()"
+                label="YouTube Link (Optional)"
+                prepend-icon="mdi-youtube" />
+            </v-row>
+            
+            <br v-if="!$vuetify.breakpoint.smAndDown" />
+
+            <v-row
+            class="timestamp">
+                <v-text-field
+                :dense="!$vuetify.breakpoint.smAndDown"
+                v-model="youtube.ts"
+                :disabled="!userUrl"
+                prepend-icon="mdi-timer-outline"
+                label="Timestamp"/>
+            </v-row>
+        </v-col>
     </v-row>
 </template>
 

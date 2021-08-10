@@ -62,15 +62,15 @@ img.logo {
 }
 
 .wide .p1 .icon {
-    padding-left: 10px;
+    margin-left: 10px;
 }
 
 .wide .p2 .icon {
-    padding-right: 10px;
+    margin-right: 10px;
 }
 
 .small .icon {
-    padding-right: 10px;
+    margin-right: 10px;
 }
 
 /** filters.vue **/
@@ -153,15 +153,15 @@ img.logo {
     padding-right: 5px;
 }
 
-.match .p1 {
+.p1 {
     order: 1;
 }
 
-.match .p2 {
+.p2 {
     order: 3;
 }
 
-.match .vs {
+.vs {
     order: 2;
     display: flex;
     justify-content: center;
@@ -515,7 +515,7 @@ img.logo {
 }
 
 .wide #youtube .desc > .v-textarea {
-    max-width: 65%;
+    max-width: 70%;
 }
 
 #youtube .desc > .v-textarea .v-messages {
@@ -571,6 +571,12 @@ img.logo {
 
 .small #youtube .desc-buttons {
     flex-wrap: wrap;
+    justify-content: space-evenly;
+    align-content: flex-start;
+}
+
+.small #youtube .desc-buttons > .col {
+    padding: 5px 0px;
 }
 
 
@@ -581,28 +587,39 @@ img.logo {
     padding: 0px;
 }
 
-.preview .players {
-    display: flex;
+.preview .col {
+    padding: 0px;
 }
 
-.wide .preview .players > .row {
-    flex-wrap: nowrap;
-}
-
-.preview .players > .row {
+.preview .player {
     display: flex;
+    align-items: center;
 }
 
 .preview .players .p1 {
     order: 1;
 }
 
-.preview .players .vs {
+.preview .vs {
     order: 2;
+    margin: auto;
+    align-items: center;
 }
 
 .preview .players .p2 {
     order: 3;
+}
+
+.preview .youtube {
+    order: 4;
+}
+
+.wide .preview .youtube {
+    padding-left: 12px;
+}
+
+.wide .preview .p1 {
+    flex-direction: row-reverse;
 }
 
 /** filepreview.vue **/
@@ -622,10 +639,6 @@ img.logo {
 
 #files .preview .header .remove {
     margin-right: 10px;
-}
-
-#files .preview .vs {
-    padding: 0px 20px;
 }
 
 #files .preview .data {
@@ -656,4 +669,19 @@ img.logo {
 /* desktop */
 .wide #youtube .preview .vs {
     min-width: 10%;
+}
+
+/** edit.vue **/
+
+.wide #edit .youtube {
+    padding-left: 12px;
+}
+
+#edit .buttons > .col {
+    display: flex;
+    
+}
+
+#edit .buttons > .reset {
+    justify-content: flex-end;
 }

@@ -4,7 +4,8 @@ admin.initializeApp()
 
 const express = require('express')
 const cors = require('cors')({ origin: true })
-const MongoClient = require('mongodb').MongoClient
+const mongo = require('mongodb')
+const MongoClient = mongo.MongoClient
 const axios = require('axios')
 const api = express()
 api.use(cors)
@@ -45,6 +46,10 @@ api.get('/matches', (req, res) => {
 
     if (req.query.players) {
         query = formatQuery(query, req.query.players)
+    }
+
+    if (req.query.id) {
+        query['_id'] = mongo.ObjectId(req.query.id)
     }
 
     MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {

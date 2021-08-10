@@ -2,7 +2,6 @@
 node_modules
 /dist
 /old
-/src/views/Edit.vue
 /functions/.runtimeconfig.json
 
 # Log files

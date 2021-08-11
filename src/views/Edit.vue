@@ -175,14 +175,13 @@
 
 <script>
 import CharacterSelect from '.././components/CharacterSelect.vue'
-import firebase from 'firebase'
 import 'firebase/storage'
 
 
 export default {
     name: 'Edit',
     components: {
-        CharacterSelect
+        CharacterSelect,
     },
     props: {
         id: String,
@@ -203,7 +202,10 @@ export default {
             re: {
                 youtube: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
                 id: /(?<=\?v=)\w*(?=[^#\&\?]*)/,
-                timestamp: /(((?:[0-9]{1,2})h)?)(((?:[0-9]{1,3})m)?)(((?:[0-9]{1,5})s)?)/g,
+                //for timestamp at end of youtube urls
+                urlTimestamp: /(?<=&t=)((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/g,
+                // for checking if full timestamp string is valid
+                timestamp: /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/g,
             },
             rules: {
                 name: [
@@ -216,12 +218,11 @@ export default {
                     ],
                     req: [
                         v => !!v || 'Required',
-                        v => v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                        v => v && /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'
-                    ]
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'                    ]
                 },
                 timestamp: [
-                        v => !!v || !v || v && /\d+h\d+m\d+s|\d+h|\d+m|\d+s/.test(v) || 'Invalid format',
+                        v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
                 ]
             },
         }
@@ -284,42 +285,36 @@ export default {
             }
         },
         'url': function(v) {
-            
-            if (this.$refs.url.valid && v && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11) {
+            console.log(this.$refs.url)
+            if (v && v.match(/(?<=\?v=)([^#\&\?]*)/) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11) {
                 this.tempUrl = v.match(this.re.youtube)[0]
 
-                if (this.re.timestamp.test(v)) {
-                    this.timestamp = v.match(this.re.timestamp)[0]
+                if (this.tempUrl && !this.video || this.tempUrl !== this.video.url) {
+                    this.$emit('set-url', this.tempUrl)
+                }
+
+                if (this.re.urlTimestamp.test(v) && v.match(this.re.urlTimestamp)[0] !== this.timestamp) {
+                    this.timestamp = v.match(this.re.urlTimestamp)[0]
                 }
             } else {
-                this.tempUrl = (this.match.video ? this.match.video.url : null)
-                this.timestamp = (this.match.video && this.match.video.timestamp ? this.match.video.timestamp : null)
+                
+                this.tempUrl = (this.video ? this.video.url : null)
+                this.timestamp = (this.video && this.video.timestamp ? this.video.timestamp : null)
+                this.$emit('delete-video')
+                return null
             }
-
-            if ((!this.tempUrl && this.updated.video) || !this.re.youtube.test(v)) {
-                this.$delete(this.updated, 'video')
-            } else {
-
-                if (!this.updated.video) {
-                    this.$set(this.updated, 'video', {})
-                }
-            
-                if (this.tempUrl !== this.updated.video.url) {
-                    this.$set(this.updated.video, 'url', this.tempUrl)
-                }
-            }
-
-            console.log(this.tempUrl)
         },
+        
         'timestamp': function(v) {
-                if (this.timestamp && this.$refs.timestamp.valid && this.re.timestamp.test(v)) {
-                    this.$set(this.updated.video, 'timestamp', this.timestamp)
-                } else {
-                    if (this.updated.video) {
-                        this.$delete(this.updated.video, 'timestamp')
-                    }
-                }
+            ///^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g
+            if (this.timestamp && (this.re.timestamp).test(v)) {
+                    if (this.timestamp !== this.currentTimestamp)
+                    this.$emit('set-timestamp', this.timestamp.match(this.re.timestamp)[0])
+            } else {
+                //this.$delete(this.updated.video, 'timestamp')
+                this.$emit('delete-timestamp')
             }
+        }
     },
     methods: {
         signIn: function (providerName) {

@@ -1,7 +1,11 @@
 <template>
-    <v-row class="preview">
+    <v-row
+    
+    class="preview">
 
         <v-col
+        justify="center"
+        :cols="$vuetify.breakponSmAndDown ? 3 : undefined"
         class="remove__wrapper">
             <v-btn
             :ripple="false"
@@ -19,7 +23,7 @@
 
         <v-col
         class="players"
-        :cols="!$vuetify.breakpoint.smAndDown ? 10 : 8">
+        :cols="$vuetify.breakpoint.smAndDown ? 7 : 10">
             <v-row
             align-self="center">
                 <v-layout
@@ -57,7 +61,7 @@
 
         <v-col
         class="timestamp"
-        >
+        :cols="$vuetify.breakpoint.smAndDown ? 3 : 2">
             <v-text-field
             v-model="video.timestamp"
             :rules="!timestampRequired ? rules.timestamp.req : rules.timestamp.noReq"

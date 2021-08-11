@@ -85,7 +85,7 @@ img.logo {
 
 #filters__toggle {
     width: 100%;
-    border: 1px solid black;
+    border: 1px solid black !important;
     border-radius: 0px;
 }
 
@@ -95,12 +95,20 @@ img.logo {
     border-top: none;
     transition: all 0.5s;
     position: relative;
-    width: 100%;
-    padding: 20px 50px;
+    max-width: 95%;
 }
 
-#filters .flex {
-    margin: auto;
+#filters .player {
+    display: flex;
+}
+
+.small #filters .player {
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.wide #filters .p1 {
+    flex-direction: row-reverse;
 }
 
 #filters .player {
@@ -113,6 +121,7 @@ img.logo {
 
 #filters .swap {
     order: 2;
+    min-width: max-content;
 }
 
 #filters .p2 {
@@ -120,15 +129,8 @@ img.logo {
 }
 
 #filters .swap {
-    padding: 0px !important;
-    margin: 0px 20px;
-    width: min-content !important;
     text-align: center;
     align-self: center;
-}
-
-#filters .swap .v-btn__content {
-    width: 64px;
 }
 
 /* matches.vue */
@@ -556,6 +558,25 @@ img.logo {
     width: 50%;
 }
 
+.wide #youtube .match-list .preview {
+    padding: 20px 0px;
+}
+
+#youtube .players {
+    max-width: max-content
+}
+
+#youtube .preview {
+    justify-content: space-between
+}
+
+#youtube .preview {
+    flex-wrap: nowrap;
+}
+
+.wide #youtube .players > .row {
+    flex-wrap: nowrap;
+}
 .small #youtube .url-input {
     width: 100%;
     flex-wrap: nowrap;

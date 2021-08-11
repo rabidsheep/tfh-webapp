@@ -1,14 +1,18 @@
 import Vue from 'vue'
 import VueResource from 'vue-resource'
 import config from './config'
-import firebase from 'firebase'
-import 'firebase/auth'
-
+import firebase from 'firebase/app'
 Vue.prototype.$config = config;
 
 Vue.use(VueResource)
-//let uri = 'https://us-central1-tfh-webapp.cloudfunctions.net/api'
-let uri = 'http://localhost:5001/tfh-webapp/us-central1/api'
+
+let uri = null
+
+if (process.env.NODE_ENV == "development") {
+  uri = 'http://localhost:5001/tfh-webapp/us-central1/api'
+} else {
+  uri = 'https://us-central1-tfh-webapp.cloudfunctions.net/api'
+}
 
 Vue.prototype.$providers = {
   twitter: new firebase.auth.TwitterAuthProvider(),

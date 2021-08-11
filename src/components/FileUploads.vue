@@ -33,10 +33,15 @@
                 :index="i"
                 v-bind="match"
                 :uploading="uploading"
+                :video="match.video ? match.video : null"
                 :uploadType="'files'"
+                :currentTimestamp="match.video && match.video.timestamp ? match.video.timestamp : null "
                 @update-character="updateCharacter($event.character, $event.index, i)"
                 @remove="removeMatch(i)"
-                @set-youtube="setYoutubeLink($event, i)" />
+                @set-url="setUrl($event, i)"
+                @set-timestamp="setTimestamp($event, i)"
+                @delete-video="deleteVideoObj(i)"
+                @delete-timestamp="deleteTimestamp(i)" />
             </v-layout>
             <!-- should we allow users to add comments to their uploads? -->
 
@@ -103,7 +108,7 @@ export default {
     props: {
         uid: String,
     },
-    data: function() {
+    data: () => {
         return {
             hidden: true,
             valid: false,
@@ -259,10 +264,11 @@ export default {
          * character hexes @ 197-213 (max)
          */
         parseFileData(result, fileName, files, i) {
+            
             // error if file uses non-.tfhr extension
             if (fileName.substring(fileName.length - 5, fileName.length) !== '.tfhr') {
                 this.setErrors('extension', fileName)
-            } else if (this.matches.find(m => m.fileName === fileName)) {
+            } else if (this.matches.find(m => m.file.name === fileName)) {
                 this.setErrors('duplicate', fileName)
             } else {  
                 let playerNames = result.substring(8, 137).replace(/\0{1,65}/g, '\n').split('\n', 2)
@@ -334,7 +340,36 @@ export default {
             this.files.splice(i, 1)
         },
         updateCharacter(character, j, i) {
-            this.matches[i].players[j].character = character
+            this.$set(this.matches[i].players[j], 'character', character)
+        },
+        setUrl(url, i) {
+            if (!this.matches[i].video) {
+                this.$set(this.matches[i], 'video', {})
+            }
+
+            if (this.matches[i].video.url !== url || !this.matches[i].video.url) {
+                this.$set(this.matches[i].video, 'url', url)
+            }
+        },
+        setTimestamp(timestamp, i) {
+            
+            if (this.matches[i].video && !this.matches[i].video.timestamp || this.matches[i].video.timestamp !== timestamp) {
+                this.$set(this.matches[i].video, 'timestamp', timestamp)
+            }
+        },
+        deleteVideoObj(i) {
+            if (this.matches[i].video) {
+                console.log('deleting video')
+                this.$delete(this.matches[i], 'video')
+            }
+
+            
+        },
+        deleteTimestamp(i) {
+            if (this.matches[i].video && this.matches[i].video.timestamp) {
+                console.log('deleting timestamp')
+                this.$delete(this.matches[i].video, 'timestamp')
+            }
         },
         setYoutubeLink(v, i) {
             if (Object.keys(v).length > 0) {

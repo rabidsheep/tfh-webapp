@@ -83,7 +83,7 @@
                   :class="file ? 'btn' : 'btn disabled'"
                   style="position: relative;">
                     <template v-if="file">
-                      <a :href="file.url">
+                      <a :href="file.url" >
                         <v-icon
                         v-bind="attrs"
                         v-on="on"
@@ -148,7 +148,8 @@
                 v-else-if="video.url"
                 :href="video.timestamp ?
                 `${video.url}&t=${video.timestamp}` :
-                `${video.url}`">
+                `${video.url}`"
+                :target="`_blank`">
                   <v-icon
                   color="#d52726"
                   class="base"

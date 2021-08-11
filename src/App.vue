@@ -2,11 +2,10 @@
   <v-app :dark="$vuetify.theme.dark">
     <v-main>
       <v-layout column align-center>
-          <Topbar
-          @force-rerender="componentKey = forceRerender()"/>
+          <Topbar />
           <div id="router-view"
           :class="$vuetify.breakpoint.smAndDown ? 'small' : 'wide'">
-            <router-view :key="componentKey" />
+            <router-view />
           </div>
       </v-layout>
     </v-main>
@@ -20,22 +19,11 @@ export default {
 	components: {
     Topbar
 	},
-  data() {
-    return {
-      componentKey: 0,
-    }
-  },
   watch: {
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     }
   },
-  methods: {
-    // this is just to force the match view component to re-render when the router link is clicked
-    forceRerender() {
-      return ( this.componentKey === 0 ? 1 : 0 )
-    }
-  }
 }
 </script>
 

@@ -107,7 +107,7 @@
                                     :ripple="false"
                                     color = "primary"
                                     @click="parseVideoDescription(currentDescription)">
-                                        Parse Description
+                                        Parse Text
                                     </v-btn>
                                 </v-col>
                                 
@@ -119,7 +119,7 @@
                                     :ripple="false"
                                     color = "primary"
                                     @click="currentDescription = video.description">
-                                        Reset Description
+                                        Reset Text
                                     </v-btn>
                                 </v-col>
                             </v-row>
@@ -130,8 +130,6 @@
                 <div
                 v-show="!$v.url.$invalid && parsed"
                 class="match-list">
-                    <br />
-
                     <template v-if="matches.length > 0">
                         <YoutubePreview
                         v-for="(match, i) in matches"

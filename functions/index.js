@@ -1,5 +1,6 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
+const { configs } = require('./configs')
 admin.initializeApp()
 
 const express = require('express')
@@ -9,7 +10,6 @@ const MongoClient = mongo.MongoClient
 const axios = require('axios')
 const api = express()
 api.use(cors)
-
 /** you need to set up .runtimeconfig.json to use functions.config()
  * from root folder:
  * 1. cd functions
@@ -20,12 +20,14 @@ api.use(cors)
 var url = null
 
 if (process.env.FUNCTIONS_EMULATOR === 'true') {
-    url = functions.config().dev.mongodb
+    url = configs.dev.mongodb
 } else {
-    url = functions.config().prod.mongodb
+    url = configs.prod.mongodb
 }
 
-const youtubeKey = functions.config().youtube.key
+//var url = "mongodb+srv://admin:QLOGVgYtVHxhEGnt@cluster0.uez1g.mongodb.net/tfhr?retryWrites=true&w=majority"
+
+const youtubeKey = configs.youtube.key
 const itemsPerPage = 5
 
 

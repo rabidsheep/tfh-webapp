@@ -130,8 +130,7 @@
 <script>
 import FileUploads from '../components/FileUploads.vue'
 import YoutubeUploads from '../components/YoutubeUploads.vue'
-import firebase from 'firebase'
-import 'firebase/storage'
+import 'firebase/auth'
 
 export default {
     components: {
@@ -158,29 +157,30 @@ export default {
                 return
             }
 
-            /** can't authorize token right now for some reason
-            this.setAuthToken()
-            .then(() => this.$users.get({ uid: user.uid }))
-            .then((response) => {
-                let userData = response.body[0]
-                if (userData) {
-                    this.isAdmin = userData.admin
-                } else {
-                    let newUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    admin: false
+            if (process.env == "production") {
+                this.setAuthToken()
+                .then(() => this.$users.get({ uid: user.uid }))
+                .then((response) => {
+                    let userData = response.body[0]
+                    if (userData) {
+                        this.isAdmin = userData.admin
+                    } else {
+                        let newUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        admin: false
+                        }
+                        this.$users.save(newUser)
                     }
-                    this.$users.save(newUser)
-                }
 
-                this.step = 2
+                    this.step = 2
 
-                this.loading = false
-            })
-            .catch((error) => {
-                console.log(error)
-            })*/
+                    this.loading = false
+                })
+                .catch((error) => {
+                    console.log(error)
+                })
+            }
 
             if (user) {
                 console.log('Signed in')
@@ -206,7 +206,7 @@ export default {
                 this.loading = false
             })
         },
-        /*
+        
         setAuthToken: function () {
             return this.$firebase.auth().currentUser.getIdToken()
                 .then((token) => {
@@ -214,7 +214,7 @@ export default {
                     request.headers.set('Authorization', token)
                 })
             })
-        },*/
+        },
         /** determines what upload form to use */
         setUploadType(type) {
             this.uploadType = type

@@ -2,7 +2,6 @@
 node_modules
 /dist
 /old
-/functions/.runtimeconfig.json
 
 # Log files
 npm-debug.log*

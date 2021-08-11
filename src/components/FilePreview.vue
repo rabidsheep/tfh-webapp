@@ -61,23 +61,30 @@
             <v-row
             class="link">
                 <v-text-field
+                ref="url"
+                v-model="url"
+                @blur="url = tempUrl"
+                clearable
                 :dense="!$vuetify.breakpoint.smAndDown"
-                v-model="userUrl"
-                :error-messages="urlErrors"
-                @input="$v.url.$touch()"
-                @blur="$v.url.$touch()"
+                :rules="rules.url"
                 label="YouTube Link (Optional)"
                 prepend-icon="mdi-youtube" />
             </v-row>
-            
-            <br v-if="!$vuetify.breakpoint.smAndDown" />
 
+            <br v-if="!$vuetify.breakpoint.smAndDown" />
+            
             <v-row
             class="timestamp">
                 <v-text-field
+                v-model="timestamp"
+                @blur="timestamp = ( timestamp && timestamp.match(/((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/)
+                        ? timestamp.match(/((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/)[0]
+                        : null )"
+                :rules="rules.timestamp"
                 :dense="!$vuetify.breakpoint.smAndDown"
-                v-model="youtube.ts"
-                :disabled="!userUrl"
+                :disabled="!url || !$refs.url.valid"
+                ref="timestamp"
+                clearable
                 prepend-icon="mdi-timer-outline"
                 label="Timestamp"/>
             </v-row>
@@ -87,62 +94,82 @@
 
 <script>
 import CharacterSelect from './CharacterSelect.vue'
-import { url } from 'vuelidate/lib/validators'
 
 export default {
-    components: { CharacterSelect },
+    components: {
+        CharacterSelect,
+    },
     name: 'FilePreview',
     props: {
         file: {
             name: String,
         },
+        video: [Object, null],
         players: Array,
         version: Number,
         index: Number,
         progress: Number,
         uploading: Boolean,
+        currentTimestamp: [String, null],
     },
     data: () => {
         return {
-        userUrl: null,
-        timestamp: null,
-        youtube: {},
-        re: {
-            yt: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
-            id: /(?<=\?v=)[^#\&\?]*/,
-            ts: /(?<=t=)\d+m\d+s|\d+m|\d+s/,
-        },
-        hidden: true,
-        valid: false,
+            hidden: true,
+            valid: false,
+            url: null,
+            tempUrl: null,
+            timestamp: null,
+            re: {
+                youtube: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
+                id: /(?<=\?v=)\w*(?=[^#\&\?]*)/,
+                //for timestamp at end of youtube urls
+                urlTimestamp: /(?<=&t=)((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/g,
+                // for checking if full timestamp string is valid
+                timestamp: /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/g,
+            },
+            rules: {
+                name: [
+                    v => !!v || 'Required'
+                ],
+                url: [
+                    v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                    v => !v || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'
+                ],
+                timestamp: [
+                    v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
+                ]
+            },
         }
     },
-    validations: {
-        url: { url }
-    },
-    computed: {
-        urlErrors() {
-            const errors = []
-            if (!this.$v.url.$dirty || !this.userUrl) return errors
+    watch: {
+        'url': function(v) {
+            console.log(this.$refs.url)
+            if (v && v.match(/(?<=\?v=)([^#\&\?]*)/) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11) {
+                this.tempUrl = v.match(this.re.youtube)[0]
 
-            !this.$v.url.url && errors.push('Must be valid URL')
+                if (this.tempUrl && !this.video || this.tempUrl !== this.video.url) {
+                    this.$emit('set-url', this.tempUrl)
+                }
 
-            var yt = {}
-
-            if (this.re.yt.test(this.userUrl)) {
-                yt['id'] = this.userUrl.match(this.re.id)
-                
-                if (this.re.ts.test(this.userUrl)) {
-                    yt['ts'] = this.userUrl.match(this.re.ts)
+                if (this.re.urlTimestamp.test(v) && v.match(this.re.urlTimestamp)[0] !== this.timestamp) {
+                    this.timestamp = v.match(this.re.urlTimestamp)[0]
                 }
             } else {
-                errors.push('Invalid URL format')
+                this.tempUrl = null
+                this.timestamp = null
+                this.$emit('delete-video')
             }
-
-            this.youtube = yt
-
-            this.$emit('set-youtube', this.youtube)
-
-            return errors
+        },
+        
+        'timestamp': function(v) {
+            if (this.timestamp && (this.re.timestamp).test(v)) {
+                    if (this.timestamp !== this.currentTimestamp) {
+                        this.$emit('set-timestamp', this.timestamp.match(this.re.timestamp)[0])
+                    }
+            } else {
+                //this.$delete(this.updated.video, 'timestamp')
+                this.$emit('delete-timestamp')
+            }
         }
     },
     methods: {

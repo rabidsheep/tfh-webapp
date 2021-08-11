@@ -7,14 +7,14 @@
         </v-btn>
 
         <v-expand-transition>
-            <div id="filters__main" v-show="!hidden">
-                <v-layout players :column="$vuetify.breakpoint.smAndDown">
+            <v-container id="filters__main" v-show="!hidden">
+                <v-row class="players" align="center" justify="center">
                     <!-- player filters -->
-                    <v-layout
+                    <v-col
                     :class="`player p${i + 1}`"
                     v-for="(player, i) in playerInfo"
                     :key="i"
-                    :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"> 
+                    :cols="$vuetify.breakpoint.smAndDown ? 12 : 5"> 
 
                         <CharacterSelect
                         :currentCharacter="playerInfo[i].character"
@@ -49,28 +49,30 @@
                             </template>
                         </v-combobox>
                         <!-- /player select-->
-                    </v-layout>
+                    </v-col>
                     <!-- /player filters -->
 
-
-                    <v-btn
+                    <v-col
                     class="swap"
-                    color="primary"
-                    @click="swap()">
-                        <v-icon>
-                            {{ $vuetify.breakpoint.mdAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
-                        </v-icon>
-                    </v-btn>
-                </v-layout>
+                    :cols="$vuetify.breakpoint.smAndDown ? 12 : 1">
+                        <v-btn
+                        color="primary"
+                        @click="swap()">
+                            <v-icon>
+                                {{ $vuetify.breakpoint.mdAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
+                            </v-icon>
+                        </v-btn>
+                    </v-col>
+                </v-row>
 
-                <center>
+                <v-row align="center" justify="center">
                     <v-btn
                     color="primary"
                     @click="clear()">
                         Clear All
                     </v-btn>
-                </center>
-            </div>
+                </v-row>
+            </v-container>
         </v-expand-transition>
     </v-layout>
 </template>

@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "tfh-webapp"
+    "default": "tfh-webapp",
+    "tfh-webapp-dev": "tfh-webapp-dev"
   }
 }

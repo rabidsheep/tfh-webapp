@@ -10,7 +10,7 @@
             height="24px"
             width="24px"
             @click="$emit('remove')"
-            color="primary">
+            color="accent">
                 <v-icon size="15px">
                     mdi-close-thick
                 </v-icon>

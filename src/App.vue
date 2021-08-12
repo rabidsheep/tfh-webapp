@@ -1,24 +1,35 @@
 <template>
-  <v-app :dark="$vuetify.theme.dark">
+  <v-app dark>
+    <v-toolbar maxHeight="50px" dense color="accent">
+        <!-- replace <a> with <router-link> eventually -->
+        <a href="/">
+            <img class="logo" src="./assets/img/pixel/1.png" />
+        </a>
+
+        <v-toolbar-title>
+            fortnite gaming
+        </v-toolbar-title>
+
+        <router-link to="/upload">
+            <v-btn icon>
+                <v-icon>mdi-plus-box</v-icon>
+            </v-btn>
+        </router-link>
+    </v-toolbar>
+
     <v-main>
       <v-layout column align-center>
-          <Topbar />
-          <div id="router-view"
-          :class="$vuetify.breakpoint.smAndDown ? 'small' : 'wide'">
-            <router-view />
-          </div>
+        <div id="router-view"
+        :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
+          <router-view />
+        </div>
       </v-layout>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import Topbar from './components/Topbar.vue'
-
 export default {
-	components: {
-    Topbar
-	},
   watch: {
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
@@ -31,7 +42,20 @@ export default {
 @import './assets/css/global.css';
 
 .theme--dark.v-application {
-  background-color: #3a3939;
+  background-color: var(--v-background-base);
+  color: var(--v-text-base);
+}
+
+.theme--dark.v-sheet {
+  color: var(--v-text-base);
+}
+
+::v-deep #filters__main {
+  background: var(--v-background-darken1);
+}
+
+::v-deep .theme--dark.v-stepper {
+  background: var(--v-background-darken1);
 }
 
 ::v-deep .v-menu__content.player-select-menu {

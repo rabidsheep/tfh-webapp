@@ -33,6 +33,7 @@
     <v-layout v-if="!loading && !(resultsCount <= this.$config.itemsPerPage)" class="mt-3">
       <v-spacer/>
       <v-pagination
+      color="accent"
       v-model="page"
       :length="resultsCount % this.$config.itemsPerPage === 0 ?
                 Math.floor(resultsCount / this.$config.itemsPerPage) :

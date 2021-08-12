@@ -89,10 +89,10 @@
             <v-btn
             rounded
             :ripple="false"
-            color = "primary"
+            color = "accent"
             :disabled="!valid || matches.length <= 0"
             @click="submitFiles()">
-                Upload
+                Upload Files
             </v-btn>
         </v-layout>
     </v-form>

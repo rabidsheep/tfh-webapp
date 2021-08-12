@@ -3,14 +3,14 @@
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>
-                    <v-stepper-step step="1"
+                    <v-stepper-step color="accent" step="1"
                     :complete="step > 1">
                         Sign In
                     </v-stepper-step>
 
                     <v-divider />
 
-                    <v-stepper-step step="2"
+                    <v-stepper-step color="accent" step="2"
                     :complete="step > 2">
                         Edit Details
                     </v-stepper-step>
@@ -150,7 +150,7 @@
                             <v-col class="reset">
                                 <v-btn
                                 rounded
-                                color="primary"
+                                color="accent"
                                 @click="resetMatch()">
                                     Reset
                                 </v-btn>
@@ -160,7 +160,7 @@
                                 <v-btn
                                 rounded
                                 :disabled="!valid || !changesFound"
-                                color="primary"
+                                color="accent"
                                 @click="updateMatch()">
                                     Submit
                                 </v-btn>

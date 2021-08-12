@@ -29,7 +29,7 @@
             justify-center>
                 <v-row
                 class="url-input">
-                    <v-text-field
+                    <!--<v-text-field
                     class="url"
                     v-model="url"
                     :error-messages="urlErrors"
@@ -38,13 +38,25 @@
                     label="YouTube Link"
                     prepend-icon="mdi-youtube"
                     required
+                    clearable />-->
+
+                    <v-text-field
+                    class="url"
+                    ref="url"
+                    v-model="url"
+                    :rules="rules.url"
+                    label="YouTube Link"
+                    prepend-icon="mdi-youtube"
+                    required
                     clearable />
 
+
                     <v-btn
+                    v-if="$refs.url"
                     rounded
                     :ripple="false"
-                    color = "primary"
-                    :disabled="!youtube.id"
+                    color = "accent"
+                    :disabled="!$refs.url.valid"
                     @click="validateYoutubeID()">
                         Go
                     </v-btn>
@@ -55,7 +67,7 @@
                     v-if="loading" />
                 
                 <template v-if="invalidId">
-                    No video found under ID '{{ youtube.id[0] }}'
+                    No video found under ID '{{ vid }}'
                 </template>
 
                 <div
@@ -105,7 +117,7 @@
                                     <v-btn
                                     rounded
                                     :ripple="false"
-                                    color = "primary"
+                                    color="accent"
                                     @click="parseVideoDescription(currentDescription)">
                                         Parse Text
                                     </v-btn>
@@ -117,7 +129,6 @@
                                     <v-btn
                                     rounded
                                     :ripple="false"
-                                    color = "primary"
                                     @click="currentDescription = video.description">
                                         Reset Text
                                     </v-btn>
@@ -128,7 +139,7 @@
                 </div>
 
                 <div
-                v-show="!$v.url.$invalid && parsed"
+                v-show="$refs.url && $refs.url.valid && parsed"
                 class="match-list">
                     <template v-if="matches.length > 0">
                         <YoutubePreview
@@ -165,7 +176,7 @@
                 <v-btn
                 rounded
                 :ripple="false"
-                color = "primary"
+                color = "accent"
                 :disabled="!valid"
                 @click="youtubeUpload()">
                     Upload
@@ -178,9 +189,6 @@
 <script>
 import YoutubePreview from './YoutubePreview.vue'
 import StatusOverlay from './StatusOverlay.vue'
-import { required, url, helpers } from 'vuelidate/lib/validators'
-const youtubeUrl = helpers.regex('youtubeUrl', /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/)
-
 // youtube test video url: https://www.youtube.com/watch?v=uciAaVk3xaE
 
 export default {
@@ -205,12 +213,25 @@ export default {
             progress: 0,
             errors: [],
             timestamp: null,
-            youtube: {},
+            vid: null,
             video: {},
             re: {
                 yt: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
-                id: /(?<=\?v=)\w*(?=[^#\&\?]*)/,
+                id: /(?<=\?v=)[^#\&\?]*/,
                 ts: /(?<=t=)\d+m\d+s|\d+m|\d+s/,
+            },
+            rules: {
+                name: [
+                    v => !!v || 'Required'
+                ],
+                url: [
+                    v => !!v || 'Required',
+                    v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                    v => !v || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'
+                ],
+                timestamp: [
+                    v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
+                ]
             },
             hidden: true,
             valid: false,
@@ -219,47 +240,25 @@ export default {
             invalidId: false,
         }
     },
-    validations: {
-        url: {
-            required,
-            url,
-            youtubeUrl,
-        }
-    },
-    computed: {
-        urlErrors() {
-            const errors = []
-            this.youtube = {}
-            //console.log(JSON.parse(JSON.stringify(this.$v.url)))
-
-            if (!this.$v.url.$dirty) return errors 
-            !this.url && errors.push('Required')
-            !this.$v.url.url && errors.push('Must be valid URL')
-            !this.$v.url.youtubeUrl && errors.push('Must be a link to a YouTube video')
-
-            if (!this.$v.$invalid) {
-                let matched = this.url.match(this.re.id)
-                if (matched && matched[0].length !== 11) {
-                    errors.push ('Video ID must be 11 characters')
-                } else {
-                    this.youtube.id = this.url.match(this.re.id)
-                    
-                    if (this.re.ts.test(this.url)) {
-                        this.youtube.ts = this.url.match(this.re.ts)
-                    }
-                }
-            }
-
-            return errors
-        }
-    },
     methods: {
         validateYoutubeID() {
+            
+            if (this.$refs.url.valid) {
+                let matched = this.url.match(this.re.id)
+                if (matched && matched[0].length === 11) {
+                    this.vid = matched[0]
+                }
+            } else {
+                this.invalidId = true;
+                return
+            }
+
+            this.url = "https://youtu.be/watch?v=" + this.vid
             this.loading = true
             
             this.video = {}
 
-            this.$youtubeData.get({ v: this.youtube.id })
+            this.$youtubeData.get({ v: this.vid })
             .then((response) => {
                 this.loading = false
                 this.error = false
@@ -363,13 +362,13 @@ export default {
            this.error = false
         },
         resetForm() {
-            this.$v.$reset()
             this.matches = []
-            this.youtube = null
-            this.video = null
+            this.youtube = {}
+            this.video = {}
             this.parsed = false
             this.url = null
             this.finished = false
+            this.$refs.url.reset()
         },
         removeMatch(i) {
             this.matches.splice(i, 1)

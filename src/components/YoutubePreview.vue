@@ -1,20 +1,18 @@
 <template>
     <v-row
-    
     class="preview">
 
         <v-col
         justify="center"
-        :cols="$vuetify.breakponSmAndDown ? 3 : undefined"
-        class="remove__wrapper">
+        :cols="$vuetify.breakpoint.smAndDown ? 1 : undefined"
+        class="remove">
             <v-btn
             :ripple="false"
-            class="remove"
             fab
             height="24px"
             width="24px"
             @click="$emit('remove')"
-            color="primary">
+            color="accent">
                 <v-icon size="15px">
                     mdi-close-thick
                 </v-icon>
@@ -23,14 +21,14 @@
 
         <v-col
         class="players"
-        :cols="$vuetify.breakpoint.smAndDown ? 7 : 10">
+        :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : 8) : 8">
             <v-row
             align-self="center">
-                <v-layout
+                <v-col
+                :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : 12) : undefined"
                 :class="`player p${i+1}`"
                 v-for="(player, i) in players"
-                :key="i"
-                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
+                :key="i">
                     <CharacterSelect
                     :currentCharacter ="player.character"
                     :index = "i"
@@ -47,26 +45,31 @@
                     counter="64"
                     required
                     />
-                </v-layout>
+                </v-col>
                 
-                <v-layout
+                <v-col
+                v-if="!$vuetify.breakpoint.smAndDown"
+                cols="1"
                 align-center
                 justify-center
-                class="vs"
-                v-if="!$vuetify.breakpoint.smAndDown">
+                class="vs">
                     vs.
-                </v-layout>
+                </v-col>
             </v-row>
         </v-col>
 
         <v-col
+        
         class="timestamp"
-        :cols="$vuetify.breakpoint.smAndDown ? 3 : 2">
-            <v-text-field
-            v-model="video.timestamp"
-            :rules="!timestampRequired ? rules.timestamp.req : rules.timestamp.noReq"
-            label="Timestamp"
-            :required="timestampRequired" />
+        :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? undefined : 3) : 3">
+                <v-col class="field" :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? undefined : undefined) : undefined">
+                <v-text-field
+                v-model="video.timestamp"
+                :dense="$vuetify.breakpoint.xsOnly"
+                :rules="!timestampRequired ? rules.timestamp.req : rules.timestamp.noReq"
+                label="Timestamp"
+                :required="timestampRequired" />
+                </v-col>
         </v-col>
     </v-row>
 </template>

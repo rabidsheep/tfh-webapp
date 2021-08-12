@@ -4,7 +4,7 @@
         <router-link :to="`edit?id=${_id}`">
         <v-icon
         :size="$vuetify.breakpoint.smAndDown ? '22px' : '32px'"
-        color="primary">
+        color="accent">
           mdi-square-edit-outline
         </v-icon>
         </router-link>
@@ -77,7 +77,7 @@
               v-model="show"
               top
               :disabled="!version || $version === version"
-              color="primary">
+              color="accent">
                 <template v-slot:activator="{on, attrs}">
                   <div
                   :class="file ? 'btn' : 'btn disabled'"

@@ -17,15 +17,14 @@ api.use(cors)
  * 3. add respective keys to .runtimeconfig.json
  */
 
-var url = null
+var dev = null
 
-if (process.env.FUNCTIONS_EMULATOR === 'true') {
-    url = configs.dev.mongodb
-} else {
-    url = configs.prod.mongodb
-}
+if (process.env.FUNCTIONS_EMULATOR === 'true')
+    dev = true
+else 
+    dev = false
 
-//var url = "mongodb+srv://admin:QLOGVgYtVHxhEGnt@cluster0.uez1g.mongodb.net/tfhr?retryWrites=true&w=majority"
+let url = (dev ? configs.dev.mongodb : configs.prod.mongodb)
 
 const youtubeKey = configs.youtube.key
 const itemsPerPage = 5
@@ -185,12 +184,11 @@ api.get('/youtube-data', (req, res) => {
 
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.v}&key=${youtubeKey}`
     
-    return axios.get(url)
-    .then((youtube, error) => {
+    //if (dev) {
+        return axios.get(url)
+        .then((youtube, error) => {
 
-        if (error) throw error
-
-
+            if (error) throw error
             if (youtube.data.items.length > 0) {
                 res.status(200).json({
                     id: req.query.v[0],
@@ -202,35 +200,34 @@ api.get('/youtube-data', (req, res) => {
                     name: youtube.data.items[0].snippet.channelTitle
                     }
                 })
-            } else {
-                res.status(400).send(error)
-            }
+            } else { res.status(400).send(error) }
 
-        return res
-    })
-    .catch((error) => res.status(400).send(error.toString()))
+            return res
+        })
+        .catch((error) => res.status(400).send(error.toString()))
+    /*} else {
+        admin.auth().verifyIdToken(request.headers.authorization, () => {
+            return axios.get(url, (youtube) => {
+                if (youtube.data.items.length > 0) {
+                response.status(200).json({
+                    id: req.query.v,
+                    title: youtube.data.items[0].snippet.title,
+                    date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
+                    description: youtube.data.items[0].snippet.description,
+                    channel: {
+                    id: youtube.data.items[0].snippet.channelId,
+                    name: youtube.data.items[0].snippet.channelTitle
+                    }
+                })
+                } else {
+                res.status(400).send('Invalid video')
+                }
+            })
+            .catch((error) => res.status(400).send(error.toString()))
+        }).catch((error) => res.status(400).send(error.toString()))
+    }
 
-/*admin.auth().verifyIdToken(request.headers.authorization).then(() => {
-    let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${request.query.v}&key=${youtubeKey}`
-    return axios.get(url)
-      .then((youtube) => {
-        if (youtube.data.items.length > 0) {
-          response.status(200).json({
-            id: request.query.v,
-            title: youtube.data.items[0].snippet.title,
-            date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
-            description: youtube.data.items[0].snippet.description,
-            channel: {
-              id: youtube.data.items[0].snippet.channelId,
-              name: youtube.data.items[0].snippet.channelTitle
-            }
-          })
-        } else {
-          response.status(400).send('Invalid video')
-        }
-      })
-      .catch((error) => response.status(400).send(error.toString()))
-  }).catch((error) => response.status(400).send(error.toString()))*/
+    return res*/
 })
 
 

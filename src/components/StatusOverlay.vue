@@ -41,7 +41,7 @@
                     <v-btn
                     rounded
                     @click="$emit('close')"
-                    color="primary">
+                    color="accent">
                         OK
                     </v-btn>
                 </template>
@@ -70,7 +70,7 @@
                     <v-btn
                     rounded
                     @click="$emit('clear-errors')"
-                    color="primary">
+                    color="accent">
                         OK
                     </v-btn>
                 </template>

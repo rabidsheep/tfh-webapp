@@ -56,7 +56,7 @@
                     class="swap"
                     :cols="$vuetify.breakpoint.smAndDown ? 12 : 1">
                         <v-btn
-                        color="primary"
+                        color="accent"
                         @click="swap()">
                             <v-icon>
                                 {{ $vuetify.breakpoint.mdAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
@@ -67,7 +67,7 @@
 
                 <v-row align="center" justify="center">
                     <v-btn
-                    color="primary"
+                    color="accent"
                     @click="clear()">
                         Clear All
                     </v-btn>

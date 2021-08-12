@@ -3,21 +3,21 @@
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>
-                    <v-stepper-step step="1"
+                    <v-stepper-step color="accent" step="1"
                     :complete="step > 1">
                         Sign In
                     </v-stepper-step>
 
                     <v-divider />
 
-                    <v-stepper-step step="2"
+                    <v-stepper-step color="accent" step="2"
                     :complete="step > 2">
                         Select Upload Type
                     </v-stepper-step>
 
                     <v-divider />
 
-                    <v-stepper-step step="3"
+                    <v-stepper-step color="accent" step="3"
                     :complete="step > 3">
                         Upload Matches
                     </v-stepper-step>
@@ -210,10 +210,11 @@ export default {
         setAuthToken: function () {
             return this.$firebase.auth().currentUser.getIdToken()
                 .then((token) => {
-                return this.$httpInterceptors.push((request) => {
-                    request.headers.set('Authorization', token)
+                    console.log('set auth token')
+                    return this.$httpInterceptors.push((request) => {
+                        request.headers.set('Authorization', token)
+                    })
                 })
-            })
         },
         /** determines what upload form to use */
         setUploadType(type) {

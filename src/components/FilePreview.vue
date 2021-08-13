@@ -38,6 +38,7 @@
                             
             <v-text-field
             v-model="player.name"
+            :rules="rules.name"
             :label="`Player ${i + 1}`"
             :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
             maxLength="64"

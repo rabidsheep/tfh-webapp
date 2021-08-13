@@ -8,10 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@google-cloud/storage": "^5.8.5",
     "@mdi/font": "^5.9.55",
-    "@vuelidate/core": "*",
-    "@vuelidate/validators": "*",
     "axios": "^0.21.1",
     "connect-firebase": "^0.0.9",
     "core-js": "^3.6.5",
@@ -28,10 +25,8 @@
     "moment": "^2.29.1",
     "mongodb": "^3.6.10",
     "vue": "^2.6.11",
-    "vue-float-label": "^1.6.1",
     "vue-resource": "^1.5.3",
     "vue-router": "^3.5.1",
-    "vuelidate": "^0.7.6",
     "vuetify": "^2.4.0"
   },
   "devDependencies": {

@@ -33,10 +33,6 @@
                     align-center>
                         <h1>Sign In</h1>
 
-                        <v-progress-linear
-                        indeterminate
-                        v-show="$firebase.auth().currentUser"/>
-
                         <v-layout
                         class="body"
                         column
@@ -51,6 +47,17 @@
                                 Google
                             </v-btn>
                         </v-layout>
+
+                        <v-progress-linear
+                        indeterminate
+                        v-show="$firebase.auth().currentUser || loggingIn"/>
+
+                        <template v-if="$firebase.auth().currentUser || loggingIn">
+                            <br />
+                            {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
+                        </template>
+
+                        
                         <!--<v-btn height="50" v-show="!$firebase.auth().currentUser" @click="signIn('twitter')">
                             <v-icon left>mdi-twitter</v-icon> Twitter
                         </v-btn>-->
@@ -147,51 +154,70 @@ export default {
             loading: false,
             loginError: false,
             uploadValue: 0,
+            isAdmin: false,
+            isRegistered: true,
+            loggingIn: false,
         }
     },
     mounted: function () {
         this.$firebase.auth().onAuthStateChanged((user) => {
-
+            
             if (!user) {
                 this.step = 1
                 return
             }
 
-            if (process.env == "production") {
+            if (process.env.NODE_ENV == "production") {
+                console.log("Production Environment")
+
                 this.setAuthToken()
-                .then(() => this.$users.get({ uid: user.uid }))
+                .then(() => {
+                    console.log('Checking user')
+                    this.loggingIn = true
+                    return this.$users.get({ uid: user.uid })
+                })
                 .then((response) => {
                     let userData = response.body[0]
                     if (userData) {
+                        console.log("Retrieved user data")
+
                         this.isAdmin = userData.admin
+                        this.step = 2
+                        this.loading = false
+                        this.loggingIn = false
                     } else {
+                        console.log("Creating new user")
+                        this.isRegistered = false
+
                         let newUser = {
-                        uid: user.uid,
-                        email: user.email,
-                        admin: false
+                            uid: user.uid,
+                            email: user.email,
+                            admin: false
                         }
+
                         this.$users.save(newUser)
+                        .then(() => {
+                            this.step = 2
+                            this.loading = false
+                            this.isRegistered = true
+                            this.loggingIn = false
+                        })
                     }
-
-                    this.step = 2
-
-                    this.loading = false
                 })
                 .catch((error) => {
                     console.log(error)
                 })
-            }
-
-            if (user) {
-                console.log('Signed in')
-                //console.log(user)
-                this.uid = user.uid
-                this.step = 2
             } else {
-                console.log('Signed out')
-            }
+                if (user) {
+                    console.log('Signed in')
+                    this.uid = user.uid
+                    this.step = 2
+                } else {
+                    console.log('Signed out')
+                }
 
-            this.loading = false;
+                this.loading = false;
+            }
         })
     },
     methods: {
@@ -206,11 +232,10 @@ export default {
                 this.loading = false
             })
         },
-        
         setAuthToken: function () {
             return this.$firebase.auth().currentUser.getIdToken()
                 .then((token) => {
-                    console.log('set auth token')
+                    console.log('Setting auth token')
                     return this.$httpInterceptors.push((request) => {
                         request.headers.set('Authorization', token)
                     })

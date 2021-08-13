@@ -7,22 +7,19 @@ const express = require('express')
 const cors = require('cors')({ origin: true })
 const mongo = require('mongodb')
 const MongoClient = mongo.MongoClient
+
+
 const axios = require('axios')
 const api = express()
 api.use(cors)
-/** you need to set up .runtimeconfig.json to use functions.config()
- * from root folder:
- * 1. cd functions
- * 2. firebase functions:config:get > .runtimeconfig.json
- * 3. add respective keys to .runtimeconfig.json
- */
 
 var dev = null
 
-if (process.env.FUNCTIONS_EMULATOR === 'true')
+if (process.env.FUNCTIONS_EMULATOR === 'true') {
     dev = true
-else 
+} else {
     dev = false
+}
 
 let url = (dev ? configs.dev.mongodb : configs.prod.mongodb)
 
@@ -53,37 +50,31 @@ api.get('/matches', (req, res) => {
         query['_id'] = mongo.ObjectId(req.query.id)
     }
 
-    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
-        if (error) {
-            console.log('Unable to connect: ', error)
-        } else {
-            console.log('Connected @ %s', (new Date()).toLocaleString())
-            console.log('Filtering with query:\n', query)
-            const db = client.db('tfhr').collection('matches').find(query)
+    MongoClient.connect(url, { useUnifiedTopology: true })
+    .then((client) => {
+        console.log('Connected @ %s', (new Date()).toLocaleString())
+        console.log('Filtering with query:\n', query)
+        let db = client.db('tfhr').collection('matches').find(query)
 
-            /* get count of all documents that match query
-            this will take into account if someone has uploaded a new
-            match */
-            db
-            .count((error, count) => {
-                if (error) throw error
-                console.log('Found ' + count + ' results.')
-
-                /* get the matches that will display
-                based on current page position */
-                db
-                .sort({uploadDate: -1, uploadTime: -1})
-                .skip(skip)
-                .limit(itemsPerPage)
-                .toArray((error, matches) => {
-                        if (error) throw error
-                        console.log('Matches retrieved.')
-                        return res.status(200).send({ matches: matches, count: count })
-                    })
-                }
-            )
-        }
+        return Promise.all([db, db.count()])
     })
+    .then((results) => {
+        let db = results[0]
+        let count = results[1]
+        console.log('Found ' + count + ' results.')
+
+        return Promise.all([
+            count,
+            db.sort({uploadDate: -1, uploadTime: -1})
+            .skip(skip)
+            .limit(itemsPerPage)
+            .toArray()
+        ])
+    })
+    .then((results) => {
+        return res.status(200).send({count: results[0], matches: results[1]})
+    })
+    .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** upload matches to db */
@@ -91,63 +82,58 @@ api.put('/matches', (req, res) => {
     let match = req.body
     let players = [match.players[0].name, match.players[1].name]
 
-    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
-        if (error) {
-            console.log('Unable to connect: ', error)
-        } else {
-            console.log('Connected.\nUploading match...')
-            let timestamp = ((new Date()).toISOString()).split('T')
-            let db = client.db('tfhr')
+    MongoClient.connect(url, { useUnifiedTopology: true })
+    .then((client) => {
+        console.log('Connected.\nUploading match...')
+        let timestamp = ((new Date()).toISOString()).split('T')
+        let db = client.db('tfhr')
 
-            if (error) throw error
-
-            db
-            .collection('matches')
+        return Promise.all([
+            db,
+            db.collection('matches')
             .insertOne({
                 uploadDate: timestamp[0],
                 uploadTime: timestamp[1],
-                ...match}, (error, result) => {
-                if (error) throw error
-                
-                // adds new entries to player collection
-                for (i in players) {
-                    console.log('Checking player list for', players[i])
-
-                    db
-                    .collection('players')
-                    .updateOne(
-                        { 'name': players[i] },
-                        { $setOnInsert: { 'name': players[i] }},
-                        { upsert: true }
-                    )
-                }
-
-                console.log('Match uploaded.\nID: ', result.insertedId)
-                return res.status(200).send({ docId: result.insertedId })
+                ...match
             })
-        }
+        ])
     })
+    .then((results) => {
+        let db = results[0]
+        let matchId = results[1].insertedId
 
+        // adds new entries to player collection
+        for (i in players) {
+            console.log('Checking player list for', players[i])
+
+            db.collection('players')
+            .updateOne(
+                { 'name': players[i] },
+                { $setOnInsert: { 'name': players[i] }},
+                { upsert: true }
+            )
+        }
+
+        console.log('Match uploaded.\nID: ', matchId)
+        return res.status(200).send({ docId: matchId })
+    })
+    .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** get list of currently existing players in db */
 api.get('/players', (req, res) => {
-    MongoClient.connect(url, { useUnifiedTopology: true }, (error, client) => {
-        if (error) {
-            console.log('Unable to connect: ', error)
-        } else {
-            console.log('Connected.\nRetrieving players...')
-
-            client
-            .db('tfhr')
-            .collection('players')
-            .distinct('name', (error, result) => {
-                if (error) throw error
-                console.log('Returning players list.')
-                return res.status(200).send({ players: result })
-            })
-        }
+    MongoClient.connect(url, { useUnifiedTopology: true })
+    .then((client) => {
+        return client
+        .db('tfhr')
+        .collection('players')
+        .distinct('name')
+     })
+     .then((result) => {
+        console.log('Returning players list.')
+        return res.status(200).send({ players: result })
     })
+    .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** authorize & verify user
@@ -155,79 +141,98 @@ api.get('/players', (req, res) => {
 */
 api.get('/users', (req, res) => {
     //console.log(admin.auth())
-    if (!req.headers.authorization) {
+    console.log('--> Verifying User <--')
+    if (!req.headers.authorization && !dev) {
+        console.log('Unauthorized')
         res.status(403).send('Unauthorized')
     }
-    admin.auth().verifyIdToken(req.headers.authorization)
-    .then((token) => {
-        console.log(token)
-        return null
-    })
-    .catch((error) => {
-        console.log(error)
-    })
 
+    admin.auth()
+    .verifyIdToken(req.headers.authorization)
+    .then(() => {
+        console.log('Connecting to client')
+        return MongoClient.connect(url, { useUnifiedTopology: true })
+    })
+    .then((client) => {
+        console.log('Retrieving user info')
+
+        return client.db()
+        .collection('users')
+        .find(req.query)
+        .toArray()
+    })
+    .then((user) => {
+        console.log(user)
+        return res.status(200).send(user)
+    })
+    .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** save user info to user table in db */
-/*api.put('/users', (req, res) => {
-    // call to save user info to user table
-})*/
+api.put('/users', (req, res) => {
+    if (!req.headers.authorization && !dev) {
+        res.status(403).send('Unauthorized')
+    }
+
+    let user = req.body
+
+    admin.auth()
+    .verifyIdToken(req.headers.authorization)
+    .then(() => {
+        return MongoClient.connect(url, { useUnifiedTopology: true })
+    })
+    .then((client) => { 
+        client.db()
+        .collection('users')
+        .updateOne({ uid: user.uid }, { $set: { email: user.email } }, { upsert: true })
+
+        return user
+    })
+    .then((user) => {
+        return res.status(200).send(`${user.email} saved`)
+    })
+    .catch((error) => res.status(400).send(error.toString()))
+})
 
 /** retrieve youtube video info */
 api.get('/youtube-data', (req, res) => {
-    /*this breaks the function
-    need to implement id verification first
-    if (!req.headers.authorization) {
+
+    if (!req.headers.authorization && !dev) {
       res.status(403).send('Unauthorized')
-    }*/
+    }
 
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.v}&key=${youtubeKey}`
     
-    //if (dev) {
-        return axios.get(url)
-        .then((youtube, error) => {
+    let client = null
 
-            if (error) throw error
-            if (youtube.data.items.length > 0) {
-                res.status(200).json({
-                    id: req.query.v[0],
-                    title: youtube.data.items[0].snippet.title,
-                    date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
-                    description: youtube.data.items[0].snippet.description,
-                    channel: {
-                    id: youtube.data.items[0].snippet.channelId,
-                    name: youtube.data.items[0].snippet.channelTitle
-                    }
-                })
-            } else { res.status(400).send(error) }
-
-            return res
+    if (dev) {
+        client = axios.get(url)
+    } else {
+        client = admin.auth()
+        .verifyIdToken(req.headers.authorization)
+        .then(() => {
+            console.log("ID Token Verified")
+            return axios.get(url)
         })
-        .catch((error) => res.status(400).send(error.toString()))
-    /*} else {
-        admin.auth().verifyIdToken(request.headers.authorization, () => {
-            return axios.get(url, (youtube) => {
-                if (youtube.data.items.length > 0) {
-                response.status(200).json({
-                    id: req.query.v,
-                    title: youtube.data.items[0].snippet.title,
-                    date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
-                    description: youtube.data.items[0].snippet.description,
-                    channel: {
-                    id: youtube.data.items[0].snippet.channelId,
-                    name: youtube.data.items[0].snippet.channelTitle
-                    }
-                })
-                } else {
-                res.status(400).send('Invalid video')
-                }
-            })
-            .catch((error) => res.status(400).send(error.toString()))
-        }).catch((error) => res.status(400).send(error.toString()))
     }
 
-    return res*/
+    return client.then((youtube) => {
+        if (youtube.data.items.length > 0) {
+            console.log("Successfully retrieved Youtube data")
+
+            return res.status(200).send({
+                id: req.query.v,
+                title: youtube.data.items[0].snippet.title,
+                date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
+                description: youtube.data.items[0].snippet.description,
+            })
+        } else {
+            console.log("Failed to retrieve Youtube data")
+
+            return res.status(400).send('Invalid video')
+        }
+    })
+    .catch((error) => res.status(400).send(error.toString()))
 })
 
 

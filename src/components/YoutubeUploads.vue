@@ -71,7 +71,7 @@
                 </template>
 
                 <div
-                v-if="Object.keys(video).length"
+                v-if="Object.keys(video).length && !loading"
                 column
                 justify-center
                 align-center
@@ -258,21 +258,50 @@ export default {
             
             this.video = {}
 
-            this.$youtubeData.get({ v: this.vid })
-            .then((response) => {
-                this.loading = false
-                this.error = false
-                if (response.ok) {
+            if (process.env.NODE_ENV === "production") {
+                this.setAuthToken()
+                .then(() => {
+                    console.log('Retrieving Youtube data')
+                    return this.$youtubeData.get({ v: this.vid })
+                })
+                .then((response) => {
+                    this.loading = false
+                    this.error = false
+                    if (response.ok) {
                         this.video = response.body
                         this.invalidId = false
                         this.currentDescription = this.video.description
-                }
-            })
-            .catch(() => {
-                this.invalidId = true
-                this.loading = false
-
-            })
+                    }
+                })
+                .catch(() => {
+                    this.invalidId = true
+                    this.loading = false
+                })
+            } else {
+                this.$youtubeData.get({ v: this.vid })
+                .then((response) => {
+                    this.loading = false
+                    this.error = false
+                    if (response.ok) {
+                        this.video = response.body
+                        this.invalidId = false
+                        this.currentDescription = this.video.description
+                    }
+                })
+                .catch(() => {
+                    this.invalidId = true
+                    this.loading = false
+                })
+            }
+        },
+        setAuthToken: function () {
+            return this.$firebase.auth().currentUser.getIdToken()
+                .then((token) => {
+                    console.log('Setting auth token')
+                    return this.$httpInterceptors.push((request) => {
+                        request.headers.set('Authorization', token)
+                    })
+                })
         },
         parseVideoDescription(desc) {
             this.matches = []
@@ -328,10 +357,10 @@ export default {
         addBlankMatch() {
             console.log(this.video)
             this.matches.push({
+                userId: this.uid,
                 players: [{}, {}],
                 index: this.matches.length,
                 video: this.video})
-            console.log(JSON.parse(JSON.stringify(this.matches)))
         },
         /** upload youtube-only object */
         youtubeUpload() {

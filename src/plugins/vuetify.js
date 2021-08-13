@@ -64,7 +64,7 @@ export default new Vuetify({
       thresholds: {
         xs: 600,
         sm: 800,
-        md: 960,
+        md: 900,
         lg: 1280,
       },
       mobileBreakpoint: 740,

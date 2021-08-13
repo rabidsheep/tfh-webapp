@@ -30,6 +30,19 @@
 
 <script>
 export default {
+  computed: {
+    /*size: function() {
+      if (this.$vuetify.breakpoint.lgOnly) {
+        return 'lg'
+      } else if (this.$vuetify.breakpoint.mdOnly) {
+        return 'md'
+      } else if (this.$vuetify.breakpoint.smOnly) {
+        return 'sm'
+      } else if (this.$vuetify.breakpoint.xsOnly) {
+        return 'xs'
+      }
+    }*/
+  },
   watch: {
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250

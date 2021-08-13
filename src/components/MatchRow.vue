@@ -28,7 +28,7 @@
         </div>
 
         <div
-        :class="$vuetify.breakpoint.smAndDown ? `time` : `time mr-3`">
+        class="time">
           {{ time }} {{ timezone }}
         </div>
       </v-layout>

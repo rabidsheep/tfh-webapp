@@ -20,6 +20,7 @@
         v-for="(match, i) in matches"
         :key="i"
         v-bind="match"
+        :timezone="timezone"
         @update-character="updateCharacterFilter($event.character, $event.index)"
         @update-name="updateNameFilter($event.name, $event.index)" />
       </template>
@@ -72,6 +73,7 @@ export default {
       loading: false,
       error: false,
       errorMessage: '',
+      timezone: new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
     }
   },
   watch: {

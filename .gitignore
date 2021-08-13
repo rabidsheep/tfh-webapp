@@ -17,3 +17,6 @@ pnpm-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+.firebase/hosting.ZGlzdA.cache
+*.cache

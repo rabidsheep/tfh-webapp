@@ -29,7 +29,7 @@
 
         <div
         :class="$vuetify.breakpoint.smAndDown ? `time` : `time mr-3`">
-          {{ time }} UTC
+          {{ time }} {{ timezone }}
         </div>
       </v-layout>
 
@@ -145,7 +145,7 @@
                 </template>
 
                 <a
-                v-else-if="video.url"
+                v-else-if="video"
                 :href="video.timestamp ?
                 `${video.url}&t=${video.timestamp}` :
                 `${video.url}`"
@@ -185,6 +185,7 @@ export default {
     },
     uploadDate: String,
     uploadTime: String,
+    timezone: String,
   },
   data: () => {
     return {
@@ -195,9 +196,9 @@ export default {
   },
  created() {
       /* convert timestamp to date and format it */
-      /*var date = (this.timestamp).toDate();*/
-      this.date = moment(this.uploadDate).format('MM/DD/YYYY');
-      this.time = moment(this.uploadDate + 'T' + this.uploadTime).utc().format('HH:mm:ss');
+      let fullDate = this.uploadDate + 'T' + this.uploadTime
+      this.date = moment(fullDate).local(true).format('MM/DD/YYYY')
+      this.time = moment(fullDate).local(true).format('HH:mm')
   }
 }
 </script>

@@ -75,4 +75,8 @@ export default {
   max-width: 0% !important;
 }
 
+::v-deep .theme--dark.v-icon.v-icon.v-icon--disabled {
+  color: #5e5e5e !important;
+}
+
 </style>

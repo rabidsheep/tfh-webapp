@@ -24,36 +24,55 @@
         <div style="width:100%;"><br /></div>
 
         <v-col
-        :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
-        :class="`player p${i+1}`"
-        v-for="(player, i) in players"
-        :key="i"
-        :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
-            <CharacterSelect
-            :currentCharacter ="player.character"
-            :index = "i"
-            :selectionEnabled="false"
-            :anyEnabled="false"
-            @character-select="$emit('update-character', { character: $event, index: i})"/>
-                            
-            <v-text-field
-            v-model="player.name"
-            :rules="rules.name"
-            :label="`Player ${i + 1}`"
-            :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
-            maxLength="64"
-            counter="64"
-            required
-            />
-        </v-col>
-        
-        <v-col
-        cols="1"
-        align="center"
-        justify="center"
-        class="vs"
-        v-if="!$vuetify.breakpoint.smAndDown">
-            vs.
+        class="file-info"
+        :cols="$vuetify.breakpoint.smAndDown ? 12 : 8">
+            <v-col
+            :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
+            :class="`player p${i+1}`"
+            v-for="(player, i) in players"
+            :key="i"
+            :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
+                <CharacterSelect
+                :currentCharacter ="player.character"
+                :index = "i"
+                :selectionEnabled="false"
+                :anyEnabled="false"
+                @character-select="$emit('update-character', { character: $event, index: i})"/>
+                                
+                <v-text-field
+                v-model="player.name"
+                :rules="rules.name"
+                :label="`Player ${i + 1}`"
+                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
+                maxLength="64"
+                counter="64"
+                required
+                />
+            </v-col>
+            
+            <v-col
+            cols="1"
+            align="center"
+            justify="center"
+            class="vs"
+            v-if="!$vuetify.breakpoint.smAndDown">
+                vs.
+            </v-col>
+
+            <v-col
+            class="comment"
+            cols="12">
+                <v-textarea
+                v-model="comment"
+                :rules="rules.comment"
+                counter="180"
+                maxlength="180"
+                prepend-icon="mdi-message-reply"
+                label="Comment (Optional)"
+                class="comment"
+                height="50px"
+                no-resize/>
+            </v-col>
         </v-col>
 
         <v-col
@@ -66,13 +85,12 @@
                 v-model="url"
                 @blur="url = tempUrl"
                 clearable
-                :dense="!$vuetify.breakpoint.smAndDown"
                 :rules="rules.url"
                 label="YouTube Link (Optional)"
                 prepend-icon="mdi-youtube" />
             </v-row>
 
-            <br v-if="!$vuetify.breakpoint.smAndDown" />
+            <div v-if="!$vuetify.breakpoint.smAndDown" style="width: 100%;" ><br /></div>
             
             <v-row
             class="timestamp">
@@ -82,7 +100,6 @@
                         ? timestamp.match(/((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/)[0]
                         : null )"
                 :rules="rules.timestamp"
-                :dense="!$vuetify.breakpoint.smAndDown"
                 :disabled="!url || !$refs.url.valid"
                 ref="timestamp"
                 clearable
@@ -90,6 +107,8 @@
                 label="Timestamp"/>
             </v-row>
         </v-col>
+
+        
     </v-row>
 </template>
 
@@ -120,6 +139,7 @@ export default {
             url: null,
             tempUrl: null,
             timestamp: null,
+            comment: null,
             re: {
                 youtube: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
                 id: /(?<=\?v=)\w*(?=[^#\&\?]*)/,
@@ -138,6 +158,9 @@ export default {
                 ],
                 timestamp: [
                     v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
+                ],
+                comment: [
+                    v => !v || v.length <= 180 || 'Too long'
                 ]
             },
         }
@@ -170,6 +193,14 @@ export default {
             } else {
                 //this.$delete(this.updated.video, 'timestamp')
                 this.$emit('delete-timestamp')
+            }
+        },
+
+        'comment': function(v) {
+            if (v.length > 0 && v.length <= 180) {
+                this.$emit('update-comment', v)
+            } else if (v.length === 0) {
+                this.$emit('delete-comment', v)
             }
         }
     },

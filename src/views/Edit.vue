@@ -1,5 +1,5 @@
 <template>
-    <v-container id="edits">
+    <v-container v-if="id" id="edits">
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>
@@ -51,8 +51,19 @@
                 </v-stepper-content>
 
                 <v-stepper-content step="2">
-                    <center><h1>Edit Match Details</h1>
-                    <pre style="max-width: 99%; overflow: clip; white-space: break-spaces;">Match ID: {{ id }} </pre></center>
+                    <center>
+                        <h1>Edit Match Details</h1>
+                        <pre v-if="id"
+                        style="max-width: 99%;
+                        overflow: clip;
+                        white-space: break-spaces;
+                        text-overflow: ellipsis;">Match ID: {{ id }} </pre>
+                        <pre v-if="match.file"
+                        style="max-width: 99%;
+                        overflow: clip;
+                        white-space: break-spaces;
+                        text-overflow: ellipsis;">{{ match.file.name }}</pre>
+                    </center>
 
                     <v-form
                     v-model="valid"
@@ -73,37 +84,55 @@
                         v-if="!loading"
                         class="preview">
                             <v-col
-                            :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
-                            :class="`player p${i+1}`"
-                            v-for="(player, i) in updated.players"
-                            :key="i"
-                            :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
-                                <CharacterSelect
-                                :currentCharacter ="player.character"
-                                :index = "i"
-                                :selectionEnabled="true"
-                                :anyEnabled="false"
-                                @character-select="updateCharacter($event, i)"/>
-                                                
-                                <v-text-field
-                                v-model="player.name"
-                                :rules="rules.name"
-                                :label="`Player ${i + 1}`"
-                                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
-                                maxLength="64"
-                                counter="64"
-                                clearable
-                                required
-                                />
-                            </v-col>
-                            
-                            <v-col
-                            align="center"
-                            justify="center"
-                            class="vs"
-                            cols="1"
-                            v-if="!$vuetify.breakpoint.smAndDown">
-                                vs.
+                            class="file-info"
+                            :cols="$vuetify.breakpoint.smAndDown ? 12 : 8">
+                                <v-col
+                                :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
+                                :class="`player p${i+1}`"
+                                v-for="(player, i) in updated.players"
+                                :key="i"
+                                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
+                                    <CharacterSelect
+                                    :currentCharacter ="player.character"
+                                    :index = "i"
+                                    :selectionEnabled="false"
+                                    :anyEnabled="false"
+                                    @character-select="$emit('update-character', { character: $event, index: i})"/>
+                                                    
+                                    <v-text-field
+                                    v-model="player.name"
+                                    :rules="rules.name"
+                                    :label="`Player ${i + 1}`"
+                                    :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
+                                    maxLength="64"
+                                    counter="64"
+                                    required
+                                    />
+                                </v-col>
+                                
+                                <v-col
+                                cols="1"
+                                align="center"
+                                justify="center"
+                                class="vs"
+                                v-if="!$vuetify.breakpoint.smAndDown">
+                                    vs.
+                                </v-col>
+
+                                <v-col
+                                class="comment"
+                                cols="12">
+                                    <v-textarea
+                                    v-model="comment"
+                                    :rules="rules.comment"
+                                    counter="180"
+                                    maxlength="180"
+                                    prepend-icon="mdi-message-reply"
+                                    label="Comment (Optional)"
+                                    class="comment"
+                                    height="50px"
+                                    no-resize/>
+                                </v-col>
                             </v-col>
                                 
 
@@ -116,8 +145,7 @@
                                     ref="url"
                                     v-model="url"
                                     @blur="url = tempUrl"
-                                    clearable
-                                    :dense="!$vuetify.breakpoint.smAndDown"
+                                    :clearable="!match.file ? false : true"
                                     :rules="!match.file ? rules.url.req : rules.url.noReq"
                                     :disabled="!match.file ? true : false"
                                     :required="!match.file ? true : false"
@@ -133,7 +161,6 @@
                                     v-model="timestamp"
                                     @blur="timestamp = ( timestamp ? timestamp.match(re.timestamp)[0] : null )"
                                     :rules="rules.timestamp"
-                                    :dense="!$vuetify.breakpoint.smAndDown"
                                     :disabled="!url || !$refs.url.valid"
                                     ref="timestamp"
                                     clearable
@@ -141,6 +168,8 @@
                                     label="Timestamp"/>
                                 </v-row>
                             </v-col>
+
+                            
                         </v-row>
                         
                         <v-row
@@ -199,6 +228,10 @@ export default {
             url: null,
             tempUrl: null,
             timestamp: null,
+            comment: null,
+            isAdmin: false,
+            isRegistered: true,
+            loggingIn: false,
             re: {
                 youtube: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
                 id: /(?<=\?v=)\w*(?=[^#\&\?]*)/,
@@ -223,54 +256,78 @@ export default {
                 },
                 timestamp: [
                         v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
+                ],
+                comment: [
+                    v => !v || v.length <= 180 || 'Too long'
                 ]
             },
         }
     },
     mounted: function () {
-        this.$firebase.auth().onAuthStateChanged((user) => {
-            this.loading = true
-            if (!user) {
-                this.step = 1
-                return
-            }
-
-            /** can't authorize token right now for some reason
-            this.setAuthToken()
-            .then(() => this.$users.get({ uid: user.uid }))
-            .then((response) => {
-                let userData = response.body[0]
-                if (userData) {
-                    this.isAdmin = userData.admin
-                } else {
-                    let newUser = {
-                    uid: user.uid,
-                    email: user.email,
-                    admin: false
-                    }
-                    this.$users.save(newUser)
+        if (this.id) {
+            this.$firebase.auth().onAuthStateChanged((user) => {
+                
+                if (!user) {
+                    this.step = 1
+                    return
                 }
 
-                this.step = 2
+                if (process.env.NODE_ENV == "production") {
+                    console.log("Production Environment")
 
-                this.loading = false
+                    this.setAuthToken()
+                    .then(() => {
+                        console.log('Checking user')
+                        this.loggingIn = true
+                        return this.$users.get({ uid: user.uid })
+                    })
+                    .then((response) => {
+                        let userData = response.body[0]
+                        if (userData) {
+                            console.log("Retrieved user data")
+
+                            this.isAdmin = userData.admin
+                            this.getMatch(this.id)
+                            this.step = 2
+                            this.loading = false
+                            this.loggingIn = false
+                        } else {
+                            console.log("Creating new user")
+                            this.isRegistered = false
+
+                            let newUser = {
+                                uid: user.uid,
+                                email: user.email,
+                                admin: false
+                            }
+
+                            this.$users.save(newUser)
+                            .then(() => {
+                                this.getMatch(this.id)
+                                this.step = 2
+                                this.loading = false
+                                this.isRegistered = true
+                                this.loggingIn = false
+                            })
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                    })
+                } else {
+                    if (user) {
+                        this.getMatch(this.id)
+                        console.log('Signed in')
+                        this.uid = user.uid
+                        this.step = 2
+                    } else {
+                        console.log('Signed out')
+                    }
+
+                    this.loading = false;
+                }
             })
-            .catch((error) => {
-                console.log(error)
-            })*/
-
-            if (user) {
-                console.log('Signed in')
-                //console.log(user)
-                this.uid = user.uid
-                this.step = 2
-                this.getMatch(this.id)
-            } else {
-                console.log('Signed out')
-            }
-
-            this.loading = false;
-        })
+        }
     },
     watch: {
         'updated': {
@@ -285,7 +342,6 @@ export default {
             }
         },
         'url': function(v) {
-            console.log(this.$refs.url)
             if (v && v.match(/(?<=\?v=)([^#\&\?]*)/) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11) {
                 this.tempUrl = v.match(this.re.youtube)[0]
 
@@ -313,6 +369,13 @@ export default {
             } else {
                 //this.$delete(this.updated.video, 'timestamp')
                 this.$emit('delete-timestamp')
+            }
+        },
+        'comment': function(v) {
+            if (v.length > 0 && v.length <= 180) {
+                this.updateComment(v)
+            } else if (v.length === 0) {
+                this.deleteComment()
             }
         }
     },
@@ -352,6 +415,10 @@ export default {
                             this.timestamp = this.match.video.timestamp
                         }
                     }
+
+                    if (this.match.comment) {
+                        this.comment = this.match.comment
+                    }
                 }
             })
         },
@@ -364,9 +431,17 @@ export default {
         updateCharacter(character, i) {
             this.$set(this.updated.players[i], 'character', character)
         },
+        updateComment(comment) {
+            this.$set(this.updated, 'comment', comment)
+        },
+        deleteComment() {
+            if (this.updated.comment) {
+                this.$delete(this.updated, 'comment')
+            }
+        },
         updateMatch() {
 
-        }
+        },
     }
 }
 </script>

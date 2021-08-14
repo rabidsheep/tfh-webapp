@@ -8,6 +8,7 @@
 
         <v-expand-transition>
             <v-container id="filters__main" v-show="!hidden">
+                <div class="wrapper">
                 <v-row class="players" align="center" justify="center">
                     <!-- player filters -->
                     <v-col
@@ -72,6 +73,7 @@
                         Clear All
                     </v-btn>
                 </v-row>
+                </div>
             </v-container>
         </v-expand-transition>
     </v-layout>

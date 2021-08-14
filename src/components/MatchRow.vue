@@ -31,6 +31,24 @@
         class="time">
           {{ time }} {{ timezone }}
         </div>
+
+        <div
+        v-show="$vuetify.breakpoint.smAndDown"
+        :class="$vuetify.breakpoint.smAndDown ? `divider mr-2 ml-2` : `divider`">
+        ||
+        </div>
+
+        <div
+        :class="comment ? `comment btn` : `comment disabled`"
+        v-show="$vuetify.breakpoint.smAndDown">
+            <v-icon
+            size="22px"
+            :color="comment ? `accent` : undefined"
+            :disabled="comment ? false : true"
+            @click="hidden = !hidden">
+              mdi-message-reply
+            </v-icon>
+        </div>
       </v-layout>
 
       <v-layout players>
@@ -151,7 +169,7 @@
                 `${video.url}`"
                 :target="`_blank`">
                   <v-icon
-                  color="#d52726"
+                  color="accent"
                   class="base"
                   x-large>
                     mdi-youtube
@@ -161,8 +179,30 @@
               </div>
             </template>
           </v-col>
+
+          <v-col
+          class="comment link"
+          v-show="!$vuetify.breakpoint.smAndDown">
+            <div
+            :class="comment ? 'btn' : 'btn disabled'">
+              <v-icon
+              x-large
+              :color="comment ? `accent` : undefined"
+              @click="hidden = !hidden">
+                mdi-comment
+              </v-icon>
+            </div>
+          </v-col>
         </v-row>
       </v-layout>
+
+      
+
+      <v-expand-transition>
+        <v-col v-show="!hidden" class="comment msg background darken-1" cols="12">
+          <p>{{ comment }}</p>
+        </v-col>
+      </v-expand-transition>
     </v-row>
 </template>
 
@@ -186,9 +226,11 @@ export default {
     uploadDate: String,
     uploadTime: String,
     timezone: String,
+    comment: [String, null],
   },
   data: () => {
     return {
+      hidden: true,
       show: false,
       date: null,
       time: null,

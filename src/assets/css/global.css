@@ -100,6 +100,11 @@ a {
     transition: all 0.5s;
     position: relative;
     max-width: 95%;
+    padding: 0px;
+}
+
+#filters .wrapper {
+    margin: 12px;
 }
 
 #filters .player {
@@ -156,7 +161,8 @@ a {
     padding: 0px;
 }
 
-.match .unique .edit .v-icon {
+.match .unique .edit .v-icon,
+.match .unique .comment .v-icon {
     margin-top: -2px;
     padding-right: 5px;
 }
@@ -209,13 +215,26 @@ a {
     text-shadow: -3px 0px #3a3939;
 }
 
-.match .links .disabled .v-icon {
-    color: #5e5e5e
+.match .disabled .v-icon {
+    color: #5e5e5e !important;
 }
 
 .match .players .player,
 .match .players .vs {
     align-items: center;
+}
+
+.match .comment .v-icon:focus::after {
+    background: transparent;
+}
+
+.match .comment.msg {
+    border-radius: 10px;
+    margin-top: 5px;
+}
+
+.match .comment.msg > p {
+    margin: 5px;
 }
 
 /* desktop */
@@ -308,7 +327,8 @@ a {
     margin-right: 15px;
 }
 
-.small .match .edit {
+.small .match .edit,
+.small .match .unique .comment {
     max-height: 24px;
 }
 
@@ -374,6 +394,10 @@ a {
 }
 .small .match .file .slash {
     top: 10%;
+}
+
+.match .unique .comment .v-icon {
+    margin-top: 2px;
 }
 
 /** uploadform.vue **/
@@ -599,6 +623,7 @@ a {
 /* general */
 .preview {
     padding: 0px;
+    padding-bottom: 10px;
 }
 
 .preview .col {
@@ -627,13 +652,63 @@ a {
     order: 4;
 }
 
+.preview .col.comment {
+    order: 3;
+}
+
+.preview .v-textarea.comment .v-text-field__slot {
+    height: 100%;
+}
+
+.wide .preview .v-textarea.comment {
+    height: 100%;
+    margin-top: 6px;
+}
+
+.preview .file-info {
+ display: flex;
+ flex-wrap: wrap;
+}
+
+.preview .youtubelink {
+    display: flex;
+}
+
 /* desktop */
 .wide .preview .vs {
     margin: auto;
 }
 
-.wide .preview .youtube {
+.wide #files .preview .file-info,
+.wide #edit .preview .file-info {
+    max-height: 164px;
+    min-height: 164px;
+}
+
+.wide #files .preview .player,
+.wide #edit .preview .player {
+    height: 75px;
+    margin-top: 1px;
+}
+
+.wide #files .preview .youtube,
+.wide #edit .preview .youtube  {
     padding-left: 12px;
+    max-height: 164px;
+    min-height: 164px;
+    
+}
+
+.wide #files .preview .link,
+.wide #edit .preview .link {
+    height: 76px;
+    align-items: center;
+}
+
+.wide #files .preview .timestamp,
+.wide #edit .preview .timestamp {
+    height: 66px;
+    align-content: end;
 }
 
 .wide .preview .p1 {
@@ -752,4 +827,22 @@ a {
 /* desktop */
 .wide #edit .youtube {
     padding-left: 12px;
+}
+
+#edit .file-name {
+    order: 4;
+    padding-top: 15px;
+    justify-content: right;
+}
+
+#edit .match-id {
+    max-width: 99%;
+    overflow: clip;
+    white-space: break-spaces;
+}
+
+#edit .match-file {
+    max-width: 99%;
+    overflow: clip;
+    white-space: break-spaces;
 }

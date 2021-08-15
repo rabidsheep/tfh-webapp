@@ -54,17 +54,37 @@
                     <!-- /player filters -->
 
                     <v-col
-                    class="swap"
+                    class="btns"
                     :cols="$vuetify.breakpoint.smAndDown ? 12 : 1">
-                        <v-btn
-                        color="accent"
-                        @click="swap()">
-                            <v-icon>
-                                {{ $vuetify.breakpoint.mdAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
-                            </v-icon>
-                        </v-btn>
+                        
+
+                        <v-col
+                        class="swap"
+                        cols="12">
+                            <v-btn
+                            :disabled="!strict"
+                            color="accent"
+                            @click="swap()">
+                                <v-icon>
+                                    {{ $vuetify.breakpoint.mdAndUp ? 'mdi-swap-horizontal' : 'mdi-swap-vertical' }}
+                                </v-icon>
+                            </v-btn>
+                        </v-col>
                     </v-col>
+
+                    <v-row
+                    class="strictness"
+                    justify="center">
+                        <v-checkbox
+                        v-model="strict"
+                        class="checkbox"
+                        label="Strict Search"
+                        value
+                        hide-details/>
+                    </v-row>
                 </v-row>
+
+                
 
                 <v-row align="center" justify="center">
                     <v-btn
@@ -99,6 +119,7 @@ export default {
             search: [],
             hidden: false,
             playerList: [],
+            strict: false,
         }
     },
     watch: {
@@ -108,6 +129,9 @@ export default {
             },
             deep: true
         },
+        'strict': function(v) {
+            this.$emit('update-strictness', v)
+        }
     },
     mounted: function() {
         this.$emit('update-filter', this.playerInfo)
@@ -159,6 +183,10 @@ export default {
                     {name: null, character: null},
                     {name: null, character: null}
                 ]
+            }
+
+            if (this.strict) {
+                this.strict = false
             }
 
         },

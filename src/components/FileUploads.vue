@@ -41,12 +41,8 @@
                 @set-url="setUrl($event, i)"
                 @set-timestamp="setTimestamp($event, i)"
                 @delete-video="deleteVideoObj(i)"
-                @delete-timestamp="deleteTimestamp(i)"
-                @update-comment="updateComment($event, i)"
-                @delete-comment="deleteComment(i)" />
+                @delete-timestamp="deleteTimestamp(i)" />
             </v-layout>
-            <!-- should we allow users to add comments to their uploads? -->
-
         
             <v-layout
             class="message"
@@ -371,14 +367,6 @@ export default {
             if (this.matches[i].video && this.matches[i].video.timestamp) {
                 console.log('deleting timestamp')
                 this.$delete(this.matches[i].video, 'timestamp')
-            }
-        },
-        updateComment(comment, i) {
-            this.$set(this.matches[i], 'comment', comment)
-        },
-        deleteComment(i) {
-            if (this.matches[i].comment) {
-                this.$delete(this.matches[i], 'comment')
             }
         },
         setYoutubeLink(v, i) {

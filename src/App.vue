@@ -10,7 +10,7 @@
             fortnite gaming
         </v-toolbar-title>
 
-        <router-link to="/upload">
+        <router-link :user="user" to="/upload">
             <v-btn icon>
                 <v-icon>mdi-plus-box</v-icon>
             </v-btn>
@@ -21,33 +21,88 @@
       <v-layout column align-center>
         <div id="router-view"
         :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
-          <router-view />
+          <router-view :user="user" />
         </div>
       </v-layout>
     </v-main>
+
+    <v-container class="footer">
+      <v-row>
+        <v-col class="copyright">
+          THEM’S FIGHTIN’ HERDS ® & © 2017-2020 Mane6, Inc.
+          <br />
+          THEM’S FIGHTIN’ HERDS is a registered trademark of Mane6, Inc.
+        </v-col>
+      </v-row>
+    </v-container>
   </v-app>
 </template>
 
 <script>
 export default {
-  computed: {
-    /*size: function() {
-      if (this.$vuetify.breakpoint.lgOnly) {
-        return 'lg'
-      } else if (this.$vuetify.breakpoint.mdOnly) {
-        return 'md'
-      } else if (this.$vuetify.breakpoint.smOnly) {
-        return 'sm'
-      } else if (this.$vuetify.breakpoint.xsOnly) {
-        return 'xs'
+  data: () => {
+    return {
+      user: null,
+    }
+  },
+  mounted: function () {
+    this.$firebase.auth().onAuthStateChanged((user) => {
+        
+      if (!user) {
+        return null
       }
-    }*/
+
+      if (process.env.NODE_ENV == "production") {
+        console.log("Production Environment")
+
+        this.setAuthToken()
+        .then(() => {
+            console.log('Checking user')
+            this.loggingIn = true
+            return this.$users.get({ uid: user.uid })
+        })
+        .then((response) => {
+            let userData = response.body[0]
+            if (userData) {
+                console.log("Retrieved user data")
+
+                this.isAdmin = userData.admin
+                this.user = userData
+            } else {
+                console.log("Not logged in")
+            }
+        })
+        .catch((error) => {
+            console.log(error)
+        })
+    } else {
+        if (user) {
+            console.log('Signed in')
+            this.uid = user.uid
+            this.user = user.uid
+        } else {
+            console.log('Signed out')
+        }
+      }
+    })
   },
   watch: {
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     }
   },
+  methods: {
+    setAuthToken: function () {
+      return this.$firebase.auth().currentUser
+      .getIdToken()
+      .then((token) => {
+        console.log('Setting auth token')
+        return this.$httpInterceptors.push((request) => {
+          request.headers.set('Authorization', token)
+        })
+      })
+    },
+  }
 }
 </script>
 

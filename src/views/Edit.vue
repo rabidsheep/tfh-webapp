@@ -38,7 +38,7 @@
                             <v-btn
                             height="50"
                             rounded
-                            v-show="!$firebase.auth().currentUser"
+                            v-show="!$firebase.auth().currentUser && !uid"
                             @click="signIn('google')">
                                 <v-icon left>mdi-google</v-icon>
                                 Google
@@ -64,6 +64,14 @@
                         white-space: break-spaces;
                         text-overflow: ellipsis;">{{ match.file.name }}</pre>
                     </center>
+                    
+                    
+                    
+                    <center v-show="loadingMatch">
+                        <br />
+                        <v-progress-circular
+                        indeterminate />
+                    </center>
 
                     <v-form
                     v-model="valid"
@@ -71,20 +79,11 @@
                     id="edit">
                         <div style="width: 100%;"><br /></div>
                         
-                        <!--<EditPreview
-                        :file="match.file ? updatedMatch.file.name : null"
-                        :players="updatedMatch.players"
-                        :video="match.video ? updatedMatch.video : {}"
-                        @update-character="updateCharacter($event.character, $event.index)" />-->
-                        <v-progress-circular
-                        indeterminate
-                        v-if="loading" />
-
                         <v-row
-                        v-if="!loading"
+                        v-show="!loading && Object.keys(match).length > 0"
                         class="preview">
                             <v-col
-                            class="file-info"
+                            class="file-info align-center"
                             :cols="$vuetify.breakpoint.smAndDown ? 12 : 8">
                                 <v-col
                                 :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
@@ -118,21 +117,6 @@
                                 v-if="!$vuetify.breakpoint.smAndDown">
                                     vs.
                                 </v-col>
-
-                                <v-col
-                                class="comment"
-                                cols="12">
-                                    <v-textarea
-                                    v-model="comment"
-                                    :rules="rules.comment"
-                                    counter="180"
-                                    maxlength="180"
-                                    prepend-icon="mdi-message-reply"
-                                    label="Comment (Optional)"
-                                    class="comment"
-                                    height="50px"
-                                    no-resize/>
-                                </v-col>
                             </v-col>
                                 
 
@@ -144,6 +128,7 @@
                                     <v-text-field
                                     ref="url"
                                     v-model="url"
+                                    :dense="$vuetify.breakpoint.mdAndUp"
                                     @blur="url = tempUrl"
                                     :clearable="!match.file ? false : true"
                                     :rules="!match.file ? rules.url.req : rules.url.noReq"
@@ -153,12 +138,11 @@
                                     prepend-icon="mdi-youtube" />
                                 </v-row>
 
-                                <br v-if="!$vuetify.breakpoint.smAndDown" />
-                                
                                 <v-row
                                 class="timestamp">
                                     <v-text-field
                                     v-model="timestamp"
+                                    :dense="$vuetify.breakpoint.mdAndUp"
                                     @blur="timestamp = ( timestamp ? timestamp.match(re.timestamp)[0] : null )"
                                     :rules="rules.timestamp"
                                     :disabled="!url || !$refs.url.valid"
@@ -174,6 +158,7 @@
                         
                         <v-row
                         class="buttons"
+                        v-show="!loading && Object.keys(match).length > 0"
                         align="center"
                         justify="space-around">
                             <v-col class="reset">
@@ -214,6 +199,7 @@ export default {
     },
     props: {
         id: String,
+        user: [String, null]
     },
     data: () => {
         return {
@@ -228,10 +214,10 @@ export default {
             url: null,
             tempUrl: null,
             timestamp: null,
-            comment: null,
             isAdmin: false,
             isRegistered: true,
             loggingIn: false,
+            loadingMatch: false,
             re: {
                 youtube: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
                 id: /(?<=\?v=)\w*(?=[^#\&\?]*)/,
@@ -257,14 +243,11 @@ export default {
                 timestamp: [
                         v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
                 ],
-                comment: [
-                    v => !v || v.length <= 180 || 'Too long'
-                ]
             },
         }
     },
     mounted: function () {
-        if (this.id) {
+        if (this.id && !this.user) {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 
                 if (!user) {
@@ -287,10 +270,11 @@ export default {
                             console.log("Retrieved user data")
 
                             this.isAdmin = userData.admin
-                            this.getMatch(this.id)
-                            this.step = 2
                             this.loading = false
                             this.loggingIn = false
+                            this.getMatch(this.id)
+                            this.step = 2
+                            
                         } else {
                             console.log("Creating new user")
                             this.isRegistered = false
@@ -303,11 +287,12 @@ export default {
 
                             this.$users.save(newUser)
                             .then(() => {
-                                this.getMatch(this.id)
-                                this.step = 2
                                 this.loading = false
                                 this.isRegistered = true
                                 this.loggingIn = false
+                                this.getMatch(this.id)
+                                this.step = 2
+                                
                             })
                         }
                     })
@@ -316,6 +301,8 @@ export default {
                     })
                 } else {
                     if (user) {
+                        
+                        this.loading = false;
                         this.getMatch(this.id)
                         console.log('Signed in')
                         this.uid = user.uid
@@ -324,9 +311,13 @@ export default {
                         console.log('Signed out')
                     }
 
-                    this.loading = false;
                 }
             })
+        } else if (this.id && this.user) {
+            this.getMatch(this.id)
+            this.step = 2
+            this.loading = false
+            console.log("Skipping sign in")
         }
     },
     watch: {
@@ -371,13 +362,6 @@ export default {
                 this.$emit('delete-timestamp')
             }
         },
-        'comment': function(v) {
-            if (v.length > 0 && v.length <= 180) {
-                this.updateComment(v)
-            } else if (v.length === 0) {
-                this.deleteComment()
-            }
-        }
     },
     methods: {
         signIn: function (providerName) {
@@ -393,7 +377,6 @@ export default {
                 this.loading = false
             })
         },
-        /*
         setAuthToken: function () {
             return this.$firebase.auth().currentUser.getIdToken()
                 .then((token) => {
@@ -401,8 +384,9 @@ export default {
                     request.headers.set('Authorization', token)
                 })
             })
-        },*/
+        },
         getMatch(id) {
+            this.loadingMatch = true
             this.$matches.get({id}).then((response) => {
                 if (response.ok) {
                     this.match = response.body.matches[0]
@@ -416,9 +400,7 @@ export default {
                         }
                     }
 
-                    if (this.match.comment) {
-                        this.comment = this.match.comment
-                    }
+                    this.loadingMatch = false
                 }
             })
         },
@@ -430,14 +412,6 @@ export default {
         },
         updateCharacter(character, i) {
             this.$set(this.updated.players[i], 'character', character)
-        },
-        updateComment(comment) {
-            this.$set(this.updated, 'comment', comment)
-        },
-        deleteComment() {
-            if (this.updated.comment) {
-                this.$delete(this.updated, 'comment')
-            }
         },
         updateMatch() {
 

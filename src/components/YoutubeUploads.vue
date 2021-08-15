@@ -119,7 +119,7 @@
                                     :ripple="false"
                                     color="accent"
                                     @click="parseVideoDescription(currentDescription)">
-                                        Parse Text
+                                        Parse Timestamps
                                     </v-btn>
                                 </v-col>
                                 
@@ -130,7 +130,7 @@
                                     rounded
                                     :ripple="false"
                                     @click="currentDescription = video.description">
-                                        Reset Text
+                                        Reset Timestamps
                                     </v-btn>
                                 </v-col>
                             </v-row>
@@ -139,7 +139,6 @@
                 </div>
 
                 <div
-                v-show="$refs.url && $refs.url.valid && parsed"
                 class="match-list">
                     <template v-if="matches.length > 0">
                         <YoutubePreview
@@ -153,12 +152,13 @@
                         @update-character="updateCharacter($event.character, $event.index, i)" />
                     </template>
 
-                    <template v-if="matches.length <= 0">
-                        <center>No matches found!</center>
-                    </template>
+                    <center v-show="matches.length <= 0 && parsed">
+                        No matches found!
+                    </center>
 
-                    <center>
+                    <center v-if="vid && !loading">
                         <v-btn
+                        :ripple="false"
                         :disabled="matches.length > 16"
                         @click="addBlankMatch()"
                         plain>
@@ -218,6 +218,7 @@ export default {
             re: {
                 yt: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
                 id: /(?<=\?v=)[^#\&\?]*/,
+                sh: /(?<=(?:youtu.be\/))[^#\&\?]*/,
                 ts: /(?<=t=)\d+m\d+s|\d+m|\d+s/,
             },
             rules: {
@@ -227,7 +228,7 @@ export default {
                 url: [
                     v => !!v || 'Required',
                     v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                    v => !v || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'
+                    v => !v || /(?<=(?:youtu.be\/))[^#\&\?]*/.test(v) && v.match(/(?<=(?:youtu.be\/))[^#\&\?]*/)[0].length == 11 || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'
                 ],
                 timestamp: [
                     v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
@@ -242,9 +243,11 @@ export default {
     },
     methods: {
         validateYoutubeID() {
+
+            this.vid = null
             
             if (this.$refs.url.valid) {
-                let matched = this.url.match(this.re.id)
+                let matched = (this.url.match(this.re.sh) ? this.url.match(this.re.sh) : this.url.match(this.re.id))
                 if (matched && matched[0].length === 11) {
                     this.vid = matched[0]
                 }

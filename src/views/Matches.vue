@@ -3,7 +3,8 @@
     <!-- filters box -->
     <Filters
     :players="players"
-    @update-filter="players = $event" />
+    @update-filter="players = $event"
+    @update-strictness="strict = $event" />
     
     
     <div class="loading" style="margin: 20% 0" v-if="loading">
@@ -20,6 +21,7 @@
         v-for="(match, i) in matches"
         :key="i"
         v-bind="match"
+        :user="user"
         :timezone="timezone"
         @update-character="updateCharacterFilter($event.character, $event.index)"
         @update-name="updateNameFilter($event.name, $event.index)" />
@@ -40,7 +42,7 @@
                 Math.floor(resultsCount / this.$config.itemsPerPage) :
                 Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
       :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
-      @input="getMatches(players, page)"
+      @input="getMatches(players, page, strict)"
       circle
       />
       <v-spacer/>
@@ -58,6 +60,9 @@ export default {
     MatchRow,
     Filters,
   },
+  props: {
+    user: [String, null]
+  },
   data: () => {
     return {
       showToTop: false,
@@ -66,6 +71,7 @@ export default {
         {name: null, character: null},
         {name: null, character: null}
       ],
+      strict: false,
       matches: [],
       resultsCount: null,
       page: 1,
@@ -79,18 +85,21 @@ export default {
   watch: {
     'players': {
       handler: function() {
-        this.getMatches(this.players, 1)
+        this.getMatches(this.players, 1, this.strict)
         // move paginate back to page 1 after changing filters
         this.page = 1
       },
       deep: true
     },
+    'strict': function() {
+      this.getMatches(this.players, 1, this.strict)
+    }
   },
   methods: {
-    getMatches: function (players, page) {
+    getMatches: function (players, page, strict) {
       this.loading = true
 
-      this.$matches.get({players, page})
+      this.$matches.get({players, page, strict})
       .then((response) => {
         if (response.ok) {
           this.error = false

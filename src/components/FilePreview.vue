@@ -52,26 +52,9 @@
             
             <v-col
             cols="1"
-            align="center"
-            justify="center"
             class="vs"
             v-if="!$vuetify.breakpoint.smAndDown">
                 vs.
-            </v-col>
-
-            <v-col
-            class="comment"
-            cols="12">
-                <v-textarea
-                v-model="comment"
-                :rules="rules.comment"
-                counter="180"
-                maxlength="180"
-                prepend-icon="mdi-message-reply"
-                label="Comment (Optional)"
-                class="comment"
-                height="50px"
-                no-resize/>
             </v-col>
         </v-col>
 
@@ -82,6 +65,7 @@
             class="link">
                 <v-text-field
                 ref="url"
+                :dense="$vuetify.breakpoint.mdAndUp"
                 v-model="url"
                 @blur="url = tempUrl"
                 clearable
@@ -90,12 +74,12 @@
                 prepend-icon="mdi-youtube" />
             </v-row>
 
-            <div v-if="!$vuetify.breakpoint.smAndDown" style="width: 100%;" ><br /></div>
             
             <v-row
             class="timestamp">
                 <v-text-field
                 v-model="timestamp"
+                :dense="$vuetify.breakpoint.mdAndUp"
                 @blur="timestamp = ( timestamp && timestamp.match(/((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/)
                         ? timestamp.match(/((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/)[0]
                         : null )"
@@ -159,9 +143,6 @@ export default {
                 timestamp: [
                     v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
                 ],
-                comment: [
-                    v => !v || v.length <= 180 || 'Too long'
-                ]
             },
         }
     },
@@ -195,14 +176,6 @@ export default {
                 this.$emit('delete-timestamp')
             }
         },
-
-        'comment': function(v) {
-            if (v.length > 0 && v.length <= 180) {
-                this.$emit('update-comment', v)
-            } else if (v.length === 0) {
-                this.$emit('delete-comment', v)
-            }
-        }
     },
     methods: {
         remove: function() {

@@ -1,12 +1,15 @@
 <template>
     <v-row class="match" align="center">
       <v-layout unique row align-center>
-        <router-link :to="`edit?id=${_id}`">
-        <v-icon
-        :size="$vuetify.breakpoint.smAndDown ? '22px' : '32px'"
-        color="accent">
-          mdi-square-edit-outline
-        </v-icon>
+        <router-link
+        :user="user"
+        class="edit"
+        :to="`edit?id=${_id}`">
+          <v-icon
+          :size="$vuetify.breakpoint.smAndDown ? '22px' : '28px'"
+          color="accent">
+            mdi-square-edit-outline
+          </v-icon>
         </router-link>
 
         <div
@@ -30,24 +33,6 @@
         <div
         class="time">
           {{ time }} {{ timezone }}
-        </div>
-
-        <div
-        v-show="$vuetify.breakpoint.smAndDown"
-        :class="$vuetify.breakpoint.smAndDown ? `divider mr-2 ml-2` : `divider`">
-        ||
-        </div>
-
-        <div
-        :class="comment ? `comment btn` : `comment disabled`"
-        v-show="$vuetify.breakpoint.smAndDown">
-            <v-icon
-            size="22px"
-            :color="comment ? `accent` : undefined"
-            :disabled="comment ? false : true"
-            @click="hidden = !hidden">
-              mdi-message-reply
-            </v-icon>
         </div>
       </v-layout>
 
@@ -105,7 +90,7 @@
                         <v-icon
                         v-bind="attrs"
                         v-on="on"
-                        x-large
+                        size="36px"
                         color="#171717">
                           mdi-download
                         </v-icon>
@@ -115,14 +100,14 @@
                     <template v-else-if="!file">
                       <v-icon
                       class="base"
-                      x-large>
+                      size="36px">
                         mdi-download
                       </v-icon>
 
                       <div
                       class="slash">
                         <v-icon
-                        x-large>
+                        size="36px">
                           mdi-slash-forward
                         </v-icon>
                       </div>
@@ -149,14 +134,14 @@
                 <template v-if="!video">
                   <v-icon
                   class="base"
-                  x-large>
+                  size="36px">
                     mdi-youtube
                   </v-icon>
 
                   <div
                   class="slash">
                     <v-icon
-                    x-large>
+                    size="36px">
                       mdi-slash-forward
                     </v-icon>
                   </div>
@@ -171,7 +156,7 @@
                   <v-icon
                   color="accent"
                   class="base"
-                  x-large>
+                  size="36px">
                     mdi-youtube
                   </v-icon>
                 </a>
@@ -179,30 +164,8 @@
               </div>
             </template>
           </v-col>
-
-          <v-col
-          class="comment link"
-          v-show="!$vuetify.breakpoint.smAndDown">
-            <div
-            :class="comment ? 'btn' : 'btn disabled'">
-              <v-icon
-              x-large
-              :color="comment ? `accent` : undefined"
-              @click="hidden = !hidden">
-                mdi-comment
-              </v-icon>
-            </div>
-          </v-col>
         </v-row>
       </v-layout>
-
-      
-
-      <v-expand-transition>
-        <v-col v-show="!hidden" class="comment msg background darken-1" cols="12">
-          <p>{{ comment }}</p>
-        </v-col>
-      </v-expand-transition>
     </v-row>
 </template>
 
@@ -226,7 +189,9 @@ export default {
     uploadDate: String,
     uploadTime: String,
     timezone: String,
-    comment: [String, null],
+    user: [String, null],
+  },
+  mounted: function() {
   },
   data: () => {
     return {

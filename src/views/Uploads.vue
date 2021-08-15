@@ -145,6 +145,9 @@ export default {
         YoutubeUploads,
     },
     name: 'Uploads',
+    props: {
+        user: [String, null]
+    },
     data: () => {
         return {
             uid: null,
@@ -160,65 +163,70 @@ export default {
         }
     },
     mounted: function () {
-        this.$firebase.auth().onAuthStateChanged((user) => {
-            
-            if (!user) {
-                this.step = 1
-                return
-            }
-
-            if (process.env.NODE_ENV == "production") {
-                console.log("Production Environment")
-
-                this.setAuthToken()
-                .then(() => {
-                    console.log('Checking user')
-                    this.loggingIn = true
-                    return this.$users.get({ uid: user.uid })
-                })
-                .then((response) => {
-                    let userData = response.body[0]
-                    if (userData) {
-                        console.log("Retrieved user data")
-
-                        this.isAdmin = userData.admin
-                        this.step = 2
-                        this.loading = false
-                        this.loggingIn = false
-                    } else {
-                        console.log("Creating new user")
-                        this.isRegistered = false
-
-                        let newUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            admin: false
-                        }
-
-                        this.$users.save(newUser)
-                        .then(() => {
-                            this.step = 2
-                            this.loading = false
-                            this.isRegistered = true
-                            this.loggingIn = false
-                        })
-                    }
-                })
-                .catch((error) => {
-                    console.log(error)
-                })
-            } else {
-                if (user) {
-                    console.log('Signed in')
-                    this.uid = user.uid
-                    this.step = 2
-                } else {
-                    console.log('Signed out')
+        if (!this.user) {
+            this.$firebase.auth().onAuthStateChanged((user) => {
+                
+                if (!user) {
+                    this.step = 1
+                    return
                 }
 
-                this.loading = false;
-            }
-        })
+                if (process.env.NODE_ENV == "production") {
+                    console.log("Production Environment")
+
+                    this.setAuthToken()
+                    .then(() => {
+                        console.log('Checking user')
+                        this.loggingIn = true
+                        return this.$users.get({ uid: user.uid })
+                    })
+                    .then((response) => {
+                        let userData = response.body[0]
+                        if (userData) {
+                            console.log("Retrieved user data")
+
+                            this.isAdmin = userData.admin
+                            this.step = 2
+                            this.loading = false
+                            this.loggingIn = false
+                        } else {
+                            console.log("Creating new user")
+                            this.isRegistered = false
+
+                            let newUser = {
+                                uid: user.uid,
+                                email: user.email,
+                                admin: false
+                            }
+
+                            this.$users.save(newUser)
+                            .then(() => {
+                                this.step = 2
+                                this.loading = false
+                                this.isRegistered = true
+                                this.loggingIn = false
+                            })
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error)
+                    })
+                } else {
+                    if (user) {
+                        console.log('Signed in')
+                        this.uid = user.uid
+                        this.step = 2
+                    } else {
+                        console.log('Signed out')
+                    }
+
+                    this.loading = false;
+                }
+            })
+        } else {
+            this.step = 2
+            this.loading = false
+        }
     },
     methods: {
         signIn: function (providerName) {

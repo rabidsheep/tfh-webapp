@@ -30,6 +30,11 @@ a {
     text-decoration: none;
 }
 
+.copyright {
+    text-align: center;
+    font-size: 12px;
+}
+
 /* display width */
 #router-view.small {
     width: 80%;
@@ -109,35 +114,58 @@ a {
 
 #filters .player {
     display: flex;
-}
-
-
-#filters .player {
     width: 100%;
 }
+
 
 #filters .p1 {
     order: 1;
 }
 
-#filters .swap {
+#filters .btns {
     order: 2;
     min-width: max-content;
+    text-align: center;
+    align-self: center;
+    padding: 0px;
+}
+
+#filters .col {
+    padding-top: 0px;
+}
+
+#filters .btns > .col {
+    display: flex;
+    justify-content: center;
+    padding: 0px;
+}
+
+#filters .strictness {
+    margin-bottom: 10px !important;
+    order: 4;
 }
 
 #filters .p2 {
     order: 3;
 }
 
-#filters .swap {
-    text-align: center;
-    align-self: center;
+#filters .checkbox {
+    max-width: max-content;
+    margin: 0px;
+    padding: 0px;
 }
 
 /* desktop  */
 .wide #filters .p1 {
     flex-direction: row-reverse;
+    margin-right: 12px;
 }
+
+.wide #filters .p2 {
+    margin-left: 12px;
+}
+
+.wide #filters 
 
 /* mobile */
 .small #filters .player {
@@ -164,7 +192,6 @@ a {
 .match .unique .edit .v-icon,
 .match .unique .comment .v-icon {
     margin-top: -2px;
-    padding-right: 5px;
 }
 
 .p1 {
@@ -679,40 +706,22 @@ a {
     margin: auto;
 }
 
-.wide #files .preview .file-info,
-.wide #edit .preview .file-info {
-    max-height: 164px;
-    min-height: 164px;
-}
-
-.wide #files .preview .player,
-.wide #edit .preview .player {
-    height: 75px;
-    margin-top: 1px;
-}
-
-.wide #files .preview .youtube,
-.wide #edit .preview .youtube  {
-    padding-left: 12px;
-    max-height: 164px;
-    min-height: 164px;
-    
-}
-
-.wide #files .preview .link,
+/*.wide #files .preview .link,
 .wide #edit .preview .link {
     height: 76px;
     align-items: center;
-}
+}*/
 
-.wide #files .preview .timestamp,
-.wide #edit .preview .timestamp {
-    height: 66px;
-    align-content: end;
+.wide .preview .youtube .timestamp {
+
 }
 
 .wide .preview .p1 {
     flex-direction: row-reverse;
+}
+
+.wide .preview .youtube {
+    padding-left: 10px;
 }
 
 /** filepreview.vue **/

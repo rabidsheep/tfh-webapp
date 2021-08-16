@@ -117,6 +117,7 @@ export default {
 
         this.loading = false
       })
+      .catch((error) => console.log(error))
     },
     updateCharacterFilter(character, i) {
       if (!this.players[i].character || this.players[i].character.name !== character.name) {

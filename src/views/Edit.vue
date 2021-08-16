@@ -26,6 +26,8 @@
                     align-center>
                         <h1>Sign In</h1>
 
+                        <br />
+
                         <v-progress-linear
                         color="accent"
                         indeterminate
@@ -248,6 +250,8 @@ export default {
         }
     },
     mounted: function () {
+        console.log(this.user)
+
         if (this.id && !this.user) {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 
@@ -385,10 +389,12 @@ export default {
                     request.headers.set('Authorization', token)
                 })
             })
+            .catch((error) => console.log(error))
         },
         getMatch(id) {
             this.loadingMatch = true
-            this.$matches.get({id}).then((response) => {
+            this.$matches.get({id})
+            .then((response) => {
                 if (response.ok) {
                     this.match = response.body.matches[0]
                     this.updated= JSON.parse(JSON.stringify(this.match))
@@ -404,6 +410,7 @@ export default {
                     this.loadingMatch = false
                 }
             })
+            .catch((error) => console.log(error))
         },
         resetMatch() {
             this.updated = JSON.parse(JSON.stringify(this.match))

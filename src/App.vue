@@ -46,7 +46,8 @@ export default {
     }
   },
   mounted: function () {
-    this.$firebase.auth().onAuthStateChanged((user) => {
+    this.$firebase.auth()
+    .onAuthStateChanged((user) => {
         
       if (!user) {
         return null
@@ -101,6 +102,7 @@ export default {
           request.headers.set('Authorization', token)
         })
       })
+      .catch((error) => console.log(error))
     },
   }
 }

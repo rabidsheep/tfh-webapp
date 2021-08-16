@@ -152,6 +152,7 @@ export default {
                     console.log("Error retrieving player list.\n", this.errorMsg)
                 }
             })
+            .catch((error) => console.log(error))
 
         },
         selectCharacter: function (character, i) {

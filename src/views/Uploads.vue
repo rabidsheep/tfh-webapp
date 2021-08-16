@@ -249,6 +249,7 @@ export default {
                         request.headers.set('Authorization', token)
                     })
                 })
+                .catch((error) => console.log(error))
         },
         /** determines what upload form to use */
         setUploadType(type) {

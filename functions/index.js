@@ -1,6 +1,6 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
-const { configs } = require('./configs')
+const { configs } = require('./CloudConfig')
 admin.initializeApp()
 
 const express = require('express')
@@ -33,13 +33,13 @@ const itemsPerPage = 5
 
 /** retrieve match count and filter results */
 api.get('/matches', (req, res) => {
-    let query = formatQuery(req.query.players, req.query.strict)
+    let query = (
+        req.query.players ?
+        formatQuery(req.query.players, req.query.strict) :
+        (req.query.id ? {'_id': mongo.ObjectId(req.query.id)} : {})
+    )
 
     let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
-
-    if (req.query.id) {
-        query['_id'] = mongo.ObjectId(req.query.id)
-    }
 
     MongoClient.connect(url, { useUnifiedTopology: true })
     .then((client) => {

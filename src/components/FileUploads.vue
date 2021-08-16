@@ -165,6 +165,7 @@ export default {
                         this.finished = true
                     }
                 })
+                .catch((error) => console.log(error))
                     
                 /*disable until i can figure out how to use storage emulator
                 const storageRef = firebase.storage()
@@ -207,7 +208,9 @@ export default {
                                 this.showErrors(this.errorList)
                             }
                         })
+                        .catch((error) => console.log(error))
                     })
+                    .catch((error) => console.log(error))
                 })*/
             }
         },

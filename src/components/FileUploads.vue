@@ -12,7 +12,7 @@
             finished,
             progress,
             succeeded,
-            failed
+            failed,
             }"
         :errors="errors"
         @clear-errors="clearErrors()"
@@ -117,7 +117,6 @@ export default {
             error: false,
             uploading: false,
             finished: false,
-            matchCount: 0,
             succeeded: 0,
             failed: 0,
             progress: 0,
@@ -140,6 +139,8 @@ export default {
             //this.$emit('files-upload')
 
             this.uploading = true
+            let success = 0
+            let fail = 0
 
             for (let i = 0; i < this.matches.length; i++) {
                 this.matches[i].file.url = '/';
@@ -149,18 +150,19 @@ export default {
                 .save(this.matches[i])
                 .then((response) => {
                     if (response.ok) {
-                        console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
+                        success += 1
+                        console.log('Successfully uploaded document #' + (fail + success) + ' (ID: ' + response.body.docId + ')')
                     } else {
+                        fail += 1
                         this.setErrors('upload', this.files[i].name)
+                        console.log('Failed to upload a match')
                     }
 
-                    if (i === this.matches.length - 1) {
+                    if (success + fail === this.matches.length) {
+                        this.succeeded = success
+                        this.failed = fail
                         this.uploading = false
                         this.finished = true
-                        
-                        if (this.errors.length > 0) {
-                            this.error = true
-                        }
                     }
                 })
                     
@@ -331,6 +333,7 @@ export default {
         resetForm() {
             this.matches = []
             this.files = []
+            this.matchCount = 0
             this.finished = false
         },
         removeMatch(i) {
@@ -350,7 +353,6 @@ export default {
             }
         },
         setTimestamp(timestamp, i) {
-            
             if (this.matches[i].video && !this.matches[i].video.timestamp || this.matches[i].video.timestamp !== timestamp) {
                 this.$set(this.matches[i].video, 'timestamp', timestamp)
             }
@@ -360,8 +362,6 @@ export default {
                 console.log('deleting video')
                 this.$delete(this.matches[i], 'video')
             }
-
-            
         },
         deleteTimestamp(i) {
             if (this.matches[i].video && this.matches[i].video.timestamp) {

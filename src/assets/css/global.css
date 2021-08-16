@@ -528,7 +528,7 @@ a {
 
 /* desktop */
 .wide #uploads .v-overlay__content {
-    width: 50%;
+    width: 600px;
 }
 
 .wide #uploads .back {

@@ -49,6 +49,7 @@
                         </v-layout>
 
                         <v-progress-linear
+                        color="accent"
                         indeterminate
                         v-show="$firebase.auth().currentUser || loggingIn"/>
 

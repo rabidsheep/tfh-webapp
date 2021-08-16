@@ -9,9 +9,8 @@
             error,
             uploading,
             finished,
-            progress,
             succeeded,
-            failed
+            failed,
             }"
         :errors="errors"
         @clear-errors="clearErrors()"
@@ -29,17 +28,6 @@
             justify-center>
                 <v-row
                 class="url-input">
-                    <!--<v-text-field
-                    class="url"
-                    v-model="url"
-                    :error-messages="urlErrors"
-                    @input="$v.url.$touch()"
-                    @blur="$v.url.$touch()"
-                    label="YouTube Link"
-                    prepend-icon="mdi-youtube"
-                    required
-                    clearable />-->
-
                     <v-text-field
                     class="url"
                     ref="url"
@@ -368,6 +356,8 @@ export default {
         /** upload youtube-only object */
         youtubeUpload() {
             this.uploading = true
+            let succeed = 0
+            let fail = 0
 
             for (let i = 0; i < this.matches.length; i++) {
                 // upload match info to db
@@ -375,13 +365,18 @@ export default {
                 .save(this.matches[i])
                 .then((response) => {
                     if (response.ok) {
-                        console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
-                        if (i === this.matches.length - 1) {
-                            this.uploading = false
-                            this.finished = true
-                        }
+                        succeed += 1
+                        console.log('Successfully uploaded document #' + (fail + success) + ' (ID: ' + response.body.docId + ')')
                     } else {
-                        this.showError = true
+                        fail += 1
+                        console.log('Failed to upload a match')
+                    }
+                    
+                    if (fail + succeed === this.matches.length) {
+                        this.failed = fail
+                        this.succeeded = succeed
+                        this.uploading = false
+                        this.finished = true
                     }
                 })
             } 

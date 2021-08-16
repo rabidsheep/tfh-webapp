@@ -5,38 +5,41 @@
                 <template v-if="uploading">
                     <h1>Uploading...</h1>
 
-                    <v-progress-linear
-                    v-model="progress"
-                    height="20px"
-                    :buffer-value="100" />
+                    <br />
 
-                    <p>
-                        <span style="color:green;">{{ succeeded }}</span> | <span style="color:red;">{{ failed }}</span>
-                    </p>
+                    <v-progress-linear
+                    color="accent"
+                    indeterminate />
                 </template>
 
                 <template v-else-if="finished">
-                    <!--<v-icon>
-                        <template v-if="succeeded > 0">
+                    <v-icon
+                    :class="succeeded > 0 ? ( failed > 0 ? 'amber--text lighten-3' : 'green--text lighten-2') : 'red--text lighten-2'"
+                    large>
+                        <template v-if="succeeded > 0 && failed === 0">
                             mdi-check-circle
                         </template>
 
-                        <template v-else>
+                        <template v-else-if="succeeded > 0 && failed > 0">
+                            mdi-alert
+                        </template>
+
+                        <template v-else-if="succeeded === 0 && failed > 0">
                             mdi-close-circle
                         </template>
-                    </v-icon>-->
+                    </v-icon>
 
                     <h1>
                         Upload Finished
                     </h1>
 
-                    <template v-if="succeeded > 0">
-                        Uploaded {{ succeeded }} out of {{ matchCount }} {{ matchCount == 1 ? 'match' : 'matches' }}.
-                    </template>
-                    
-                    <template v-if="failed > 0">
-                        {{ failed }} {{ failed == 1 ? 'match' : 'matches' }} failed to upload.
-                    </template>
+                    <center v-show="succeeded > 0">
+                    Successfully uploaded {{ succeeded }} {{ succeeded === 1 ? 'match' : 'matches' }}.
+                    </center>
+
+                    <center v-show="failed > 0">
+                    Failed to upload {{ failed }} {{ failed === 1 ? 'match' : 'matches' }}.
+                    </center>
 
                     <v-btn
                     rounded
@@ -48,25 +51,39 @@
 
                 <template v-else-if="error">
                     <h1>Error</h1>
+                    
+                    <div><br /></div>
 
                     <div
                     v-for="(error, i) in errors"
                     :key="i">
-                        <template>
-                            <br v-if="i < errors.length" />
-                            {{ errors.length > 1 ? i + 1 + ') ' : '' }}
-                            {{ errorMsg[error.type] }}
-
-                            <ul v-if="error.files && error.files.length > 0">
-                                <li
-                                v-for="(file, j) in error.files"
-                                :key="j">
-                                    {{ file }}
-                                </li>
-                            </ul>
+                        
+                        <template v-if="error.type === 'limit'">
+                            <center>
+                                {{ errors.length > 1 ? i + 1 + ') ' : '' }}
+                                {{ errorMsg[error.type] }}
+                            </center>
                         </template>
-                    </div>
 
+                        <template v-else>
+                            <center>
+                                {{ errors.length > 1 ? i + 1 + ') ' : '' }}
+                                {{ errorMsg[error.type] }}
+                                
+
+                                <ul v-if="error.files && error.files.length > 0">
+                                    <li
+                                    v-for="(file, j) in error.files"
+                                    :key="j">
+                                        {{ file }}
+                                    </li>
+                                </ul>
+                            </center>
+                        </template>
+
+                        <br />
+                    </div>
+                    
                     <v-btn
                     rounded
                     @click="$emit('clear-errors')"
@@ -86,11 +103,9 @@ export default {
         error: Boolean,
         uploading: Boolean,
         finished: Boolean,
-        matchCount: Number,
         succeeded: Number,
         failed: Number,
         errors: Array,
-        progress: Number,
     },
     data: () => {
         return {
@@ -103,10 +118,5 @@ export default {
             }
         }
     },
-    mounted: function() {
-
-    },
-    methods: {}
-
 }
 </script>

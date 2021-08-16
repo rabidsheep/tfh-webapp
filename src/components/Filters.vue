@@ -75,10 +75,11 @@
                     <v-row
                     class="strictness"
                     justify="center">
-                        <v-checkbox
+                        <v-switch
+                        color="accent"
                         v-model="strict"
                         class="checkbox"
-                        label="Strict Search"
+                        label="Strict"
                         value
                         hide-details/>
                     </v-row>

@@ -33,18 +33,9 @@ const itemsPerPage = 5
 
 /** retrieve match count and filter results */
 api.get('/matches', (req, res) => {
-    let query = {
-        'players.0.name': null,
-        'players.0.character.name': null,
-        'players.1.name': null,
-        'players.1.character.name': null
-    }
+    let query = formatQuery(req.query.players, req.query.strict)
 
     let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
-
-    if (req.query.players) {
-        query = formatQuery(query, req.query.players, req.query.strict)
-    }
 
     if (req.query.id) {
         query['_id'] = mongo.ObjectId(req.query.id)
@@ -243,41 +234,34 @@ exports.api = functions.https.onRequest(api)
 ************/
 
 // format query object for filtering matches
-function formatQuery(query, filters, strict) {
-    if (strict === 'true') {
-        for (let i = 0; i < filters.length; i++) {
-            if (filters[i].name && filters[i].name.length > 0) {
-                query[`players.${i}.name`] = filters[i].name
-            }
+function formatQuery(filters, strict) {
+    firstName = filters[0].name ? new RegExp(['^' + filters[0].name + '$'], 'i') : null
+    secondName = filters[1].name ? new RegExp(['^' + filters[1].name + '$'], 'i') : null
 
-            if (filters[i].character && filters[i].character.id !== '0') {
-                query[`players.${i}.character.name`] = filters[i].character.name
-            }
-        }
+    firstChar = filters[0].character.name ? filters[0].character.name : null
+    secondChar = filters[1].character.name ? filters[1].character.name : null
+
+    if (strict === 'false') {
+        return query = {$or: [
+            {
+                'players.0.name': firstName,
+                'players.0.character.name': firstChar,
+                'players.1.name': secondName,
+                'players.1.character.name': secondChar
+            },
+            {
+                'players.0.name': secondName,
+                'players.0.character.name': secondChar,
+                'players.1.name': firstName,
+                'players.1.character.name': firstChar
+            },
+        ]}
     } else {
-        firstName = filters[0].name ? filters[0].name : null
-        secondName = filters[1].name ? filters[1].name : null
-
-        firstChar = filters[0].character.name ? filters[0].character.name : null
-        secondChar = filters[1].character.name ? filters[1].character.name : null
-
-            query = {$or: [
-                {
-                    'players.0.name': firstName,
-                    'players.0.character.name': firstChar,
-                    'players.1.name': secondName,
-                    'players.1.character.name': secondChar
-                },
-                {
-                    'players.0.name': secondName,
-                    'players.0.character.name': secondChar,
-                    'players.1.name': firstName,
-                    'players.1.character.name': firstChar
-                },
-            ]}
-            
-            console.log(query)
+        return query = {
+            'players.0.name': firstName,
+            'players.0.character.name': firstChar,
+            'players.1.name': secondName,
+            'players.1.character.name': secondChar
+        }
     }
-
-    return query
 }

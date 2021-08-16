@@ -1,6 +1,6 @@
 import Vue from 'vue'
 import VueResource from 'vue-resource'
-import config from './config'
+import config from './AppConfig'
 import firebase from 'firebase/app'
 Vue.prototype.$config = config;
 

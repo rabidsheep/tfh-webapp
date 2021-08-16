@@ -27,6 +27,7 @@
                         <h1>Sign In</h1>
 
                         <v-progress-linear
+                        color="accent"
                         indeterminate
                         v-show="$firebase.auth().currentUser"/>
 

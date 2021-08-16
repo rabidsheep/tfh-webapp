@@ -1,8 +1,10 @@
 .DS_Store
-node_modules
+*node_modules
 /dist
 /old
 *.cache
+*Config.js
+/functions/*Config.js
 
 
 # Log files

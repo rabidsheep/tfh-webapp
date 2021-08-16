@@ -7,9 +7,11 @@
     @update-strictness="strict = $event" />
     
     
-    <div class="loading" style="margin: 20% 0" v-if="loading">
-      <v-progress-linear indeterminate v-show="loading"/>
-    </div>
+      <v-progress-linear
+      style="margin: 20% 0"
+      color="accent"
+      v-show="loading"
+      indeterminate/>
     
     <!-- matches table -->
     <v-layout
@@ -92,7 +94,9 @@ export default {
       deep: true
     },
     'strict': function() {
-      this.getMatches(this.players, 1, this.strict)
+        if (JSON.stringify(this.players[0]) !== JSON.stringify(this.players[1])) {
+          this.getMatches(this.players, 1, this.strict)
+        }
     }
   },
   methods: {

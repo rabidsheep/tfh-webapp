@@ -250,8 +250,6 @@ export default {
         }
     },
     mounted: function () {
-        console.log(this.user)
-
         if (this.id && !this.user) {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 

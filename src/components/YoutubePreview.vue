@@ -94,11 +94,6 @@ export default {
     },
     data: () => {
         return {
-            re: {
-                yt: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
-                id: /(?<=\?v=)[^#\&\?]*/,
-                ts: /(?<=t=)\d+m\d+s|\d+m|\d+s/,
-            },
             hidden: true,
             valid: false,
             rules: {
@@ -108,10 +103,10 @@ export default {
                 timestamp: {
                     req: [
                         v => !!v || 'Required',
-                        v => /\d+h\d+m\d+s|\d+h|\d+m|\d+s/.test(v) || 'Invalid format'
+                        v => /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/.test(v) || 'Invalid format'
                     ],
                     noReq: [
-                        v => !v || /\d+h\d+m\d+s|\d+h|\d+m|\d+s/.test(v) || 'Invalid format'
+                        v => !v || v && /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/.test(v) || 'Invalid format'
                     ]
                 },
             }

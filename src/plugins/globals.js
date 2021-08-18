@@ -4,6 +4,16 @@ import config from './AppConfig'
 import firebase from 'firebase/app'
 Vue.prototype.$config = config;
 
+Vue.prototype.$regex = {
+  ytUrl: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
+  ytId: /(?:\?v=|youtu.be\/)([^#\&\?]*)/,
+  ytIdLength: /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/,
+  //for timestamp at end of youtube urls
+  urlTimestamp: /(?:\&t=)(((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?)/,
+  // for checking if timestamp string is valid
+  strTimestamp: /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/g,
+}
+
 Vue.use(VueResource)
 
 let uri = null

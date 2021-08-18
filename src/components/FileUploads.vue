@@ -101,7 +101,10 @@ import FilePreview from './FilePreview.vue'
 import StatusOverlay from './StatusOverlay.vue'
 
 export default {
-    components: { FilePreview, StatusOverlay },
+    components: {
+        FilePreview,
+        StatusOverlay
+    },
     name: 'FileUploads',
     props: {
         uid: String,
@@ -120,7 +123,7 @@ export default {
             succeeded: 0,
             failed: 0,
             progress: 0,
-            errors: []
+            errors: [],
         }
     },
     methods: {

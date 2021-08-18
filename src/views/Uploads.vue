@@ -122,7 +122,7 @@
                         </v-layout>
                         
                         <FileUploads
-                        v-if="uploadType === 'files'"
+                        v-if="uploadType == 'files'"
                         :uid="uid" />
 
                         <YoutubeUploads
@@ -225,6 +225,7 @@ export default {
                 }
             })
         } else {
+            this.uid = this.user
             this.step = 2
             this.loading = false
         }

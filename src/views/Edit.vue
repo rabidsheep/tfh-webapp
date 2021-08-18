@@ -146,7 +146,7 @@
                                     <v-text-field
                                     v-model="timestamp"
                                     :dense="$vuetify.breakpoint.mdAndUp"
-                                    @blur="timestamp = ( timestamp ? timestamp.match(re.timestamp)[0] : null )"
+                                    @blur="timestamp = ( timestamp ? timestamp.match($regex.strTimestamp)[0] : null )"
                                     :rules="rules.timestamp"
                                     :disabled="!url || !$refs.url.valid"
                                     ref="timestamp"
@@ -221,30 +221,23 @@ export default {
             isRegistered: true,
             loggingIn: false,
             loadingMatch: false,
-            re: {
-                youtube: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
-                id: /(?<=\?v=)\w*(?=[^#\&\?]*)/,
-                //for timestamp at end of youtube urls
-                urlTimestamp: /(?<=&t=)((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/g,
-                // for checking if full timestamp string is valid
-                timestamp: /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/g,
-            },
             rules: {
                 name: [
                     v => !!v || 'Required'
                 ],
                 url: {
-                    noReq: [
-                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                        v => !v || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'
-                    ],
                     req: [
                         v => !!v || 'Required',
                         v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                        v => !v || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'                    ]
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ],
+                    noReq: [
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ]
                 },
                 timestamp: [
-                        v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
+                    v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
                 ],
             },
         }
@@ -318,6 +311,7 @@ export default {
             })
         } else if (this.id && this.user) {
             this.getMatch(this.id)
+            this.uid = this.user
             this.step = 2
             this.loading = false
             console.log("Skipping sign in")
@@ -336,18 +330,17 @@ export default {
             }
         },
         'url': function(v) {
-            if (v && v.match(/(?<=\?v=)([^#\&\?]*)/) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11) {
-                this.tempUrl = v.match(this.re.youtube)[0]
+            if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
+                this.tempUrl = v.match(this.$regex.ytUrl)[0]
 
                 if (this.tempUrl && !this.video || this.tempUrl !== this.video.url) {
                     this.$emit('set-url', this.tempUrl)
                 }
-
-                if (this.re.urlTimestamp.test(v) && v.match(this.re.urlTimestamp)[0] !== this.timestamp) {
-                    this.timestamp = v.match(this.re.urlTimestamp)[0]
+                
+                if (this.$regex.urlTimestamp.test(v) && v.match(this.$regex.urlTimestamp)[1] !== this.timestamp) {
+                    this.timestamp = v.match(this.$regex.urlTimestamp)[1]
                 }
             } else {
-                
                 this.tempUrl = (this.video ? this.video.url : null)
                 this.timestamp = (this.video && this.video.timestamp ? this.video.timestamp : null)
                 this.$emit('delete-video')
@@ -356,10 +349,10 @@ export default {
         },
         
         'timestamp': function(v) {
-            ///^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g
-            if (this.timestamp && (this.re.timestamp).test(v)) {
-                    if (this.timestamp !== this.currentTimestamp)
-                    this.$emit('set-timestamp', this.timestamp.match(this.re.timestamp)[0])
+            if (v && v.match(this.$regex.strTimestamp)) {
+                    if (this.timestamp !== this.currentTimestamp) {
+                        this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
+                    }
             } else {
                 //this.$delete(this.updated.video, 'timestamp')
                 this.$emit('delete-timestamp')

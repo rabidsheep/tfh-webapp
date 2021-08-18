@@ -203,12 +203,6 @@ export default {
             timestamp: null,
             vid: null,
             video: {},
-            re: {
-                yt: /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/,
-                id: /(?<=\?v=)[^#\&\?]*/,
-                sh: /(?<=(?:youtu.be\/))[^#\&\?]*/,
-                ts: /(?<=t=)\d+m\d+s|\d+m|\d+s/,
-            },
             rules: {
                 name: [
                     v => !!v || 'Required'
@@ -216,11 +210,11 @@ export default {
                 url: [
                     v => !!v || 'Required',
                     v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                    v => !v || /(?<=(?:youtu.be\/))[^#\&\?]*/.test(v) && v.match(/(?<=(?:youtu.be\/))[^#\&\?]*/)[0].length == 11 || /(?<=\?v=)([^#\&\?]*)/.test(v) && v.match(/(?<=\?v=)([^#\&\?]*)/)[0].length === 11 || 'Video ID must be 11 characters'
+                    v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
                 ],
                 timestamp: [
-                    v => !v || v && (/^(?=(?:[0-9]{1,5}))([0-9]{1,2}h){0,1}([0-9]{1,3}m){0,1}([0-9]{1,5}s){0,1}?$/g).test(v) || 'Invalid format',
-                ]
+                    v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
+                ],
             },
             hidden: true,
             valid: false,
@@ -235,10 +229,7 @@ export default {
             this.vid = null
             
             if (this.$refs.url.valid) {
-                let matched = (this.url.match(this.re.sh) ? this.url.match(this.re.sh) : this.url.match(this.re.id))
-                if (matched && matched[0].length === 11) {
-                    this.vid = matched[0]
-                }
+                this.vid = this.url.match(this.$regex.ytId)[1]
             } else {
                 this.invalidId = true;
                 return

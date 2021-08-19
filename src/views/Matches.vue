@@ -18,15 +18,29 @@
     id="matches"
     column
     v-if="!loading">
-      <template v-if="matches.length > 0">
-        <MatchRow
+      <template v-if="documents.length > 0">
+        <!--<MatchRow
         v-for="(match, i) in matches"
         :key="i"
         v-bind="match"
         :user="user"
         :timezone="timezone"
         @update-character="updateCharacterFilter($event.character, $event.index)"
-        @update-name="updateNameFilter($event.name, $event.index)" />
+        @update-name="updateNameFilter($event.name, $event.index)" /> -->
+        <v-row
+        class="document"
+        v-for="(doc, i) in documents"
+        :key="i">
+            <MatchRow
+            :matches="doc.matches"
+            :user="user"
+            :timezone="timezone"
+            :uploadDate="doc.uploadDate"
+            :uploadTime="doc.uploadTime"
+            @update-character="updateCharacterFilter($event.character, $event.index)"
+            @update-name="updateNameFilter($event.name, $event.index)" />
+        </v-row>
+
       </template>
 
       <template v-else>
@@ -74,7 +88,7 @@ export default {
         {name: null, character: null}
       ],
       strict: false,
-      matches: [],
+      documents: [],
       resultsCount: null,
       page: 1,
       lastVisible: null,
@@ -107,7 +121,7 @@ export default {
       .then((response) => {
         if (response.ok) {
           this.error = false
-          this.matches = response.body.matches
+          this.documents = response.body.matches
           this.resultsCount = response.body.count
         } else {
           this.error = true

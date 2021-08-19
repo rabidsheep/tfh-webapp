@@ -16,11 +16,8 @@
                 <v-avatar
                 height="100%"
                 tile>
-                    <img v-if="!currentCharacter"
-                    :src="require(`../assets/img/sel/0.png`)" />
-                    
-                    <img v-else-if="currentCharacter"
-                    :src="require(`../assets/img/sel/${currentCharacter.id}.png`)" />
+                    <img
+                    :src="require(`../assets/img/sel/${!currentCharacter ? `Any Character` : currentCharacter}.png`)" />
                 </v-avatar>
             </v-btn>
         </template>
@@ -40,7 +37,7 @@
                         class="icon"
                         height="100%"
                         tile>
-                            <img :src="require(`../assets/img/sel/${character.id}.png`)">
+                            <img :src="require(`../assets/img/sel/${character.name}.png`)">
                         </v-avatar>
                         {{ character.name }}
                 </v-list-item>
@@ -53,7 +50,7 @@
                         class="icon"
                         height="100%"
                         tile>
-                            <img :src="require(`../assets/img/sel/${character.id}.png`)">
+                            <img :src="require(`../assets/img/sel/${character.name}.png`)">
                         </v-avatar>
                         {{ character.name }}
                 </v-list-item>
@@ -67,7 +64,7 @@
 export default {
   name: 'CharacterSelect',
   props: {
-    currentCharacter: [ Object, null ],
+    currentCharacter: [ String, null ],
     selectionEnabled: Boolean,
     index: Number,
     anyEnabled: Boolean,

@@ -4,95 +4,168 @@
     class="form"
     ref="form"
     v-model="valid">
-        <div v-show="matches.length > 0"><br /></div>
-        <StatusOverlay
-        v-bind="{
-            error,
-            uploading,
-            finished,
-            progress,
-            succeeded,
-            failed,
-            }"
-        :errors="errors"
-        @clear-errors="clearErrors()"
-        @close="resetForm()" />
+        <div>
+            <StatusOverlay
+            v-bind="{
+                error,
+                uploading,
+                finished,
+                progress,
+                succeeded,
+                failed,
+                }"
+            :errors="errors"
+            @clear-errors="clearErrors()"
+            @close="resetForm()" />
 
-        <v-layout
-        column
-        class="wrapper">
+            <br />
+
             <v-layout
-            v-if="matches.length > 0"
-            class="body"
+            class="options"
+            column
+            align-center
+            justify-center>
+                <v-radio-group
+                v-model="uploadType"
+                row>
+                    <v-radio
+                    label="Casual"
+                    value="Casual"
+                    />
+                    <v-radio
+                    label="Tournament"
+                    value="Tournament"
+                    />
+                </v-radio-group>
+
+                <v-expand-transition>
+                <v-row
+                v-show="uploadType === `Tournament`">
+                    <v-col
+                    class="tournament">
+                        <v-text-field
+                        dense
+                        v-model="tournament.name"
+                        :rules="uploadType === `Tournament` ? rules.tournament : undefined"
+                        label="Tournament Name"
+                        :required="uploadType === `Tournament`" />
+                    </v-col>
+
+                    <v-col
+                    class="tournament"
+                    cols="3">
+                        <v-text-field
+                        dense
+                        v-model="tournament.num"
+                        :rules="uploadType === `Tournament` ? rules.tournament : undefined"
+                        label="No."
+                        :required="uploadType === `Tournament`" />
+                    </v-col>
+                </v-row>
+                </v-expand-transition>
+
+                <v-switch
+                color="accent"
+                v-model="individualMatches"
+                class="upload-switch"
+                label="Upload Matches Individually"
+                :disabled="uploadType === 'Tournament'"
+                value
+                hide-details/>
+                
+                <!---<v-switch
+                color="accent"
+                v-model="individualUrls"
+                class="youtube-switch"
+                label="Individual Video URLs"
+                value
+                hide-details/>--->
+            </v-layout>
+
+            <br />
+
+            <v-layout
             column
             justify-center
-            align-center>
-                <FilePreview
-                v-for="(match, i) in matches"
-                :key="i"
-                :index="i"
-                v-bind="match"
-                :uploading="uploading"
-                :video="match.video ? match.video : null"
-                :uploadType="'files'"
-                :currentTimestamp="match.video && match.video.timestamp ? match.video.timestamp : null "
-                @update-character="updateCharacter($event.character, $event.index, i)"
-                @remove="removeMatch(i)"
-                @set-url="setUrl($event, i)"
-                @set-timestamp="setTimestamp($event, i)"
-                @delete-video="deleteVideoObj(i)"
-                @delete-timestamp="deleteTimestamp(i)" />
+            align-center
+            class="wrapper">
+                <v-layout
+                v-if="matches.length > 0"
+                class="body"
+                column
+                justify-center
+                align-center>
+                    <FilePreview
+                    v-for="(match, i) in matches"
+                    :key="i"
+                    :index="i"
+                    v-bind="match"
+                    :uploading="uploading"
+                    :video="match.video ? match.video : null"
+                    :staticUrl="staticUrl"
+                    :individual="individualUrls"
+                    :currentTimestamp="match.video && match.video.timestamp ? match.video.timestamp : null "
+                    @update-character="updateCharacter($event.character, $event.index, i)"
+                    @remove="removeMatch(i)"
+                    @set-url="setUrl($event, i)"
+                    @set-timestamp="setTimestamp($event, i)"
+                    @delete-video="deleteVideoObj(i)"
+                    @delete-timestamp="deleteTimestamp(i)"
+                    @update-static-url="staticUrl = $event" />
+
+                    
+                </v-layout>
+            
+                <v-layout
+                class="message"
+                column
+                justify-center>
+                    <div><br /></div>
+
+                    <div
+                    :style="matches.length >= uploadLimit ? 'color: red;' : ''">
+                        {{ matches.length >= uploadLimit ?
+                        'Maximum file limit reached' :
+                        (uploadLimit - matches.length) + ' slots remaining' }}
+                    </div>
+
+                    <div><br /></div>
+                </v-layout>
             </v-layout>
-        
+
             <v-layout
-            class="message"
-            column
-            justify-center>
-                <div><br /></div>
+            class="buttons"
+            justify-center
+            align-center>
+                <v-btn
+                rounded
+                :ripple="false"
+                :disabled="matches.length >= uploadLimit"
+                @click="selectFiles">
+                    Select Files
+                </v-btn>
 
-                <div
-                :style="matches.length >= uploadLimit ? 'color: red;' : ''">
-                    {{ matches.length >= uploadLimit ?
-                    'Maximum file limit reached' :
-                    (uploadLimit - matches.length) + ' slots remaining' }}
-                </div>
+                <!-- just here to make upload files
+                button open file viewer -->
+                <input
+                style="display: none;"
+                ref="uploadFilesBtn"
+                type="file"
+                accept=".tfhr"
+                multiple
+                @change="openFiles"
+                required />
 
-                <div><br /></div>
+                <v-btn
+                rounded
+                :ripple="false"
+                color = "accent"
+                :disabled="!valid || matches.length <= 0"
+                @click="submitFiles()">
+                    Upload Files
+                </v-btn>
             </v-layout>
-        </v-layout>
-
-        <v-layout
-        class="buttons"
-        justify-center
-        align-center>
-            <v-btn
-            rounded
-            :ripple="false"
-            :disabled="matches.length >= uploadLimit"
-            @click="selectFiles">
-                Select Files
-            </v-btn>
-
-            <!-- just here to make upload files
-            button open file viewer -->
-            <input
-            style="display: none;"
-            ref="uploadFilesBtn"
-            type="file"
-            accept=".tfhr"
-            multiple
-            @change="openFiles"
-            required />
-
-            <v-btn
-            rounded
-            :ripple="false"
-            color = "accent"
-            :disabled="!valid || matches.length <= 0"
-            @click="submitFiles()">
-                Upload Files
-            </v-btn>
-        </v-layout>
+        </div>
     </v-form>
 </template>
 
@@ -124,7 +197,30 @@ export default {
             failed: 0,
             progress: 0,
             errors: [],
+            individualUrls: false,
+            individualMatches: true,
+            staticUrl: null,
+            uploadType: 'Casual',
+            tournament: {
+                name: null,
+                num: null,
+                date: null,
+            },
+            rules: {
+                tournament: [
+                    v => !!v || 'Required',
+                ]
+            }
         }
+    },
+    watch: {
+        'uploadType': function(val) {
+           if (val === 'Tournament') {
+               this.individualMatches = false
+           } else {
+               this.individualMatches = true
+           }
+      }
     },
     methods: {
         /* makes visible upload button act like html file upload button */
@@ -141,11 +237,72 @@ export default {
         submitFiles() {
             //this.$emit('files-upload')
 
-            this.uploading = true
+            //this.uploading = true
             let success = 0
             let fail = 0
+            var upload = null
+            var uploadRef = null
 
-            for (let i = 0; i < this.matches.length; i++) {
+            
+            
+            if (!this.individualMatches) {
+                if (this.uploadType === 'Tournament') {
+                    upload = {
+                        type: this.uploadType,
+                        tournament: this.tournament,
+                        userId: this.uid,
+                        matches: this.matches
+                    }
+                } else if (this.uploadType === 'Casual') {
+                    upload = {
+                        type: this.uploadType,
+                        userId: this.uid,
+                        matches: this.matches
+                    }
+                }
+
+                uploadRef = this.$matches.save(upload)
+            } else {
+                if (this.uploadType === 'Casual') {
+                    upload = []
+
+                    for (let i = 0; i < this.matches.length; i++) {
+
+                        /*upload.push({
+                            type: this.uploadType,
+                            userId: this.uid,
+                            matches: this.matches[i]
+                        })*/
+
+                        uploadRef = this.$matches.save({
+                            type: this.uploadType,
+                            userId: this.uid,
+                            matches: [this.matches[i]]
+                        })
+                    
+                    }
+                }
+            }
+
+            uploadRef.then((response) => {
+                if (response.ok) {
+                    success += 1
+                    console.log('Successfully uploaded document #' + (fail + success) + ' (ID: ' + response.body.docId + ')')
+                } else {
+                    fail += 1
+                    this.setErrors('upload', this.files[i].name)
+                    console.log('Failed to upload a match')
+                }
+
+                if (success + fail === this.matches.length) {
+                    this.succeeded = success
+                    this.failed = fail
+                    this.uploading = false
+                    this.finished = true
+                }
+            })
+            .catch((error) => console.log(error))
+            /*for (let i = 0; i < this.matches.length; i++) {
                 this.matches[i].file.url = '/';
 
                 // upload match info to db
@@ -168,7 +325,7 @@ export default {
                         this.finished = true
                     }
                 })
-                .catch((error) => console.log(error))
+                .catch((error) => console.log(error))*/
                     
                 /*disable until i can figure out how to use storage emulator
                 const storageRef = firebase.storage()
@@ -215,7 +372,7 @@ export default {
                     })
                     .catch((error) => console.log(error))
                 })*/
-            }
+            //}
         },
         /**
          * begins parsing files one by one
@@ -291,14 +448,14 @@ export default {
                             name: fileName
                         },
                         version: result.charCodeAt(146),
-                        players: [{
+                        p1: {
                             name: playerNames[0],
-                            character: (this.$characters).find(c => c.devName == characterNames[0])
+                            character: ((this.$characters).find(c => c.devName == characterNames[0])).name
                         },
-                        {
+                        p2: {
                             name: playerNames[1],
-                            character: (this.$characters).find(c => c.devName == characterNames[1])
-                        }]
+                            character: ((this.$characters).find(c => c.devName == characterNames[1])).name
+                        }
                     }
 
                     this.matches.push(match)
@@ -356,6 +513,11 @@ export default {
 
             if (this.matches[i].video.url !== url || !this.matches[i].video.url) {
                 this.$set(this.matches[i].video, 'url', url)
+            }
+
+            if (i === 0 && !this.individualUrls) {
+                this.staticUrl = url
+                console.log(url)
             }
         },
         setTimestamp(timestamp, i) {

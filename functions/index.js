@@ -70,8 +70,9 @@ api.get('/matches', (req, res) => {
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
-    let match = req.body
-    let players = [match.players[0].name, match.players[1].name]
+    let upload = req.body
+
+    
 
     MongoClient.connect(url, { useUnifiedTopology: true })
     .then((client) => {
@@ -79,13 +80,14 @@ api.put('/matches', (req, res) => {
         let timestamp = ((new Date()).toISOString()).split('T')
         let db = client.db('tfhr')
 
+        
         return Promise.all([
             db,
             db.collection('matches')
             .insertOne({
                 uploadDate: timestamp[0],
                 uploadTime: timestamp[1],
-                ...match
+                ...upload
             })
         ])
     })
@@ -94,15 +96,18 @@ api.put('/matches', (req, res) => {
         let matchId = results[1].insertedId
 
         // adds new entries to player collection
-        for (i in players) {
-            console.log('Checking player list for', players[i])
+        for (i in upload.matches) {
+            for (let j = 0; j < 2; j++) {
+                let player = j === 0 ? upload.matches[i].p1 : upload.matches[i].p2
+                console.log('Checking player list for', player.name )
 
-            db.collection('players')
-            .updateOne(
-                { 'name': players[i] },
-                { $setOnInsert: { 'name': players[i] }},
-                { upsert: true }
-            )
+                db.collection('players')
+                .updateOne(
+                    { 'name': player.name },
+                    { $setOnInsert: { 'name': player.name }},
+                    { upsert: true }
+                )
+            }
         }
 
         console.log('Match uploaded.\nID: ', matchId)

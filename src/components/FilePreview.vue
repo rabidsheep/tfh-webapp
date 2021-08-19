@@ -29,12 +29,12 @@
             <v-col
             :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
             :class="`player p${i+1}`"
-            v-for="(player, i) in players"
+            v-for="(player, i) in [p1, p2]"
             :key="i"
             :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
                 <CharacterSelect
                 :currentCharacter ="player.character"
-                :index = "i"
+                :index="i"
                 :selectionEnabled="false"
                 :anyEnabled="false"
                 @character-select="$emit('update-character', { character: $event, index: i})"/>
@@ -67,9 +67,10 @@
                 ref="url"
                 :dense="$vuetify.breakpoint.mdAndUp"
                 v-model="url"
-                @blur="url = tempUrl"
+                @blur="onBlur(tempUrl, index, individual)"
                 clearable
                 :rules="rules.url"
+                :disabled="!individual && index > 0"
                 label="YouTube Link (Optional)"
                 prepend-icon="mdi-youtube" />
             </v-row>
@@ -110,11 +111,15 @@ export default {
         },
         video: [Object, null],
         players: Array,
+        p1: Object,
+        p2: Object,
         version: Number,
         index: Number,
         progress: Number,
         uploading: Boolean,
         currentTimestamp: [String, null],
+        individual: Boolean,
+        staticUrl: [String, null],
     },
     data: () => {
         return {
@@ -139,6 +144,18 @@ export default {
     },
     // test url: https://www.youtube.com/watch?v=uciAaVk3xaE
     watch: {
+        'individual': function(val) {
+            if (val) {
+                this.url = ( this.index === 0 ? this.staticUrl : null )
+            } else {
+                this.url = this.staticUrl
+            }
+        },
+        'staticUrl': function(v) {
+            if (!this.individual) {
+                this.url = v
+            }
+        },
         'url': function(v) {
             
             if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
@@ -173,6 +190,13 @@ export default {
         remove: function() {
             this.$emit('remove-file', this.index)
         },
+        onBlur: function(temp, i, individual) {
+            this.url = temp
+
+            if (i === 0 && !individual) {
+                this.$emit('update-static-url', temp)
+            }
+        }
     }
 }
 </script>

@@ -214,6 +214,18 @@ a {
     cursor: pointer;
 }
 
+.match .players,
+.match .links {
+    display: flex;
+    flex-wrap: nowrap;
+}
+
+
+.xsmall .match .players,
+.xsmall .match .links {
+    flex-wrap: wrap;
+}
+
 .match .player {
     display: flex;
     align-content: center;
@@ -226,7 +238,7 @@ a {
     flex-wrap: nowrap;
 }
 
-.match .links > .row {
+.match .links {
     justify-content: space-between;
     align-content: space-between;
 }
@@ -260,6 +272,17 @@ a {
     margin-top: 5px;
 }
 
+.match .p1 {
+    flex-direction: row-reverse;
+    text-align: right;
+}
+
+
+.xsmall .match .p1 {
+    flex-direction: row;
+    text-align: left;
+}
+
 .match .comment.msg > p {
     margin: 5px;
 }
@@ -275,18 +298,15 @@ a {
 
 .wide .match .p1 {
     text-align: right;
-    justify-content: flex-end;
 }
 
-.wide .match .p1 .character-icon {
-    order: 2;
-}
 
-.wide .match .p1 .character-icon {
+
+.match .p1 .character-icon {
     margin-left: 15px;
 }
 
-.wide .match .p2 .character-icon {
+.match .p2 .character-icon {
     margin-right: 15px;
 }
 
@@ -338,20 +358,14 @@ a {
     min-width: 1%;
 }
 
-.small .match .players {
-    width: 80%;
-}
-
-.small .match .links {
-    width: 20%;
-}
 
 .small .match {
     justify-content: space-between;
 }
 
-.small .match .character-icon {
+.xsmall .match .character-icon {
     margin-right: 15px;
+    margin-left: 0px;
 }
 
 .small .match .edit,
@@ -396,6 +410,9 @@ a {
     -webkit-box-orient: vertical;
 }
 
+.xsmall .match .links {
+    max-width: min-content;
+}
 .small .match .link .btn > * {
     align-self: center;
 }
@@ -403,16 +420,7 @@ a {
 .small .match .link .btn {
     display: flex;
 }
-
-.small .match .links {
-    max-width: max-content;
-}
-
-.small .match .links > .row {
-    max-width: min-content; 
-}
-
-.small .match .links > .row > .link {
+.small .match .links > .link {
     max-width: max-content;
 }
 
@@ -699,6 +707,15 @@ a {
 
 .preview .youtubelink {
     display: flex;
+}
+
+.form .youtube-switch {
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+.tournament {
+    padding: 0px 12px !important;
 }
 
 /* desktop */

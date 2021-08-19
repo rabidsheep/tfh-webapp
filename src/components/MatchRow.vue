@@ -1,33 +1,32 @@
 <template>
-    <v-row class="match" align="center">
+  <v-col>
+    <v-row class="header">
       <v-layout unique row align-center>
         <router-link
         :user="user"
         class="edit"
         :to="`edit?id=${_id}`">
           <v-icon
-          :size="$vuetify.breakpoint.smAndDown ? '22px' : '28px'"
+          size="22px"
           color="accent">
             mdi-square-edit-outline
           </v-icon>
         </router-link>
 
         <div
-        v-show="$vuetify.breakpoint.smAndDown"
-        :class="$vuetify.breakpoint.smAndDown ? `divider mr-2 ml-2` : `divider`">
+        class='divider mr-2 ml-2'>
         ||
         </div>
 
         <div
-        :class="$vuetify.breakpoint.smAndDown ? `date` : `date mr-3 ml-3`">
+        class="date">
           {{ date }}
         </div>
 
 
         <div
-        v-show="$vuetify.breakpoint.smAndDown"
-        :class="$vuetify.breakpoint.smAndDown ? `divider mr-2 ml-2` : `divider`">
-          @
+        class='divider mr-2 ml-2'>
+        @
         </div>
 
         <div
@@ -35,138 +34,140 @@
           {{ time }} {{ timezone }}
         </div>
       </v-layout>
+    </v-row>
+      
+    <v-row
+    class="match"
+    align="center"
+    v-for="(match, n) in matches"
+    :key="n">
+      <v-col class="players" cols="10">
+        <v-col
+        :cols="$vuetify.breakpoint.xsOnly ? 12 : 6"
+        :class="`player p${i+1}`"
+        v-for="(player, i) in [match.p1, match.p2]"
+        :key="i">
+          <img
+          class="character-icon"
+          :src="require(`../assets/img/sel/${player.character}.png`)"
+          :alt="player.character"
+          :title="player.character"
+          @click="$emit('update-character', {character: player.character, index: i})" />
 
-      <v-layout players>
-        <v-row>
-          <v-col
-          :cols="$vuetify.breakpoint.smAndDown ? 12 : 5"
-          :class="`player p${i+1}`"
-          v-for="(player, i) in players"
-          :key="i">
-            <img
-            class="character-icon"
-            :src="require(`../assets/img/sel/${player.character.id}.png`)"
-            :alt="player.character.name"
-            :title="player.character.name"
-            @click="$emit('update-character', {character: player.character, index: i})" />
+          <p
+          class="name"
+          @click="$emit('update-name', {name: player.name, index: i})">
+            {{ player.name }}
+          </p>
+          
+        </v-col>
 
-            <p
-            class="name"
-            @click="$emit('update-name', {name: player.name, index: i})">
-              {{ player.name }}
-            </p>
-            
-          </v-col>
+        <v-col
+        v-show="!$vuetify.breakpoint.xsOnly"
+        class="vs">
+        vs
+        </v-col>
+      </v-col>
 
-          <v-col
-          :cols="1"
-          v-show="!$vuetify.breakpoint.smAndDown"
-          class="vs">
-          vs
-          </v-col>
-        </v-row>
-      </v-layout>
-
-      <v-layout
-      links>
-        <v-row>
-          <v-col
-          :cols="$vuetify.breakpoint.smAndDown? 12 : undefined"
-          :class="i === 1 ? 'file link' : 'video link'"
-          v-for="i in 2"
-          :key="i">
-            <template v-if="i === 1">
-              <v-tooltip
-              v-model="show"
-              top
-              :disabled="!version || $version === version"
-              color="accent">
-                <template v-slot:activator="{on, attrs}">
-                  <div
-                  :class="file ? 'btn' : 'btn disabled'"
-                  style="position: relative;">
-                    <template v-if="file">
-                      <a :href="file.url" >
-                        <v-icon
-                        v-bind="attrs"
-                        v-on="on"
-                        size="36px"
-                        color="#171717">
-                          mdi-download
-                        </v-icon>
-                      </a>
-                    </template>
-
-                    <template v-else-if="!file">
+      <v-col
+      class="links">
+        <v-col
+        :cols="$vuetify.breakpoint.xsOnly? 12 : undefined"
+        :class="i === 1 ? 'file link' : 'video link'"
+        v-for="i in 2"
+        :key="i">
+          <template v-if="i === 1">
+            <v-tooltip
+            v-model="show"
+            top
+            :disabled="!version || $version === version"
+            color="accent">
+              <template v-slot:activator="{on, attrs}">
+                <div
+                :class="file ? 'btn' : 'btn disabled'"
+                style="position: relative;">
+                  <template v-if="file">
+                    <a :href="file.url" >
                       <v-icon
-                      class="base"
-                      size="36px">
+                      v-bind="attrs"
+                      v-on="on"
+                      size="36px"
+                      color="#171717">
                         mdi-download
                       </v-icon>
+                    </a>
+                  </template>
 
-                      <div
-                      class="slash">
-                        <v-icon
-                        size="36px">
-                          mdi-slash-forward
-                        </v-icon>
-                      </div>
-                    </template>
-                  </div>
-                </template>
-
-                <div class="tooltip msg">
-                  <center>
-                    <strong>WARNING</strong>
-                    <br />
-                    This file contains an outdated replay version stamp.
-                    <br />
-                    It may no longer be compatible with the in-game replay system.
-                  </center>
-                </div>
-              </v-tooltip>
-            </template>
-
-            <template v-else>
-              <div
-              :class="video ? 'btn' : 'btn disabled'">
-              <div style="position: relative;">
-                <template v-if="!video">
-                  <v-icon
-                  class="base"
-                  size="36px">
-                    mdi-youtube
-                  </v-icon>
-
-                  <div
-                  class="slash">
+                  <template v-else-if="!file">
                     <v-icon
+                    class="base"
                     size="36px">
-                      mdi-slash-forward
+                      mdi-download
                     </v-icon>
-                  </div>
-                </template>
 
-                <a
-                v-else-if="video"
-                :href="video.timestamp ?
-                `${video.url}&t=${video.timestamp}` :
-                `${video.url}`"
-                :target="`_blank`">
-                  <v-icon
-                  color="accent"
-                  class="base"
-                  size="36px">
-                    mdi-youtube
-                  </v-icon>
-                </a>
+                    <div
+                    class="slash">
+                      <v-icon
+                      size="36px">
+                        mdi-slash-forward
+                      </v-icon>
+                    </div>
+                  </template>
                 </div>
+              </template>
+
+              <div class="tooltip msg">
+                <center>
+                  <strong>WARNING</strong>
+                  <br />
+                  This file contains an outdated replay version stamp.
+                  <br />
+                  It may no longer be compatible with the in-game replay system.
+                </center>
               </div>
-            </template>
-          </v-col>
-        </v-row>
-      </v-layout>
+            </v-tooltip>
+          </template>
+
+          <template v-else>
+            <div
+            :class="video ? 'btn' : 'btn disabled'">
+            <div style="position: relative;">
+              <template v-if="!video">
+                <v-icon
+                class="base"
+                size="36px">
+                  mdi-youtube
+                </v-icon>
+
+                <div
+                class="slash">
+                  <v-icon
+                  size="36px">
+                    mdi-slash-forward
+                  </v-icon>
+                </div>
+              </template>
+
+              <a
+              v-else-if="video"
+              :href="video.timestamp ?
+              `${video.url}&t=${video.timestamp}` :
+              `${video.url}`"
+              :target="`_blank`">
+                <v-icon
+                color="accent"
+                class="base"
+                size="36px">
+                  mdi-youtube
+                </v-icon>
+              </a>
+              </div>
+            </div>
+          </template>
+        </v-col>
+      </v-col>
     </v-row>
+  </v-col>
 </template>
 
 <script>
@@ -177,7 +178,8 @@ export default {
   props: {
     _id: String,
     version: Number,
-    players: Array,
+    p1: Object,
+    p2: Object,
     file: {
       url: String,
       name: String,
@@ -189,6 +191,7 @@ export default {
     uploadDate: String,
     uploadTime: String,
     timezone: String,
+    matches: Array,
     user: [String, null],
   },
   mounted: function() {

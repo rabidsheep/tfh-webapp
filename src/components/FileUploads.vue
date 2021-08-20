@@ -4,7 +4,6 @@
     class="form"
     ref="form"
     v-model="valid">
-        <div>
             <StatusOverlay
             v-bind="{
                 error,
@@ -18,8 +17,6 @@
             @clear-errors="clearErrors()"
             @close="resetForm()" />
 
-            <br />
-
             <v-layout
             class="options"
             column
@@ -27,82 +24,90 @@
             justify-center>
                 <v-radio-group
                 v-model="uploadType"
-                row>
+                class="mb-3"
+                row
+                hide-details>
                     <v-radio
-                    label="Casual"
-                    value="Casual"
-                    />
+                    label="Casuals Mode"
+                    value="Casual" />
                     <v-radio
-                    label="Tournament"
-                    value="Tournament"
-                    />
+                    label="Tournament Mode"
+                    value="Tournament" />
                 </v-radio-group>
 
-                <v-expand-transition>
-                    <v-row
-                    v-show="uploadType === `Tournament`">
-                        <v-col
-                        class="tournament">
-                            <v-text-field
-                            dense
-                            v-model="tournament.name"
-                            :rules="uploadType === `Tournament` ? rules.tournament : undefined"
-                            label="Tournament Name"
-                            :required="uploadType === `Tournament`" />
-                        </v-col>
-
-                        <v-col
-                        class="tournament"
-                        cols="2">
-                            <v-text-field
-                            dense
-                            v-model="tournament.num"
-                            label="No." />
-                        </v-col>
-
-                        <v-col
-                        class="tournament">
-                            <v-menu
-                            v-model="datepicker"
-                            :close-on-content-click="false"
-                            :nudge-right="40"
-                            transition="scale-transition"
-                            offset-y
-                            min-width="auto">
-                                <template v-slot:activator="{ on, attrs }">
-                                    <v-text-field
-                                    v-model="tournament.date"
-                                    label="Date"
-                                    :rules="uploadType === `Tournament` ? rules.date : undefined"
-                                    :required="uploadType === `Tournament`"
-                                    prepend-icon="mdi-calendar"
-                                    dense
-                                    v-bind="attrs"
-                                    v-on="on" />
-                                </template>
-
-                                <v-date-picker
-                                v-model="tournament.date"
-                                @input="datepicker = false" />
-                            </v-menu>
-                        </v-col>
-                    </v-row>
-                </v-expand-transition>
-                
-                <v-expand-transition>
-                    <v-switch
-                    v-show="uploadType === 'Casual'"
+                <v-row
+                class="hint mb-3">
+                    <v-icon
                     color="accent"
-                    v-model="individualUrls"
-                    class="youtube-switch"
-                    label="Individual Video URLs"
-                    :disabled="uploadType === 'Tournament'"
-                    value
-                    hide-details/>
+                    left>
+                        mdi-alert-circle-outline
+                    </v-icon>
+
+                    <span><template v-if="uploadType === 'Casual'">
+                        Matches uploaded using <b>Casuals Mode</b> will display individually on the main page.
+                    </template>
+
+                    <template v-else>
+                        Matches uploaded using <b>Tournament Mode</b> will be grouped together on the main page.
+                    </template>
+                    </span>
+                </v-row>
+
+                <v-expand-transition>
+                <v-row
+                v-show="uploadType === `Tournament`">
+                    <v-col
+                    :cols="$vuetify.breakpoint.xsOnly ? 8 : undefined"
+                    class="tournament">
+                        <v-text-field
+                        dense
+                        v-model="tournament.name"
+                        :rules="uploadType === `Tournament` ? rules.tournament : undefined"
+                        label="Tournament Name"
+                        :required="uploadType === `Tournament`" />
+                    </v-col>
+
+                    <v-col
+                    class="tournament"
+                    :cols="$vuetify.breakpoint.xsOnly ? undefined : 2">
+                        <v-text-field
+                        dense
+                        v-model="tournament.num"
+                        label="No." />
+                    </v-col>
+
+                    <v-col
+                    :cols="$vuetify.breakpoint.xsOnly ? 12 : undefined"
+                    class="tournament">
+                        <v-menu
+                        v-model="datepicker"
+                        :close-on-content-click="false"
+                        :nudge-right="40"
+                        transition="scale-transition"
+                        offset-y
+                        min-width="auto">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-text-field
+                                v-model="tournament.date"
+                                label="Date"
+                                :rules="uploadType === `Tournament` ? rules.date : undefined"
+                                :required="uploadType === `Tournament`"
+                                prepend-icon="mdi-calendar"
+                                dense
+                                v-bind="attrs"
+                                v-on="on" />
+                            </template>
+
+                            <v-date-picker
+                            v-model="date"
+                            @input="datepicker = false" />
+                        </v-menu>
+                    </v-col>
+                </v-row>
                 </v-expand-transition>
             </v-layout>
 
-            <br />
+            <br v-show="matches.length > 0" />
 
             <v-layout
             column
@@ -138,8 +143,6 @@
                 class="message"
                 column
                 justify-center>
-                    <div><br /></div>
-
                     <div
                     :style="matches.length >= uploadLimit ? 'color: red;' : ''">
                         {{ matches.length >= uploadLimit ?
@@ -156,11 +159,12 @@
             justify-center
             align-center>
                 <v-btn
+                color="button2"
                 rounded
                 :ripple="false"
                 :disabled="matches.length >= uploadLimit"
                 @click="selectFiles">
-                    Select Files
+                    Add Files
                 </v-btn>
 
                 <!-- just here to make upload files
@@ -178,12 +182,11 @@
                 rounded
                 :ripple="false"
                 color = "accent"
-                :disabled="!valid || matches.length <= 0"
+                :disabled="!valid || matches.length <= 0 || uploading"
                 @click="submitFiles()">
                     Upload Files
                 </v-btn>
             </v-layout>
-        </div>
     </v-form>
 </template>
 
@@ -204,6 +207,7 @@ export default {
         return {
             hidden: true,
             datepicker: false,
+            date: null,
             valid: false,
             isSelecting: false,
             files: [],
@@ -216,6 +220,7 @@ export default {
             failed: 0,
             progress: 0,
             errors: [],
+            matchesLinked: false,
             individualUrls: false,
             individualMatches: true,
             staticUrl: null,
@@ -239,14 +244,26 @@ export default {
         'uploadType': function(val) {
            if (val === 'Tournament') {
                this.individualUrls = false
+               this.matchesLinked = true
+           } else {
+               this.individualUrls = true
+               this.matchesLinked = false
            }
         },
 
       'date': function(v) {
-
+          this.tournament.date = this.formatDate(v)
       }
     },
+    mounted() {
+    },
     methods: {
+        formatDate(date) {
+            if (!date) return null
+
+            const [year, month, day] = date.split('-')
+            return `${month}-${day}-${year}`
+        },
         /* makes visible upload button act like html file upload button */
         selectFiles() {
             this.isSelecting = true
@@ -259,11 +276,21 @@ export default {
         },
         /** tell parent component to begin uploading files */
         submitFiles() {
-            //this.$emit('files-upload')
+            var uploadRef = Math.floor(new Date() / 1000)
+            var counter = 0;
 
             this.uploading = true
             let matches = this.matches.map((match) => {
                 let timestamp = ((new Date()).toISOString()).split('T')
+
+                match.linked = this.matchesLinked
+
+                if (this.matchesLinked) {
+                    match.uploadId = this.uid + '_' + uploadRef
+                } else {
+                    match.uploadId = this.uid + '_' + (uploadRef + counter)
+                }
+
                 match.type = this.uploadType
                 match.uploadDate = timestamp[0]
                 match.uploadTime = timestamp[1]
@@ -271,6 +298,8 @@ export default {
                 if (this.uploadType === 'Tournament') {
                     match.tournament = this.tournament
                 }
+
+                counter += 1
 
                 return match
             })
@@ -292,137 +321,53 @@ export default {
                 this.finished = true
             })
             .catch((error) => console.log(error))
-            
-            
-            /*if (!this.individualMatches) {
-                if (this.uploadType === 'Tournament') {
-                    upload = {
-                        type: this.uploadType,
-                        tournament: this.tournament,
-                        userId: this.uid,
-                        matches: this.matches
-                    }
-                } else if (this.uploadType === 'Casual') {
-                    upload = {
-                        type: this.uploadType,
-                        userId: this.uid,
-                        matches: this.matches
-                    }
-                }
-
-                uploadRef = this.$matches.save(upload)
-            } else {
-                if (this.uploadType === 'Casual') {
-                    upload = []
-
-                    for (let i = 0; i < this.matches.length; i++) {
-
-                        /*upload.push({
-                            type: this.uploadType,
-                            userId: this.uid,
-                            matches: this.matches[i]
-                        })*/
-
-                        /*uploadRef = this.$matches.save({
-                            type: this.uploadType,
-                            userId: this.uid,
-                            matches: [this.matches[i]]
-                        })
                     
-                    }
-                }
-            }
+            /*disable until i can figure out how to use storage emulator
+            const storageRef = firebase.storage()
+            .ref(`${this.files[i].name}`)
+            .put(this.files[i])
 
-            uploadRef.then((response) => {
-                if (response.ok) {
-                    success += 1
-                    console.log('Successfully uploaded document #' + (fail + success) + ' (ID: ' + response.body.docId + ')')
-                } else {
-                    fail += 1
-                    this.setErrors('upload', this.files[i].name)
-                    console.log('Failed to upload a match')
-                }
+            // upload file to storage
+            storageRef.on(`state_changed`,
+            snapshot => {
+                // keep track of file upload progress
+                this.progress = (this.progress + (snapshot.bytesTransferred/snapshot.totalBytes)) * (100 * this.matches.length)
+            },
+            error => {
+                this.failed += 1
+                this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
+                this.setErrors(3, this.files[i].name)
+                console.log(error.message)
+            },
+            () => {
+                this.succeeded += 1
+                this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
+                storageRef.snapshot.ref
+                .getDownloadURL()
+                .then((url) => {
+                    this.matches[i].fileUrl = url;
+                    this.matches[i].timestamp = new Date();
 
-                if (success + fail === this.matches.length) {
-                    this.succeeded = success
-                    this.failed = fail
-                    this.uploading = false
-                    this.finished = true
-                }
-            })
-            .catch((error) => console.log(error))*/
-
-            /*for (let i = 0; i < this.matches.length; i++) {
-                this.matches[i].file.url = '/';
-
-                // upload match info to db
-                this.$matches
-                .save(this.matches[i])
-                .then((response) => {
-                    if (response.ok) {
-                        success += 1
-                        console.log('Successfully uploaded document #' + (fail + success) + ' (ID: ' + response.body.docId + ')')
-                    } else {
-                        fail += 1
-                        this.setErrors('upload', this.files[i].name)
-                        console.log('Failed to upload a match')
-                    }
-
-                    if (success + fail === this.matches.length) {
-                        this.succeeded = success
-                        this.failed = fail
-                        this.uploading = false
-                        this.finished = true
-                    }
-                })
-                .catch((error) => console.log(error))*/
-                    
-                /*disable until i can figure out how to use storage emulator
-                const storageRef = firebase.storage()
-                .ref(`${this.files[i].name}`)
-                .put(this.files[i])
-
-                // upload file to storage
-                storageRef.on(`state_changed`,
-                snapshot => {
-                    // keep track of file upload progress
-                    this.progress = (this.progress + (snapshot.bytesTransferred/snapshot.totalBytes)) * (100 * this.matches.length)
-                },
-                error => {
-                    this.failed += 1
-                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
-                    this.setErrors(3, this.files[i].name)
-                    console.log(error.message)
-                },
-                () => {
-                    this.succeeded += 1
-                    this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
-                    storageRef.snapshot.ref
-                    .getDownloadURL()
-                    .then((url) => {
-                        this.matches[i].fileUrl = url;
-                        this.matches[i].timestamp = new Date();
-
-                        // upload match info to db
-                        this.$matches
-                        .save(this.matches[i])
-                        .then((response) => {
-                            if (response.ok) {
-                                console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
-                                if (i === this.matches.length - 1) {
-                                    this.uploading = false
-                                    this.finished = true
-                                }
-                            } else {
-                                this.setErrors(3, this.files[i].name)
-                                this.showErrors(this.errorList)
+                    // upload match info to db
+                    this.$matches
+                    .save(this.matches[i])
+                    .then((response) => {
+                        if (response.ok) {
+                            console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
+                            if (i === this.matches.length - 1) {
+                                this.uploading = false
+                                this.finished = true
                             }
-                        })
-                        .catch((error) => console.log(error))
+                        } else {
+                            this.setErrors(3, this.files[i].name)
+                            this.showErrors(this.errorList)
+                        }
                     })
                     .catch((error) => console.log(error))
-                })*/
-            //}
+                })
+                .catch((error) => console.log(error))
+            })*/
+        //}
         },
         /**
          * begins parsing files one by one
@@ -562,7 +507,7 @@ export default {
             }
 
             if (this.matches[i].video.url !== url || !this.matches[i].video.url) {
-                this.$set(this.matches[i].video, 'url', url)
+                this.$set(this.matches[i].video, 'url', 'https://youtu.be/watch?v=' + url.match(this.$regex.ytId)[1])
                 this.$set(this.matches[i].video, 'id', url.match(this.$regex.ytId)[1])
             }
 

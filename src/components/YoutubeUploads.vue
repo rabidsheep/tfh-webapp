@@ -38,7 +38,6 @@
                     required
                     clearable />
 
-
                     <v-btn
                     v-if="$refs.url"
                     rounded
@@ -51,8 +50,8 @@
                 </v-row>
 
                 <v-progress-circular
-                    indeterminate
-                    v-if="loading" />
+                indeterminate
+                v-if="loading" />
                 
                 <template v-if="invalidId">
                     No video found under ID '{{ vid }}'
@@ -100,7 +99,6 @@
                             class="desc-buttons"
                             justify="center"
                             align="center">
-                            
                                 <v-col>
                                     <v-btn
                                     rounded
@@ -111,12 +109,11 @@
                                     </v-btn>
                                 </v-col>
                                 
-                                
-
                                 <v-col>
                                     <v-btn
                                     rounded
                                     :ripple="false"
+                                    color="button2"
                                     @click="currentDescription = video.description">
                                         Reset Timestamps
                                     </v-btn>
@@ -125,6 +122,58 @@
                         </v-row>
                     </template>
                 </div>
+
+                <v-row
+                class="mt-8"
+                v-show="currentDescription">
+                    <v-col
+                    :cols="$vuetify.breakpoint.xsOnly ? 8 : undefined"
+                    class="tournament">
+                        <v-text-field
+                        dense
+                        v-model="tournament.name"
+                        :rules="rules.tournament"
+                        label="Tournament Name"
+                        required />
+                    </v-col>
+
+                    <v-col
+                    class="tournament"
+                    :cols="$vuetify.breakpoint.xsOnly ? undefined : 2">
+                        <v-text-field
+                        dense
+                        v-model="tournament.num"
+                        label="No." />
+                    </v-col>
+
+                    <v-col
+                    :cols="$vuetify.breakpoint.xsOnly ? 12 : undefined"
+                    class="tournament">
+                        <v-menu
+                        v-model="datepicker"
+                        :close-on-content-click="false"
+                        :nudge-right="40"
+                        transition="scale-transition"
+                        offset-y
+                        min-width="auto">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-text-field
+                                v-model="tournament.date"
+                                label="Date"
+                                :rules="rules.date"
+                                required
+                                prepend-icon="mdi-calendar"
+                                dense
+                                v-bind="attrs"
+                                v-on="on" />
+                            </template>
+
+                            <v-date-picker
+                            v-model="date"
+                            @input="datepicker = false" />
+                        </v-menu>
+                    </v-col>
+                </v-row>
 
                 <div
                 class="match-list">
@@ -191,6 +240,13 @@ export default {
             loading: false,
             url: '',
             currentDescription: '',
+            datepicker: false,
+            date: null,
+            tournament: {
+                name: null,
+                num: null,
+                date: null
+            },
             matches: [],
             error: false,
             uploading: false,
@@ -215,6 +271,12 @@ export default {
                 timestamp: [
                     v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
                 ],
+                tournament: [
+                    v => !!v || 'Required',
+                ],
+                date: [
+                    v => !!v || 'Required'
+                ]
             },
             hidden: true,
             valid: false,
@@ -223,7 +285,18 @@ export default {
             invalidId: false,
         }
     },
+    watch: {
+        'date': function(v) {
+          this.tournament.date = this.formatDate(v)
+      }
+    },
     methods: {
+        formatDate(date) {
+            if (!date) return null
+
+            const [year, month, day] = date.split('-')
+            return `${month}-${day}-${year}`
+        },
         validateYoutubeID() {
 
             this.vid = null
@@ -253,6 +326,7 @@ export default {
                         this.video = response.body
                         this.invalidId = false
                         this.currentDescription = this.video.description
+                        this.tournament.name = this.video.title
                     }
                 })
                 .catch(() => {
@@ -268,6 +342,7 @@ export default {
                         this.video = response.body
                         this.invalidId = false
                         this.currentDescription = this.video.description
+                        this.tournament.name = this.video.title
                     }
                 })
                 .catch(() => {
@@ -314,18 +389,17 @@ export default {
                                 userId: this.uid,
                                 video: {
                                     url: "https://youtu.be/watch?v=" + this.video.id,
+                                    id: this.video.id,
                                     timestamp: timestamp,
                                 },
-                                players: [
-                                    {
+                                p1: {
                                         name: matched[1],
-                                        character: (this.$characters).find(c => c.names.includes(matched[2]))
+                                        character: ((this.$characters).find(c => c.names.includes(matched[2])).name)
                                     },
-                                    {
+                                p2: {
                                         name: matched[3],
-                                        character: (this.$characters).find(c => c.names.includes(matched[4]))
+                                        character: ((this.$characters).find(c => c.names.includes(matched[4])).name)
                                     }
-                                ]
                             })
                         }
                     }
@@ -340,9 +414,13 @@ export default {
             console.log(this.video)
             this.matches.push({
                 userId: this.uid,
-                players: [{}, {}],
-                index: this.matches.length,
-                video: this.video})
+                p1: {},
+                p2: {},
+                video: {
+                    url: "https://youtu.be/watch?v=" + this.video.id,
+                    timestamp: null,
+                }
+            })
         },
         /** upload youtube-only object */
         youtubeUpload() {
@@ -350,7 +428,37 @@ export default {
             let succeed = 0
             let fail = 0
 
-            for (let i = 0; i < this.matches.length; i++) {
+            let matches = this.matches.map((match) => {
+                let time = ((new Date()).toISOString()).split('T')
+                match.type = 'Tournament'
+                match.channel = this.video.channel
+                match.uploadDate = time[0]
+                match.uploadTime = time[1]
+
+                match.tournament = this.tournament
+
+                return match
+            })
+
+            console.log(JSON.parse(JSON.stringify(matches)))
+
+            this.$matches.save(matches).then((response) => {
+                if (response.ok) {
+                    console.log('Uploaded matches:')
+                    for (const i in response.body.matchIds) {
+                        console.log('ID:', response.body.matchIds[i])
+                    }
+                } else {
+                    this.setErrors('upload', this.files[i].name)
+                    console.log('Failed to upload a match')
+                }
+
+                this.uploading = false
+                this.finished = true
+            })
+            .catch((error) => console.log(error))
+
+            /*for (let i = 0; i < this.matches.length; i++) {
                 // upload match info to db
                 this.$matches
                 .save(this.matches[i])
@@ -370,7 +478,7 @@ export default {
                         this.finished = true
                     }
                 })
-            } 
+            } */
         },
         /**
          * clears errors array

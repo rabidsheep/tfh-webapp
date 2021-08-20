@@ -204,10 +204,8 @@ a {
 }
 
 #matches .header .btn {
-    justify-content: center;
-    align-content: center;
-    justify-items: center;
     align-items: center;
+    max-width: min-content;
 }
 
 #matches .header a {
@@ -220,12 +218,9 @@ a {
     display: flex;
 }
 
-#matches .header .btn {
-    max-width: min-content;
-}
-
 #matches .match-group > hr {
-    margin: 20px 0px;
+    margin: 15px 0px;
+    border-color: #a6a6a6
 }
 
 .wide #matches .match-group .header,
@@ -234,9 +229,6 @@ a {
     margin-right: 20px !important;
 }
 
-#matches .header {
-    margin-bottom: 5px !important;
-}
 
 .xsmall #matches .match-group .header {
     margin-bottom: 0px !important;
@@ -244,8 +236,13 @@ a {
 
 #matches .header {
     padding-bottom: 10px;
-    border-bottom: 1px solid hsla(0,0%,100%,.2);
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
     
+}
+
+#matches .header, #matches .header .v-divider {
+    border-color: hsla(0,0%,100%,.2)
 }
 
 /** matchrow.vue **/
@@ -593,6 +590,10 @@ a {
     width: 80%;
 }
 
+.small #uploads .back {
+    margin-bottom: 10px;
+}
+
 /** youtubeuploads.vue **/
 #youtube .body {
     width: 100%;
@@ -704,6 +705,15 @@ a {
 
 .preview .col {
     padding: 0px;
+    display: flex;
+}
+
+.preview .body {
+    width: 100%;
+}
+
+.options .v-input--radio-group__input {
+    justify-content: center !important;
 }
 
 .preview .player {
@@ -728,9 +738,6 @@ a {
     order: 4;
 }
 
-.preview .col.comment {
-    order: 3;
-}
 
 .preview .v-textarea.comment .v-text-field__slot {
     height: 100%;
@@ -750,9 +757,67 @@ a {
     display: flex;
 }
 
-.form .youtube-switch {
+.preview .youtube {
+    flex-wrap: wrap;
+}
+
+#youtube .preview .counter {
+    align-items: center;
+    max-width: min-content;
+    font-size: 20px;
+}
+
+#youtube .preview .leader {
+    justify-content:space-between;
+    flex-wrap: wrap;
+    align-content:space-around;
+    justify-content: center;
+    max-width: min-content;
+}
+
+.small #youtube .preview .timestamp {
+    margin-left: 15px;
+}
+
+.xsmall #youtube .preview .leader {
+    flex-wrap: nowrap;
+    align-content: space-around;
+    justify-content: space-evenly;
+    max-height:min-content;
+    height:min-content;
+    max-width: none;
+}
+
+.xsmall #youtube .preview .leader .remove {
+    margin-top: 0px;
+    margin-left: 8px;
+}
+
+.form .v-input--radio-group {
+    margin-top: 0px;
+}
+
+.form .switch {
     padding: 0px !important;
     margin: 0px !important;
+}
+
+.form .hint {
+    white-space: pre-wrap;
+    justify-content: center;
+    text-align: center;
+}
+
+.form .hint .v-icon {
+    margin-right: 2px;
+}
+
+.form .hint span {
+    display: contents;
+}
+
+.form .hint span b {
+    display: inherit;
 }
 
 .tournament {
@@ -824,8 +889,7 @@ a {
     flex-grow: 0;
     padding: 0px;
     align-self: center;
-    max-height: min-content;
-    max-width: max-content;
+    max-width: min-content;
 }
 
 #youtube .preview .players {
@@ -854,14 +918,8 @@ a {
 .xsmall #youtube .preview .players {
     padding-left: 0px;
 }
-
-.xsmall #youtube .preview .remove {
-    margin-top: -11px;
-}
-
 .xsmall #youtube .preview .timestamp {
     order: 1;
-    padding-left: 10px;
 }
 
 .xsmall #youtube .preview .players {

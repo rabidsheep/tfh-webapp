@@ -18,6 +18,7 @@ const themes = {
     warning: '#FB8C00',
     error: '#FF5252',
     youtubeBtn: '#d52726',
+    button2: '#212121'
   },
   oleander: {
     background: {

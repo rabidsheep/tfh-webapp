@@ -61,7 +61,8 @@
         <v-col
         class="youtube"
         :cols="$vuetify.breakpoint.smAndDown ? 12 : 4 ">
-            <v-row
+            <v-col
+            cols="12"
             class="link">
                 <v-text-field
                 ref="url"
@@ -73,10 +74,11 @@
                 :disabled="!individual && index > 0"
                 label="YouTube Link (Optional)"
                 prepend-icon="mdi-youtube" />
-            </v-row>
+            </v-col>
 
             
-            <v-row
+            <v-col
+            cols="12"
             class="timestamp">
                 <v-text-field
                 v-model="timestamp"
@@ -90,7 +92,7 @@
                 clearable
                 prepend-icon="mdi-timer-outline"
                 label="Timestamp"/>
-            </v-row>
+            </v-col>
         </v-col>
 
         
@@ -181,7 +183,6 @@ export default {
                         this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
                     }
             } else {
-                //this.$delete(this.updated.video, 'timestamp')
                 this.$emit('delete-timestamp')
             }
         },

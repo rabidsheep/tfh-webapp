@@ -32,8 +32,7 @@ api.get('/matches', (req, res) => {
         formatQuery(req.query.players, req.query.strict) :
         (req.query.id ? {'_id': mongo.ObjectId(req.query.id)} : {})
     )*/
-
-    let query = {}
+    
     let players = req.query.players
     let unfiltered = true
 
@@ -49,42 +48,12 @@ api.get('/matches', (req, res) => {
         }
     }
 
-    if (req.query.strict === 'false' && !unfiltered) {
-        query = { $or: [] }
+    let query = formatQuery(players, req.query.strict, unfiltered)
+    
 
-        for (let i = 0; i < players.length; i++) {
-            if (players[i].name) {
-                query.$or.push({
-                    'p1.name': players[i].name
-                })
-                query.$or.push({
-                    'p2.name': players[i].name
-                })
-            }
+    
 
-            if (players[i].character) {
-                query.$or.push({
-                    'p1.character': players[i].character
-                })
-                query.$or.push({
-                    'p2.character': players[i].character
-                })
-            }
-        }
-    } else if (req.query.strict === 'true' && !unfiltered) {
-        console.log('hi')
-        
-        for (let i = 0; i < players.length; i++) {
-            if (players[i].name) {
-                query[`p${i + 1}.name`] = players[i].name
-            }
-
-            if (players[i].character) {
-                query[`p${i + 1}.character`] = players[i].character
-            }
-        }
-    }
-
+    
     console.log(query)
 
     let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
@@ -106,8 +75,21 @@ api.get('/matches', (req, res) => {
                         type: '$type',
                     },
                     else: {
-                        id: '$_id',
-                        type: '$type',
+                        '$cond': {
+                            if: {
+                                '$eq': ['$linked', true]
+                            },
+                            then: {
+                                uploadId: '$uploadId',
+                                linked: true,
+                                type: '$type',
+                            },
+                            else: {
+                                id: '$_id',
+                                type: '$type',
+                            }
+                        }
+                        
                     }
                 }
             },
@@ -131,13 +113,6 @@ api.get('/matches', (req, res) => {
             },
         }},
     ]
-    /* { '$sort': {
-            uploaded: -1,
-        }},
-        { '$skip': skip },
-        { '$limit': itemsPerPage },
-    */
-
     
 
     MongoClient.connect(dbUrl, { useUnifiedTopology: true })
@@ -169,31 +144,6 @@ api.get('/matches', (req, res) => {
             .toArray()
         ])
     })
-    /*.then((results) => {
-        //let db = results[0]
-        let groups = results[0]
-        console.log(groups)
-        return Promise.all([
-            //db,
-            groups.count(),
-            groups])
-    })
-    /*.then((results) => {
-        let db = results[0]
-        let count = results[1]
-        let groups = results[2]
-        console.log('Found ' + count + ' results.')
-
-
-        return Promise.all([
-            count,
-            db.sort({uploadDate: -1, uploadTime: -1})
-            .skip(skip)
-            .limit(itemsPerPage)
-            .toArray(),
-            groups
-        ])
-    })*/
     .then((results) => {
         return res.status(200).send({
             count: results[0].length,
@@ -238,49 +188,6 @@ api.put('/matches', (req, res) => {
             return match
         }
     })
-
-    
-
-    /*MongoClient.connect(dbUrl, { useUnifiedTopology: true })
-    .then((client) => {
-        console.log('Connected.\nUploading match...')
-        
-        let db = client.db('tfhr')
-
-        
-        return Promise.all([
-            db,
-            db.collection('matches')
-            .insertOne({
-                uploadDate: timestamp[0],
-                uploadTime: timestamp[1],
-                ...upload
-            })
-        ])
-    })
-    .then((results) => {
-        let db = results[0]
-        let matchId = results[1].insertedId
-
-        // adds new entries to player collection
-        for (i in upload.matches) {
-            for (let j = 0; j < 2; j++) {
-                let player = j === 0 ? upload.matches[i].p1 : upload.matches[i].p2
-                console.log('Checking player list for', player.name )
-
-                db.collection('players')
-                .updateOne(
-                    { 'name': player.name },
-                    { $setOnInsert: { 'name': player.name }},
-                    { upsert: true }
-                )
-            }
-        }
-
-        console.log('Match uploaded.\nID: ', matchId)
-        return res.status(200).send({ docId: matchId })
-    })
-    .catch((error) => res.status(400).send(error.toString()))*/
 
     Promise.all(matches).then((matches) => {
         return Promise.all(
@@ -432,6 +339,10 @@ api.get('/youtube-data', (req, res) => {
                 title: youtube.data.items[0].snippet.title,
                 date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
                 description: youtube.data.items[0].snippet.description,
+                channel: {
+                    id: youtube.data.items[0].snippet.channelId,
+                    name: youtube.data.items[0].snippet.channelTitle
+                }
             })
         } else {
             console.log("Failed to retrieve Youtube data")
@@ -450,45 +361,42 @@ exports.api = functions.https.onRequest(api)
 ************/
 
 // format query object for filtering matches
-function formatQuery(filters, strict) {
-    //firstName = filters[0].name ? new RegExp(['^' + filters[0].name + '$'], 'i') : null
-    //secondName = filters[1].name ? new RegExp(['^' + filters[1].name + '$'], 'i') : null
-    firstName = filters[0].name ? filters[0].name : null
-    secondName = filters[1].name ? filters[1].name : null
+function formatQuery(players, strict, unfiltered) {
+    let query = {}
 
-    firstChar = filters[0].character ? filters[0].character : null
-    secondChar = filters[1].character ? filters[1].character : null
+    if (strict === 'false' && !unfiltered) {
+        query = { $or: [] }
 
-    if (strict === 'false') {
-        /*return query = {
-            '$or': [
-            {
-                'p1.name': firstName,
-                'p1.character': firstChar ,
-                'p2.name': secondName ,
-                'p2.character': secondChar
-            },
-            {
-                'p1.name': secondName,
-                'p1.character': secondChar,
-                'p2.name': firstName,
-                'p2.character': firstChar
-            },
-        ]}*/
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].name) {
+                query.$or.push({
+                    'p1.name': players[i].name
+                })
+                query.$or.push({
+                    'p2.name': players[i].name
+                })
+            }
 
-        return query = {
-            'p1.name': firstName,
-            'p1.character': firstChar,
-            'p2.name': secondName,
-            'p2.character': secondChar
+            if (players[i].character) {
+                query.$or.push({
+                    'p1.character': players[i].character
+                })
+                query.$or.push({
+                    'p2.character': players[i].character
+                })
+            }
         }
+    } else if (strict === 'true' && !unfiltered) {      
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].name) {
+                query[`p${i + 1}.name`] = players[i].name
+            }
 
-    } else {
-        return query = {
-            'p1.name': firstName,
-            'p1.character': firstChar,
-            'p2.name': secondName,
-            'p2.character': secondChar
+            if (players[i].character) {
+                query[`p${i + 1}.character`] = players[i].character
+            }
         }
     }
+
+    return query
 }

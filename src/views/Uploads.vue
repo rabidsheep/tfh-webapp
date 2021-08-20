@@ -39,6 +39,7 @@
                         justify-center
                         align-center>
                             <v-btn
+                            color="button2"
                             height="50"
                             rounded
                             v-show="!$firebase.auth().currentUser"
@@ -80,6 +81,7 @@
                         justify-center
                         align-center>
                             <v-btn
+                            color="button2"
                             rounded
                             @click="setUploadType('files')">
                                 <v-icon left>mdi-file</v-icon>
@@ -87,6 +89,7 @@
                             </v-btn>
 
                             <v-btn
+                            color="button2"
                             rounded
                             @click="setUploadType('youtube')">
                                 <v-icon left>mdi-youtube</v-icon>
@@ -110,6 +113,7 @@
                         justify-center
                         class="heading">
                             <v-btn
+                            color="button2"
                             class="back"
                             x-small
                             fab

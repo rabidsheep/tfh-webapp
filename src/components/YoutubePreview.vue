@@ -1,10 +1,18 @@
 <template>
     <v-row
     class="preview">
+    <v-col
+    :cols="$vuetify.breakpoint.xsOnly ? 2 : undefined"
+    class="leader">
+        <v-col
+        justify="center"
+        class="counter">
+            {{ index + 1 }}
+        </v-col>
+
 
         <v-col
         justify="center"
-        :cols="$vuetify.breakpoint.smAndDown ? 1 : undefined"
         class="remove">
             <v-btn
             :ripple="false"
@@ -19,19 +27,23 @@
             </v-btn>
         </v-col>
 
+        
+        
+    </v-col>
+
         <v-col
         class="players"
-        :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : 8) : 8">
+        :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : 8">
             <v-row
             align-self="center">
                 <v-col
                 :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : 12) : undefined"
                 :class="`player p${i+1}`"
-                v-for="(player, i) in players"
+                v-for="(player, i) in [p1, p2]"
                 :key="i">
                     <CharacterSelect
                     :currentCharacter ="player.character"
-                    :index = "i"
+                    :index="i"
                     :selectionEnabled="true"
                     :anyEnabled="false"
                     @character-select="$emit('update-character', { character: $event, index: i })"/>
@@ -59,7 +71,6 @@
         </v-col>
 
         <v-col
-        
         class="timestamp"
         :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? undefined : 3) : 3">
                 <v-col class="field" :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? undefined : undefined) : undefined">
@@ -81,7 +92,8 @@ export default {
     components: { CharacterSelect },
     name: 'YoutubePreview',
     props: {
-        players: Array,
+        p1: Object,
+        p2: Object,
         version: Number,
         index: Number,
         progress: Number,

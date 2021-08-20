@@ -5,7 +5,7 @@
 *.cache
 *Config.js
 /functions/*Config.js
-
+* copy.vue
 
 # Log files
 npm-debug.log*

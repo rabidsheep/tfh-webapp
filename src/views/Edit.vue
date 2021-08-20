@@ -202,7 +202,6 @@ export default {
     },
     props: {
         id: String,
-        user: [String, null]
     },
     data: () => {
         return {
@@ -243,10 +242,11 @@ export default {
         }
     },
     mounted: function () {
-        if (this.id && !this.user) {
+        if (this.id && !localStorage.getItem('user')) {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 
                 if (!user) {
+                    localStorage.deleteItem('user')
                     this.step = 1
                     return
                 }
@@ -262,17 +262,23 @@ export default {
                     })
                     .then((response) => {
                         let userData = response.body[0]
+                        this.uid = user.uid
+
                         if (userData) {
                             console.log("Retrieved user data")
+                            localStorage.setItem('user', user.uid)
 
                             this.isAdmin = userData.admin
                             this.loading = false
                             this.loggingIn = false
+                            
                             this.getMatch(this.id)
+
                             this.step = 2
                             
                         } else {
                             console.log("Creating new user")
+
                             this.isRegistered = false
 
                             let newUser = {
@@ -283,6 +289,9 @@ export default {
 
                             this.$users.save(newUser)
                             .then(() => {
+                                console.log('User created')
+                                
+                                localStorage.setItem('user', user.uid)
                                 this.loading = false
                                 this.isRegistered = true
                                 this.loggingIn = false
@@ -297,24 +306,29 @@ export default {
                     })
                 } else {
                     if (user) {
-                        
-                        this.loading = false;
-                        this.getMatch(this.id)
                         console.log('Signed in')
+
+                        localStorage.setItem('user', user.uid)
                         this.uid = user.uid
+                        this.getMatch(this.id)
+                        this.loading = false;
                         this.step = 2
+                        
                     } else {
                         console.log('Signed out')
+
+                        localStorage.deleteItem('user')
                     }
 
                 }
             })
-        } else if (this.id && this.user) {
-            this.getMatch(this.id)
-            this.uid = this.user
-            this.step = 2
-            this.loading = false
+        } else if (this.id && localStorage.getItem('user')) {
             console.log("Skipping sign in")
+
+            this.uid = localStorage.getItem('user')
+            this.getMatch(this.id)
+            this.loading = false
+            this.step = 2
         }
     },
     watch: {

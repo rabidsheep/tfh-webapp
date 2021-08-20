@@ -18,38 +18,41 @@
     id="matches"
     column
     v-if="!loading">
-      <template v-if="documents.length > 0">
-        <!--<MatchRow
-        v-for="(match, i) in matches"
-        :key="i"
-        v-bind="match"
-        :user="user"
-        :timezone="timezone"
-        @update-character="updateCharacterFilter($event.character, $event.index)"
-        @update-name="updateNameFilter($event.name, $event.index)" /> -->
-        <v-row
-        class="document"
-        v-for="(doc, i) in documents"
+        <v-container
+        v-show="resultsCount > 0"
+        class="match-group"
+        v-for="(group, i) in groups"
         :key="i">
-            <MatchRow
-            :matches="doc.matches"
-            :user="user"
-            :timezone="timezone"
-            :uploadDate="doc.uploadDate"
-            :uploadTime="doc.uploadTime"
-            @update-character="updateCharacterFilter($event.character, $event.index)"
-            @update-name="updateNameFilter($event.name, $event.index)" />
-        </v-row>
+          <MatchHeader
+          :tournament="group._id.tournament ? group._id.tournament : null"
+          v-bind="group"
+          :timezone="timezone"/>
 
-      </template>
+          <MatchRow
+          v-for="(match, j) in group.matches"
+          :key="j"
+          :p1="match.p1"
+          :p2="match.p2"
+          :file="match.file ? match.file : null"
+          :video="match.video ? match.video : null"
+          @update-character="updateCharacterFilter($event.character, $event.index)"
+          @update-name="updateNameFilter($event.name, $event.index)" />
 
-      <template v-else>
-        <v-layout align-center justify-center>No matches found!</v-layout>
-      </template>
+          <hr v-if="i < groups.length - 1" />
+        </v-container>
+
+        <v-layout
+        v-show="resultsCount <= 0"
+        align-center
+        justify-center>
+          No matches found!
+        </v-layout>
     </v-layout>
 
     <!-- pagination -->
-    <v-layout v-if="!loading && !(resultsCount <= this.$config.itemsPerPage)" class="mt-3">
+    <v-layout
+    v-if="!loading && !(resultsCount <= this.$config.itemsPerPage)"
+    class="mt-3">
       <v-spacer/>
       <v-pagination
       color="accent"
@@ -59,25 +62,25 @@
                 Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
       :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
       @input="getMatches(players, page, strict)"
-      circle
-      />
-      <v-spacer/>
+      circle />
+      <v-spacer />
     </v-layout>
   </div>
 </template>
 
 <script>
 import MatchRow from '../components/MatchRow.vue'
+import MatchHeader from '../components/MatchHeader.vue'
 import Filters from '../components/Filters.vue'
 
 export default {
   name: 'Matches',
   components: {
     MatchRow,
+    MatchHeader,
     Filters,
   },
   props: {
-    user: [String, null]
   },
   data: () => {
     return {
@@ -88,7 +91,8 @@ export default {
         {name: null, character: null}
       ],
       strict: false,
-      documents: [],
+      matches: [],
+      groups: [],
       resultsCount: null,
       page: 1,
       lastVisible: null,
@@ -97,6 +101,9 @@ export default {
       errorMessage: '',
       timezone: new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2]
     }
+  },
+  mounted() {
+    
   },
   watch: {
     'players': {
@@ -121,8 +128,12 @@ export default {
       .then((response) => {
         if (response.ok) {
           this.error = false
-          this.documents = response.body.matches
+          //this.matches = response.body.matches
+          this.groups = response.body.groups
+          //console.log(JSON.parse(JSON.stringify(this.groups)))
           this.resultsCount = response.body.count
+
+          //console.log(this.resultsCount)
         } else {
           this.error = true
           this.errorMsg = `${response.status}: ${response.statusText}`
@@ -134,9 +145,11 @@ export default {
       .catch((error) => console.log(error))
     },
     updateCharacterFilter(character, i) {
-      if (!this.players[i].character || this.players[i].character.name !== character.name) {
+      if (!this.players[i].character || this.players[i].character !== character) {
         this.$set(this.players[i], 'character', character)
       }
+
+      
     },
     updateNameFilter(name, i) {
       if (!this.players[i].name || this.players[i].name !== name) {

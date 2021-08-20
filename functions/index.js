@@ -13,15 +13,9 @@ const axios = require('axios')
 const api = express()
 api.use(cors)
 
-var dev = null
+let dev = (process.env.FUNCTIONS_EMULATOR === 'true' ? true : false)
 
-if (process.env.FUNCTIONS_EMULATOR === 'true') {
-    dev = true
-} else {
-    dev = false
-}
-
-let url = (dev ? configs.dev.mongodb : configs.prod.mongodb)
+let dbUrl = (dev ? configs.dev.mongodb : configs.prod.mongodb)
 
 const youtubeKey = configs.youtube.key
 const itemsPerPage = 5
@@ -33,51 +27,224 @@ const itemsPerPage = 5
 
 /** retrieve match count and filter results */
 api.get('/matches', (req, res) => {
-    let query = (
+    /*let query = (
         req.query.players ?
         formatQuery(req.query.players, req.query.strict) :
         (req.query.id ? {'_id': mongo.ObjectId(req.query.id)} : {})
-    )
+    )*/
+
+    let query = {}
+    let players = req.query.players
+    let unfiltered = true
+
+    for (let i = 0; i < players.length; i++) {
+        if (players[i].name) {
+            unfiltered = false
+            break
+        }
+
+        if (players[i].character) {
+            unfiltered = false
+            break
+        }
+    }
+
+    if (req.query.strict === 'false' && !unfiltered) {
+        query = { $or: [] }
+
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].name) {
+                query.$or.push({
+                    'p1.name': players[i].name
+                })
+                query.$or.push({
+                    'p2.name': players[i].name
+                })
+            }
+
+            if (players[i].character) {
+                query.$or.push({
+                    'p1.character': players[i].character
+                })
+                query.$or.push({
+                    'p2.character': players[i].character
+                })
+            }
+        }
+    } else if (req.query.strict === 'true' && !unfiltered) {
+        console.log('hi')
+        
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].name) {
+                query[`p${i + 1}.name`] = players[i].name
+            }
+
+            if (players[i].character) {
+                query[`p${i + 1}.character`] = players[i].character
+            }
+        }
+    }
+
+    console.log(query)
 
     let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
 
-    MongoClient.connect(url, { useUnifiedTopology: true })
+    const pipeline = [
+        { '$match': query },
+        { '$group': {
+            _id: {
+                '$cond': {
+                    if: {
+                        '$eq': ['$type', 'Tournament' ]
+                    },
+                    then: {
+                        tournament: {
+                            name: '$tournament.name',
+                            num: '$tournament.num',
+                            date: '$tournament.date',
+                        },
+                        type: '$type',
+                    },
+                    else: {
+                        id: '$_id',
+                        type: '$type',
+                    }
+                }
+            },
+            
+            // initial upload date
+            uploaded: {
+                '$first': {
+                    '$concat': ['$uploadDate', 'T', '$uploadTime']
+                }
+            },
+            matches: {
+                '$push': {
+                    userId: '$userId',
+                    file: '$file',
+                    p1: '$p1',
+                    p2: '$p2',
+                    uploadDate: '$uploadDate',
+                    uploadTime: '$uploadTime',
+                    video: '$video'
+                }
+            },
+        }},
+    ]
+    /* { '$sort': {
+            uploaded: -1,
+        }},
+        { '$skip': skip },
+        { '$limit': itemsPerPage },
+    */
+
+    
+
+    MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
         console.log('Connected @ %s', (new Date()).toLocaleString())
         console.log('Filtering with query:\n', query)
-        let db = client.db('tfhr').collection('matches').find(query)
+        //let db = client.db('tfhr').collection('matches').find(query)
 
-        return Promise.all([db, db.count()])
+        return Promise.all([
+            //db,
+            client
+            .db('tfhr')
+            .collection('matches')
+            .aggregate([
+                ...pipeline
+            ])
+            .toArray(),
+            client
+            .db('tfhr')
+            .collection('matches')
+            .aggregate([
+                ...pipeline,
+                { '$sort': {
+                    uploaded: -1,
+                }},
+                { '$skip': skip },
+                { '$limit': itemsPerPage }
+            ])
+            .toArray()
+        ])
     })
-    .then((results) => {
+    /*.then((results) => {
+        //let db = results[0]
+        let groups = results[0]
+        console.log(groups)
+        return Promise.all([
+            //db,
+            groups.count(),
+            groups])
+    })
+    /*.then((results) => {
         let db = results[0]
         let count = results[1]
+        let groups = results[2]
         console.log('Found ' + count + ' results.')
+
 
         return Promise.all([
             count,
             db.sort({uploadDate: -1, uploadTime: -1})
             .skip(skip)
             .limit(itemsPerPage)
-            .toArray()
+            .toArray(),
+            groups
         ])
-    })
+    })*/
     .then((results) => {
-        return res.status(200).send({count: results[0], matches: results[1]})
+        return res.status(200).send({
+            count: results[0].length,
+            //matches: results[1],
+            groups: results[1]})
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
-    let upload = req.body
+    //let upload = req.body
+    let players = []
+    let matches = req.body.map((match) => {
+        if (!players.includes(match.p1.name)) players.push(match.p1.name)
+        if (!players.includes(match.p2.name)) players.push(match.p2.name)
+
+        if (match.video && match.video.id) {
+            let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
+
+            return axios.get(url)
+            .then((youtube) => {
+                if (youtube.data.items.length > 0) {
+                    console.log("Successfully retrieved Youtube data")
+
+                    match.video.title = youtube.data.items[0].snippet.title
+                    match.video.date = youtube.data.items[0].snippet.publishedAt.split('T')[0]
+
+                    match.video.channel = {
+                        id: youtube.data.items[0].snippet.channelId,
+                        name: youtube.data.items[0].snippet.channelTitle
+                    }
+                    
+                } else {
+                    console.log("Failed to retrieve Youtube data")
+                }
+
+                return match
+            })
+            .catch((error) => res.status(400).send(error.toString()))
+        } else {
+            return match
+        }
+    })
 
     
 
-    MongoClient.connect(url, { useUnifiedTopology: true })
+    /*MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
         console.log('Connected.\nUploading match...')
-        let timestamp = ((new Date()).toISOString()).split('T')
+        
         let db = client.db('tfhr')
 
         
@@ -113,12 +280,56 @@ api.put('/matches', (req, res) => {
         console.log('Match uploaded.\nID: ', matchId)
         return res.status(200).send({ docId: matchId })
     })
+    .catch((error) => res.status(400).send(error.toString()))*/
+
+    Promise.all(matches).then((matches) => {
+        return Promise.all(
+            [matches,
+            MongoClient.connect(dbUrl, { useUnifiedTopology: true  })]
+            )
+    })
+    .then((results) => {
+        let matches = results[0]
+        console.log('Connected.\nUploading match...')
+
+        let db = results[1].db('tfhr')
+        
+        return Promise.all([
+            db,
+            db.collection('matches')
+            .insertMany(matches),      
+        ])
+    })
+    .then((results) => {
+        let db = results[0]
+        let matchIds = (Object.values(results[1].insertedIds)).map(id => id.toString())
+
+        console.log('Matches uploaded:')
+
+        for (id in matchIds) {
+            console.log(matchIds[id])
+        }
+
+        for (i in players) {
+            db.collection('players')
+            .updateOne(
+                { 'name': players[i] },
+                { $setOnInsert: { 'name': players[i] }},
+                { upsert: true }
+            )
+        }
+
+        return matchIds
+    })
+    .then((ids) => { 
+        return res.status(200).send({matchIds: ids})
+    })
     .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** get list of currently existing players in db */
 api.get('/players', (req, res) => {
-    MongoClient.connect(url, { useUnifiedTopology: true })
+    MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
         return client
         .db('tfhr')
@@ -147,7 +358,7 @@ api.get('/users', (req, res) => {
     .verifyIdToken(req.headers.authorization)
     .then(() => {
         console.log('Connecting to client')
-        return MongoClient.connect(url, { useUnifiedTopology: true })
+        return MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     })
     .then((client) => {
         console.log('Retrieving user info')
@@ -175,7 +386,7 @@ api.put('/users', (req, res) => {
     admin.auth()
     .verifyIdToken(req.headers.authorization)
     .then(() => {
-        return MongoClient.connect(url, { useUnifiedTopology: true })
+        return MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     })
     .then((client) => { 
         client.db()
@@ -240,33 +451,44 @@ exports.api = functions.https.onRequest(api)
 
 // format query object for filtering matches
 function formatQuery(filters, strict) {
-    firstName = filters[0].name ? new RegExp(['^' + filters[0].name + '$'], 'i') : null
-    secondName = filters[1].name ? new RegExp(['^' + filters[1].name + '$'], 'i') : null
+    //firstName = filters[0].name ? new RegExp(['^' + filters[0].name + '$'], 'i') : null
+    //secondName = filters[1].name ? new RegExp(['^' + filters[1].name + '$'], 'i') : null
+    firstName = filters[0].name ? filters[0].name : null
+    secondName = filters[1].name ? filters[1].name : null
 
-    firstChar = filters[0].character.name ? filters[0].character.name : null
-    secondChar = filters[1].character.name ? filters[1].character.name : null
+    firstChar = filters[0].character ? filters[0].character : null
+    secondChar = filters[1].character ? filters[1].character : null
 
     if (strict === 'false') {
-        return query = {$or: [
+        /*return query = {
+            '$or': [
             {
-                'players.0.name': firstName,
-                'players.0.character.name': firstChar,
-                'players.1.name': secondName,
-                'players.1.character.name': secondChar
+                'p1.name': firstName,
+                'p1.character': firstChar ,
+                'p2.name': secondName ,
+                'p2.character': secondChar
             },
             {
-                'players.0.name': secondName,
-                'players.0.character.name': secondChar,
-                'players.1.name': firstName,
-                'players.1.character.name': firstChar
+                'p1.name': secondName,
+                'p1.character': secondChar,
+                'p2.name': firstName,
+                'p2.character': firstChar
             },
-        ]}
+        ]}*/
+
+        return query = {
+            'p1.name': firstName,
+            'p1.character': firstChar,
+            'p2.name': secondName,
+            'p2.character': secondChar
+        }
+
     } else {
         return query = {
-            'players.0.name': firstName,
-            'players.0.character.name': firstChar,
-            'players.1.name': secondName,
-            'players.1.character.name': secondChar
+            'p1.name': firstName,
+            'p1.character': firstChar,
+            'p2.name': secondName,
+            'p2.character': secondChar
         }
     }
 }

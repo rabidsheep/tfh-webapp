@@ -35,6 +35,19 @@ a {
     font-size: 12px;
 }
 
+
+#menubar .v-toolbar__items {
+    width: 120px;
+}
+
+#menubar .v-toolbar__items .col {
+    text-align: center !important;
+    display: flex;
+    align-items: center;
+    max-width: 100%;
+    justify-content: center;
+}
+
 /* display width */
 #router-view.small {
     width: 80%;
@@ -180,6 +193,61 @@ a {
     border-bottom: 2px solid;
 }
 
+#matches .header .col {
+    display: flex;
+    padding: 0px;
+}
+
+#matches .header p {
+    margin: 0px;
+    margin-top: 1px;
+}
+
+#matches .header .btn {
+    justify-content: center;
+    align-content: center;
+    justify-items: center;
+    align-items: center;
+}
+
+#matches .header a {
+    height: min-content;
+    max-height: min-content;
+}
+
+#matches .header .data {
+    flex-wrap: wrap;
+    display: flex;
+}
+
+#matches .header .btn {
+    max-width: min-content;
+}
+
+#matches .match-group > hr {
+    margin: 20px 0px;
+}
+
+.wide #matches .match-group .header,
+.wide #matches .match-group .match {
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+}
+
+#matches .header {
+    margin-bottom: 5px !important;
+}
+
+.xsmall #matches .match-group .header {
+    margin-bottom: 0px !important;
+}
+
+#matches .header {
+    padding-bottom: 10px;
+    border-bottom: 1px solid hsla(0,0%,100%,.2);
+    
+}
+
 /** matchrow.vue **/
 .match {
     padding: 10px 0px;
@@ -187,11 +255,6 @@ a {
 
 .match .col {
     padding: 0px;
-}
-
-.match .unique .edit .v-icon,
-.match .unique .comment .v-icon {
-    margin-top: -2px;
 }
 
 .p1 {
@@ -207,6 +270,18 @@ a {
     display: flex;
     justify-content: center;
     margin: 0px 10px;
+}
+
+.match {
+    padding: 10px 0px;
+}
+
+.match-group > div:not(:last-of-type):not(.header) {
+    border-bottom: 1px dashed gray;
+}
+
+.match:hover {
+    background-color: #2e2e2e;
 }
 
 .match .character-icon {
@@ -239,8 +314,13 @@ a {
 }
 
 .match .links {
-    justify-content: space-between;
+    justify-content: space-around;
     align-content: space-between;
+}
+
+.match .link {
+    align-items: center;
+    display: flex;
 }
 
 .match .links .video > .btn > div > .v-icon {
@@ -283,14 +363,7 @@ a {
     text-align: left;
 }
 
-.match .comment.msg > p {
-    margin: 5px;
-}
-
 /* desktop */
-.wide .match .unique {
-    text-align: center;
-}
 
 .wide .match .players {
     width: 50%;
@@ -299,7 +372,6 @@ a {
 .wide .match .p1 {
     text-align: right;
 }
-
 
 
 .match .p1 .character-icon {
@@ -334,53 +406,25 @@ a {
 }
 
 /* mobile */
-.small .match .unique {
-    width: 100%;
-    border-bottom: 1px dashed grey;
-    padding-bottom: 10px;
-    min-width: max-content;
-    flex-wrap: nowrap;
-    min-width: 100%;
-    overflow: clip;
-    
-}
-
-.small .match .date,
-.small .match .time {
-    margin-top: 2px;
-}
-
-.small .match .time {
-    white-space: nowrap;
-    overflow: clip;
-    text-overflow: ellipsis;
-    line-height: 1;
-    min-width: 1%;
-}
-
 
 .small .match {
     justify-content: space-between;
 }
+
 
 .xsmall .match .character-icon {
     margin-right: 15px;
     margin-left: 0px;
 }
 
-.small .match .edit,
-.small .match .unique .comment {
-    max-height: 24px;
-}
-
-.small .match .divider {
-    display: inline-block;
-}
-
-
-.small .match .player,
-.small .match .link {
+.xsmall .match .player,
+.xsmall .match .link {
     padding-top: 10px;
+}
+
+.xsmall .match .p2,
+.xsmall .match .video {
+    padding-bottom: 10px;
 }
 
 .small .match .player .character {
@@ -431,9 +475,6 @@ a {
     top: 10%;
 }
 
-.match .unique .comment .v-icon {
-    margin-top: 2px;
-}
 
 /** uploadform.vue **/
 

@@ -1,51 +1,13 @@
 <template>
-  <v-col>
-    <v-row class="header">
-      <v-layout unique row align-center>
-        <router-link
-        :user="user"
-        class="edit"
-        :to="`edit?id=${_id}`">
-          <v-icon
-          size="22px"
-          color="accent">
-            mdi-square-edit-outline
-          </v-icon>
-        </router-link>
-
-        <div
-        class='divider mr-2 ml-2'>
-        ||
-        </div>
-
-        <div
-        class="date">
-          {{ date }}
-        </div>
-
-
-        <div
-        class='divider mr-2 ml-2'>
-        @
-        </div>
-
-        <div
-        class="time">
-          {{ time }} {{ timezone }}
-        </div>
-      </v-layout>
-    </v-row>
-      
     <v-row
     class="match"
     align="center"
-    v-for="(match, n) in matches"
-    :key="n">
+    justify="center">
       <v-col class="players" cols="10">
         <v-col
         :cols="$vuetify.breakpoint.xsOnly ? 12 : 6"
         :class="`player p${i+1}`"
-        v-for="(player, i) in [match.p1, match.p2]"
+        v-for="(player, i) in [p1, p2]"
         :key="i">
           <img
           class="character-icon"
@@ -167,7 +129,7 @@
         </v-col>
       </v-col>
     </v-row>
-  </v-col>
+  <!--</v-col>-->
 </template>
 
 <script>
@@ -176,7 +138,6 @@ import moment from 'moment'
 export default {
   name: 'MatchRow',
   props: {
-    _id: String,
     version: Number,
     p1: Object,
     p2: Object,
@@ -188,27 +149,13 @@ export default {
       url: String,
       timestamp: String,
     },
-    uploadDate: String,
-    uploadTime: String,
-    timezone: String,
-    matches: Array,
-    user: [String, null],
   },
   mounted: function() {
   },
   data: () => {
     return {
-      hidden: true,
       show: false,
-      date: null,
-      time: null,
     }
   },
- created() {
-      /* convert timestamp to date and format it */
-      let fullDate = this.uploadDate + 'T' + this.uploadTime
-      this.date = moment(fullDate).local(true).format('MM/DD/YYYY')
-      this.time = moment(fullDate).local(true).format('HH:mm')
-  }
 }
 </script>

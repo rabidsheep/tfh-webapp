@@ -147,7 +147,7 @@ export default {
     },
     name: 'Uploads',
     props: {
-        user: [String, null]
+        userId: [String, null]
     },
     data: () => {
         return {
@@ -164,10 +164,11 @@ export default {
         }
     },
     mounted: function () {
-        if (!this.user) {
+        if (!localStorage.getItem('user')) {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 
                 if (!user) {
+                    localStorage.deleteItem('user')
                     this.step = 1
                     return
                 }
@@ -183,15 +184,23 @@ export default {
                     })
                     .then((response) => {
                         let userData = response.body[0]
+                        this.uid = user.uid
+
                         if (userData) {
                             console.log("Retrieved user data")
+                            localStorage.setItem('user', user.uid)
 
                             this.isAdmin = userData.admin
-                            this.step = 2
                             this.loading = false
                             this.loggingIn = false
+                            
+                            this.getMatch(this.id)
+
+                            this.step = 2
+                            
                         } else {
                             console.log("Creating new user")
+
                             this.isRegistered = false
 
                             let newUser = {
@@ -202,10 +211,15 @@ export default {
 
                             this.$users.save(newUser)
                             .then(() => {
-                                this.step = 2
+                                console.log('User created')
+                                
+                                localStorage.setItem('user', user.uid)
                                 this.loading = false
                                 this.isRegistered = true
                                 this.loggingIn = false
+                                this.getMatch(this.id)
+                                this.step = 2
+                                
                             })
                         }
                     })
@@ -215,19 +229,27 @@ export default {
                 } else {
                     if (user) {
                         console.log('Signed in')
+
+                        localStorage.setItem('user', user.uid)
                         this.uid = user.uid
+                        this.getMatch(this.id)
+                        this.loading = false;
                         this.step = 2
+                        
                     } else {
                         console.log('Signed out')
+
+                        localStorage.deleteItem('user')
                     }
 
-                    this.loading = false;
                 }
             })
         } else {
-            this.uid = this.user
-            this.step = 2
+            console.log("Skipping sign in")
+
+            this.uid = localStorage.getItem('user')
             this.loading = false
+            this.step = 2
         }
     },
     methods: {

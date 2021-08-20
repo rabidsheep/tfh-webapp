@@ -39,47 +39,67 @@
                 </v-radio-group>
 
                 <v-expand-transition>
-                <v-row
-                v-show="uploadType === `Tournament`">
-                    <v-col
-                    class="tournament">
-                        <v-text-field
-                        dense
-                        v-model="tournament.name"
-                        :rules="uploadType === `Tournament` ? rules.tournament : undefined"
-                        label="Tournament Name"
-                        :required="uploadType === `Tournament`" />
-                    </v-col>
+                    <v-row
+                    v-show="uploadType === `Tournament`">
+                        <v-col
+                        class="tournament">
+                            <v-text-field
+                            dense
+                            v-model="tournament.name"
+                            :rules="uploadType === `Tournament` ? rules.tournament : undefined"
+                            label="Tournament Name"
+                            :required="uploadType === `Tournament`" />
+                        </v-col>
 
-                    <v-col
-                    class="tournament"
-                    cols="3">
-                        <v-text-field
-                        dense
-                        v-model="tournament.num"
-                        :rules="uploadType === `Tournament` ? rules.tournament : undefined"
-                        label="No."
-                        :required="uploadType === `Tournament`" />
-                    </v-col>
-                </v-row>
+                        <v-col
+                        class="tournament"
+                        cols="2">
+                            <v-text-field
+                            dense
+                            v-model="tournament.num"
+                            label="No." />
+                        </v-col>
+
+                        <v-col
+                        class="tournament">
+                            <v-menu
+                            v-model="datepicker"
+                            :close-on-content-click="false"
+                            :nudge-right="40"
+                            transition="scale-transition"
+                            offset-y
+                            min-width="auto">
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-text-field
+                                    v-model="tournament.date"
+                                    label="Date"
+                                    :rules="uploadType === `Tournament` ? rules.date : undefined"
+                                    :required="uploadType === `Tournament`"
+                                    prepend-icon="mdi-calendar"
+                                    dense
+                                    v-bind="attrs"
+                                    v-on="on" />
+                                </template>
+
+                                <v-date-picker
+                                v-model="tournament.date"
+                                @input="datepicker = false" />
+                            </v-menu>
+                        </v-col>
+                    </v-row>
                 </v-expand-transition>
-
-                <v-switch
-                color="accent"
-                v-model="individualMatches"
-                class="upload-switch"
-                label="Upload Matches Individually"
-                :disabled="uploadType === 'Tournament'"
-                value
-                hide-details/>
                 
-                <!---<v-switch
-                color="accent"
-                v-model="individualUrls"
-                class="youtube-switch"
-                label="Individual Video URLs"
-                value
-                hide-details/>--->
+                <v-expand-transition>
+                    <v-switch
+                    v-show="uploadType === 'Casual'"
+                    color="accent"
+                    v-model="individualUrls"
+                    class="youtube-switch"
+                    label="Individual Video URLs"
+                    :disabled="uploadType === 'Tournament'"
+                    value
+                    hide-details/>
+                </v-expand-transition>
             </v-layout>
 
             <br />
@@ -112,8 +132,6 @@
                     @delete-video="deleteVideoObj(i)"
                     @delete-timestamp="deleteTimestamp(i)"
                     @update-static-url="staticUrl = $event" />
-
-                    
                 </v-layout>
             
                 <v-layout
@@ -185,6 +203,7 @@ export default {
     data: () => {
         return {
             hidden: true,
+            datepicker: false,
             valid: false,
             isSelecting: false,
             files: [],
@@ -209,6 +228,9 @@ export default {
             rules: {
                 tournament: [
                     v => !!v || 'Required',
+                ],
+                date: [
+                    v => !!v || 'Required'
                 ]
             }
         }
@@ -216,10 +238,12 @@ export default {
     watch: {
         'uploadType': function(val) {
            if (val === 'Tournament') {
-               this.individualMatches = false
-           } else {
-               this.individualMatches = true
+               this.individualUrls = false
            }
+        },
+
+      'date': function(v) {
+
       }
     },
     methods: {
@@ -237,15 +261,40 @@ export default {
         submitFiles() {
             //this.$emit('files-upload')
 
-            //this.uploading = true
-            let success = 0
-            let fail = 0
-            var upload = null
-            var uploadRef = null
+            this.uploading = true
+            let matches = this.matches.map((match) => {
+                let timestamp = ((new Date()).toISOString()).split('T')
+                match.type = this.uploadType
+                match.uploadDate = timestamp[0]
+                match.uploadTime = timestamp[1]
 
+                if (this.uploadType === 'Tournament') {
+                    match.tournament = this.tournament
+                }
+
+                return match
+            })
+
+            console.log(JSON.parse(JSON.stringify(matches)))
+
+            this.$matches.save(matches).then((response) => {
+                if (response.ok) {
+                    console.log('Uploaded matches:')
+                    for (const i in response.body.matchIds) {
+                        console.log('ID:', response.body.matchIds[i])
+                    }
+                } else {
+                    this.setErrors('upload', this.files[i].name)
+                    console.log('Failed to upload a match')
+                }
+
+                this.uploading = false
+                this.finished = true
+            })
+            .catch((error) => console.log(error))
             
             
-            if (!this.individualMatches) {
+            /*if (!this.individualMatches) {
                 if (this.uploadType === 'Tournament') {
                     upload = {
                         type: this.uploadType,
@@ -274,7 +323,7 @@ export default {
                             matches: this.matches[i]
                         })*/
 
-                        uploadRef = this.$matches.save({
+                        /*uploadRef = this.$matches.save({
                             type: this.uploadType,
                             userId: this.uid,
                             matches: [this.matches[i]]
@@ -301,7 +350,8 @@ export default {
                     this.finished = true
                 }
             })
-            .catch((error) => console.log(error))
+            .catch((error) => console.log(error))*/
+
             /*for (let i = 0; i < this.matches.length; i++) {
                 this.matches[i].file.url = '/';
 
@@ -445,9 +495,9 @@ export default {
                         userId: this.uid,
                         file: {
                             url: null,
-                            name: fileName
+                            name: fileName,
+                            version: result.charCodeAt(146),
                         },
-                        version: result.charCodeAt(146),
                         p1: {
                             name: playerNames[0],
                             character: ((this.$characters).find(c => c.devName == characterNames[0])).name
@@ -513,6 +563,7 @@ export default {
 
             if (this.matches[i].video.url !== url || !this.matches[i].video.url) {
                 this.$set(this.matches[i].video, 'url', url)
+                this.$set(this.matches[i].video, 'id', url.match(this.$regex.ytId)[1])
             }
 
             if (i === 0 && !this.individualUrls) {

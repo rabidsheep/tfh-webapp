@@ -1,27 +1,39 @@
 <template>
   <v-app dark>
-    <v-toolbar maxHeight="50px" dense color="accent">
+    <v-toolbar id="menubar" height="58px" maxHeight="58px" dense color="accent">
         <!-- replace <a> with <router-link> eventually -->
-        <a href="/">
+        <router-link to="/" @click.native="componentKey = forceRerender($event)">
             <img class="logo" src="./assets/img/pixel/1.png" />
-        </a>
+        </router-link>
 
         <v-toolbar-title>
             fortnite gaming
         </v-toolbar-title>
 
-        <router-link :user="user" to="/upload">
+        <router-link to="/upload">
             <v-btn icon>
                 <v-icon>mdi-plus-box</v-icon>
             </v-btn>
         </router-link>
+
+        <v-spacer />
+
+        <v-divider vertical />
+
+        <v-toolbar-items>
+          <v-col
+          justify="center"
+          align="center">
+            {{ userId ? 'Signed In' : 'Logged Out' }}
+          </v-col>
+        </v-toolbar-items>
     </v-toolbar>
 
     <v-main>
       <v-layout column align-center>
         <div id="router-view"
         :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
-          <router-view :user="user" />
+          <router-view :key="componentKey" />
         </div>
       </v-layout>
     </v-main>
@@ -42,50 +54,64 @@
 export default {
   data: () => {
     return {
-      user: null,
+      userId: null,
+      componentKey: 0,
     }
   },
   mounted: function () {
-    this.$firebase.auth()
-    .onAuthStateChanged((user) => {
-        
-      if (!user) {
-        return null
-      }
-
-      if (process.env.NODE_ENV == "production") {
-        console.log("Production Environment")
-
-        this.setAuthToken()
-        .then(() => {
-            console.log('Checking user')
-            this.loggingIn = true
-            return this.$users.get({ uid: user.uid })
-        })
-        .then((response) => {
-            let userData = response.body[0]
-            if (userData) {
-                console.log("Retrieved user data")
-
-                this.isAdmin = userData.admin
-                this.user = userData
-            } else {
-                console.log("Not logged in")
-            }
-        })
-        .catch((error) => {
-            console.log(error)
-        })
-    } else {
-        if (user) {
-            console.log('Signed in')
-            this.uid = user.uid
-            this.user = user.uid
-        } else {
-            console.log('Signed out')
+    if (!localStorage.getItem('user')) {
+      this.$firebase.auth()
+      .onAuthStateChanged((user) => {
+          
+        if (!user) {
+          
+          localStorage.deleteItem('user')
+          return null
         }
-      }
-    })
+
+        if (process.env.NODE_ENV == "production") {
+          console.log("Production Environment")
+
+          this.setAuthToken()
+          .then(() => {
+              console.log('Checking user')
+              this.loggingIn = true
+              return this.$users.get({ uid: user.uid })
+          })
+          .then((response) => {
+              let user = response.body[0]
+              if (user) {
+                  console.log("Retrieved user data")
+
+                  this.isAdmin = user.admin
+                  this.userId = user.uid
+
+                  localStorage.setItem('user', user.uid)
+              } else {
+                  console.log("Not logged in")
+                  localStorage.deleteItem('user')
+              }
+          })
+          .catch((error) => {
+              console.log(error)
+          })
+      } else {
+          if (user) {
+              console.log('Signed in')
+              this.uid = user.uid
+              this.userId = user.uid
+              
+              localStorage.setItem('user', user.uid)
+          } else {
+            
+              localStorage.deleteItem('user')
+              console.log('Signed out')
+          }
+        }
+      })
+    } else {
+      this.userId = localStorage.getItem('user')
+    }
   },
   watch: {
     onScroll: function (event) {
@@ -104,6 +130,11 @@ export default {
       })
       .catch((error) => console.log(error))
     },
+    forceRerender(e) {
+      if (this.$route.path === '/' && e.ctrlKey === 'false') {
+        return this.componentKey === 0 ? 1 : 0
+      }
+    }
   }
 }
 </script>
@@ -118,6 +149,10 @@ export default {
 
 .theme--dark.v-sheet {
   color: var(--v-text-base);
+}
+
+::v-deep .v-toolbar__content {
+  padding-right: 0px !important;
 }
 
 ::v-deep #filters__main {

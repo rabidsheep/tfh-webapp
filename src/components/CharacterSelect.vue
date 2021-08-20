@@ -32,7 +32,7 @@
                 <v-list-item
                 v-if="!anyEnabled && character.id > 0"
                 :key="character.id"
-                @click="selectCharacter(character)">
+                @click="selectCharacter(character.value)">
                         <v-avatar
                         class="icon"
                         height="100%"
@@ -45,7 +45,7 @@
                 <v-list-item
                 v-if="anyEnabled"
                 :key="character.id"
-                @click="selectCharacter(character)">
+                @click="selectCharacter(character.value)">
                         <v-avatar
                         class="icon"
                         height="100%"
@@ -72,11 +72,8 @@ export default {
   methods: {
         /* passes selected character up to parent */ 
         selectCharacter: function (selected) {
-            if (selected.id === 0) {
-                selected = null
-            }
             
-            if (this.currentCharacter && selected && selected.id === this.currentCharacter.id) {
+            if (selected === this.currentCharacter) {
                 return null
             } else {
                 this.$emit('character-select', selected)

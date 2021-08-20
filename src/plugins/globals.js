@@ -61,14 +61,14 @@ let youtubeDataRes = Vue.resource(`${uri}/youtube-data/`, {}, youtubeMethods)
 
 Vue.prototype.$version = 2;
 Vue.prototype.$characters = [
-  {name: 'Any Character', devName: '', id: 0, names: ['Any Character', 'Any']},
-  {name: 'Arizona', devName: 'Cow', id: 1, names: ['Arizona', 'Ari', 'Cow']},
-  {name: 'Oleander', devName: 'Uni', id: 2, names: ['Oleander', 'Ole', 'Uni']},
-  {name: 'Paprika', devName: 'Paca', id: 3, names: ['Paprika', 'Pap', 'Paca']},
-  {name: 'Pom', devName: 'Pom', id: 4, names: ['Pom']},
-  {name: 'Shanty', devName: 'Shanty', id: 5, names: ['Shanty']},
-  {name: 'Tianhuo', devName: 'Tianhuo', id: 6, names: ['Tianhuo', 'Tian']},
-  {name: 'Velvet', devName: 'Velvet', id: 7, names: ['Velvet', 'Vel']}
+  {name: 'Any Character', value: null, devName: '', id: 0, names: ['Any Character', 'Any']},
+  {name: 'Arizona', value: 'Arizona', devName: 'Cow', id: 1, names: ['Arizona', 'Ari', 'Cow']},
+  {name: 'Oleander', value: 'Oleander', devName: 'Uni', id: 2, names: ['Oleander', 'Ole', 'Uni']},
+  {name: 'Paprika', value: 'Paprika', devName: 'Paca', id: 3, names: ['Paprika', 'Pap', 'Paca']},
+  {name: 'Pom', value: 'Pom', devName: 'Pom', id: 4, names: ['Pom']},
+  {name: 'Shanty', value: 'Shanty', devName: 'Shanty', id: 5, names: ['Shanty']},
+  {name: 'Tianhuo', value: 'Tianhuo', devName: 'Tianhuo', id: 6, names: ['Tianhuo', 'Tian']},
+  {name: 'Velvet', value: 'Velvet', devName: 'Velvet', id: 7, names: ['Velvet', 'Vel']}
 ]
 
 Vue.use({

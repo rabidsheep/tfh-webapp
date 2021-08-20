@@ -13,12 +13,12 @@
                     <!-- player filters -->
                     <v-col
                     :class="`player p${i + 1}`"
-                    v-for="(player, i) in playerInfo"
+                    v-for="(player, i) in players"
                     :key="i"
                     :cols="$vuetify.breakpoint.smAndDown ? 12 : 5"> 
 
                         <CharacterSelect
-                        :currentCharacter="playerInfo[i].character"
+                        :currentCharacter="player.character? player.character : null"
                         :selectionEnabled="true"
                         :anyEnabled="true"
                         @character-select="selectCharacter($event, i)"/>
@@ -38,7 +38,7 @@
                         :search-input.sync="search[i]"
                         :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
                         counter="64"
-                        @change = "selectPlayer(playerInfo[i].name, i)">
+                        @change="selectPlayer(playerInfo[i].name, i)">
                             <template v-slot:no-data>
                                 <v-list-item>
                                     <v-list-item-content>
@@ -156,7 +156,7 @@ export default {
 
         },
         selectCharacter: function (character, i) {
-            if (character !== this.playerInfo[i].character) {
+            if (character !== this.players[i].character) {
                 this.$set(this.playerInfo[i], 'character', character)
             }
         },

@@ -54,6 +54,9 @@
 export default {
   data: () => {
     return {
+      get userId() {
+        return localStorage.getItem('user')
+      },
       userId: null,
       componentKey: 0,
     }
@@ -65,7 +68,7 @@ export default {
           
         if (!user) {
           
-          localStorage.deleteItem('user')
+          localStorage.removeItem('user')
           return null
         }
 
@@ -89,7 +92,7 @@ export default {
                   localStorage.setItem('user', user.uid)
               } else {
                   console.log("Not logged in")
-                  localStorage.deleteItem('user')
+                  localStorage.removeItem('user')
               }
           })
           .catch((error) => {
@@ -104,7 +107,7 @@ export default {
               localStorage.setItem('user', user.uid)
           } else {
             
-              localStorage.deleteItem('user')
+              localStorage.removeItem('user')
               console.log('Signed out')
           }
         }

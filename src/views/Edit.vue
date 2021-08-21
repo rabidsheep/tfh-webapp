@@ -246,7 +246,7 @@ export default {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 
                 if (!user) {
-                    localStorage.deleteItem('user')
+                    localStorage.removeItem('user')
                     this.step = 1
                     return
                 }
@@ -317,7 +317,7 @@ export default {
                     } else {
                         console.log('Signed out')
 
-                        localStorage.deleteItem('user')
+                        localStorage.removeItem('user')
                     }
 
                 }

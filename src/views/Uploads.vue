@@ -172,7 +172,7 @@ export default {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 
                 if (!user) {
-                    localStorage.deleteItem('user')
+                    localStorage.removeItem('user')
                     this.step = 1
                     return
                 }
@@ -198,8 +198,6 @@ export default {
                             this.loading = false
                             this.loggingIn = false
                             
-                            this.getMatch(this.id)
-
                             this.step = 2
                             
                         } else {
@@ -221,7 +219,6 @@ export default {
                                 this.loading = false
                                 this.isRegistered = true
                                 this.loggingIn = false
-                                this.getMatch(this.id)
                                 this.step = 2
                                 
                             })
@@ -236,14 +233,13 @@ export default {
 
                         localStorage.setItem('user', user.uid)
                         this.uid = user.uid
-                        this.getMatch(this.id)
                         this.loading = false;
                         this.step = 2
                         
                     } else {
                         console.log('Signed out')
 
-                        localStorage.deleteItem('user')
+                        localStorage.removeItem('user')
                     }
 
                 }

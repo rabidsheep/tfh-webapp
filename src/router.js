@@ -24,7 +24,8 @@ export default new Router({
       name: 'edit',
       component: Edit,
       props: (route) => ({
-        id: route.query.id
+        id: route.query.id,
+        tournament: route.query.tournament
       })
     }
   ]

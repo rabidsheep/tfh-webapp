@@ -35,28 +35,41 @@ api.get('/matches', (req, res) => {
     
     let players = req.query.players
     let unfiltered = true
+    let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
+    let query = {}
 
-    for (let i = 0; i < players.length; i++) {
-        if (players[i].name) {
-            unfiltered = false
-            break
+    console.log(req.query)
+
+    if (players) {
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].name) {
+                unfiltered = false
+                break
+            }
+
+            if (players[i].character) {
+                unfiltered = false
+                break
+            }
         }
 
-        if (players[i].character) {
-            unfiltered = false
-            break
-        }
+        query = formatQuery(players, req.query.strict, unfiltered)
+    } else {
+        query = (req.query.tournament ?
+            {'tournament': {
+                name: req.query.tournament.name,
+                num: req.query.tournament.num !== '' ? req.query.tournament.num : null,
+                date: req.query.tournament.date
+            }
+            } :
+            {'_id': mongo.ObjectId(req.query.id)}
+            
+            )
     }
-
-    let query = formatQuery(players, req.query.strict, unfiltered)
-    
-
-    
-
     
     console.log(query)
 
-    let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
+    
 
     const pipeline = [
         { '$match': query },

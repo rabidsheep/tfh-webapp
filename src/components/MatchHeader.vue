@@ -4,7 +4,11 @@
       class="btn">
         <router-link
         class="edit"
-        :to="`/`">
+        :to="{
+          path: 'edit',
+          query: edit
+          
+        }">
         <!-- edit?id=${_id} -->
           <v-icon
           size="30px"
@@ -71,10 +75,42 @@ export default {
       time: null,
     }
   },
- created() {
+  mounted() {
+
+  },
+  computed: {
+    edit: function() {
+      return this.generateEditUrl(this.tournament)
+    }
+  },
+  created() {
       /* convert timestamp to date and format it */
       this.date = moment(this.uploaded).local(true).format('MM-DD-YYYY')
       this.time = moment(this.uploaded).local(true).format('HH:mm')
+  },
+  methods: {
+    generateEditUrl(tournament) {
+      /*let edit = ''
+      if (tournament) {
+        edit = `edit?tournament.name=${tournament.name}`
+        
+        if (tournament.num) {
+          edit += `&tournament.num=${tournament.num}`
+        }
+        
+        edit += `&tournament.date=${tournament.date}`
+      } else {
+        edit = `edit?id=${this._id.id}`
+      }*/
+
+      if (tournament) {
+        return { tournament: JSON.stringify(tournament) }
+      } else {
+        return { id: this._id.id }
+      }
+
+      return edit
+    }
   }
 }
 </script>

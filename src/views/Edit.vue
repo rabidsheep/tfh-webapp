@@ -1,5 +1,5 @@
 <template>
-    <v-container v-if="id" id="edits">
+    <v-container v-if="id || tournament" id="edits">
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>
@@ -61,11 +61,11 @@
                         overflow: clip;
                         white-space: break-spaces;
                         text-overflow: ellipsis;">Match ID: {{ id }} </pre>
-                        <pre v-if="match.file"
+                        <pre v-if="matches.file"
                         style="max-width: 99%;
                         overflow: clip;
                         white-space: break-spaces;
-                        text-overflow: ellipsis;">{{ match.file.name }}</pre>
+                        text-overflow: ellipsis;">{{ matches.file.name }}</pre>
                     </center>
                     
                     
@@ -83,7 +83,9 @@
                         <div style="width: 100%;"><br /></div>
                         
                         <v-row
-                        v-show="!loading && Object.keys(match).length > 0"
+                        v-for="(match, i) in matches"
+                        :key="i"
+                        v-show="!loading && Object.keys(matches).length > 0"
                         class="preview">
                             <v-col
                             class="file-info align-center"
@@ -91,7 +93,7 @@
                                 <v-col
                                 :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
                                 :class="`player p${i+1}`"
-                                v-for="(player, i) in updated.players"
+                                v-for="(player, i) in [updated[i].p1, updated[i].p2]"
                                 :key="i"
                                 :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
                                     <CharacterSelect
@@ -127,12 +129,13 @@
                             class="youtube"
                             :cols="$vuetify.breakpoint.smAndDown ? 12 : 4 ">
                                 <v-row
+                                v-if="!tournament"
                                 class="link">
                                     <v-text-field
                                     ref="url"
-                                    v-model="url"
+                                    v-model="urls[i]"
                                     :dense="$vuetify.breakpoint.mdAndUp"
-                                    @blur="url = tempUrl"
+                                    @blur="urls[i] = tempUrls[i]"
                                     :clearable="!match.file ? false : true"
                                     :rules="!match.file ? rules.url.req : rules.url.noReq"
                                     :disabled="!match.file ? true : false"
@@ -144,11 +147,10 @@
                                 <v-row
                                 class="timestamp">
                                     <v-text-field
-                                    v-model="timestamp"
-                                    :dense="$vuetify.breakpoint.mdAndUp"
-                                    @blur="timestamp = ( timestamp ? timestamp.match($regex.strTimestamp)[0] : null )"
+                                    v-model="timestamps[i]"
+                                    :dense="$vuetify.breakpoint.mdAndUp && !tournament"
                                     :rules="rules.timestamp"
-                                    :disabled="!url || !$refs.url.valid"
+                                    :disabled="!urls[i]"
                                     ref="timestamp"
                                     clearable
                                     prepend-icon="mdi-timer-outline"
@@ -161,7 +163,7 @@
                         
                         <v-row
                         class="buttons"
-                        v-show="!loading && Object.keys(match).length > 0"
+                        v-show="!loading && Object.keys(matches).length > 0"
                         align="center"
                         justify="space-around">
                             <v-col class="reset">
@@ -202,20 +204,22 @@ export default {
     },
     props: {
         id: String,
+        tournament: String
     },
     data: () => {
         return {
+            query: null,
             uid: null,
             hidden: true,
             loading: false,
             step: 1,
-            match: {},
+            matches: {},
             updated: {},
             valid: false,
             changesFound: false,
-            url: null,
+            urls: [],
             tempUrl: null,
-            timestamp: null,
+            timestamps: [],
             isAdmin: false,
             isRegistered: true,
             loggingIn: false,
@@ -242,7 +246,17 @@ export default {
         }
     },
     mounted: function () {
-        if (this.id && !localStorage.getItem('user')) {
+
+
+        if (this.tournament) {
+            this.query = JSON.parse(this.tournament)
+        } else {
+            this.query = this.id
+        }
+
+        //console.log(this.query)
+
+        if ((this.id || this.tournament) && !localStorage.getItem('user')) {
             this.$firebase.auth().onAuthStateChanged((user) => {
                 
                 if (!user) {
@@ -272,7 +286,7 @@ export default {
                             this.loading = false
                             this.loggingIn = false
                             
-                            this.getMatch(this.id)
+                            this.getMatch()
 
                             this.step = 2
                             
@@ -295,7 +309,7 @@ export default {
                                 this.loading = false
                                 this.isRegistered = true
                                 this.loggingIn = false
-                                this.getMatch(this.id)
+                                this.getMatch()
                                 this.step = 2
                                 
                             })
@@ -310,7 +324,7 @@ export default {
 
                         localStorage.setItem('user', user.uid)
                         this.uid = user.uid
-                        this.getMatch(this.id)
+                        this.getMatch()
                         this.loading = false;
                         this.step = 2
                         
@@ -322,11 +336,11 @@ export default {
 
                 }
             })
-        } else if (this.id && localStorage.getItem('user')) {
+        } else if ((this.id || this.tournament) && localStorage.getItem('user')) {
             console.log("Skipping sign in")
 
             this.uid = localStorage.getItem('user')
-            this.getMatch(this.id)
+            this.getMatch()
             this.loading = false
             this.step = 2
         }
@@ -336,7 +350,7 @@ export default {
             deep: true,
             handler(newVal) {
                 /* only allow submission if user changed anything */
-                if (JSON.stringify(newVal) !== JSON.stringify(this.match)) {
+                if (JSON.stringify(newVal) !== JSON.stringify(this.matches)) {
                     this.changesFound = true
                 } else {
                     this.changesFound = false
@@ -345,14 +359,14 @@ export default {
         },
         'url': function(v) {
             if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
-                this.tempUrl = v.match(this.$regex.ytUrl)[0]
+                this.tempUrl = v.matches(this.$regex.ytUrl)[0]
 
                 if (this.tempUrl && !this.video || this.tempUrl !== this.video.url) {
                     this.$emit('set-url', this.tempUrl)
                 }
                 
-                if (this.$regex.urlTimestamp.test(v) && v.match(this.$regex.urlTimestamp)[1] !== this.timestamp) {
-                    this.timestamp = v.match(this.$regex.urlTimestamp)[1]
+                if (this.$regex.urlTimestamp.test(v) && v.matches(this.$regex.urlTimestamp)[1] !== this.timestamp) {
+                    this.timestamp = v.matches(this.$regex.urlTimestamp)[1]
                 }
             } else {
                 this.tempUrl = (this.video ? this.video.url : null)
@@ -362,16 +376,6 @@ export default {
             }
         },
         
-        'timestamp': function(v) {
-            if (v && v.match(this.$regex.strTimestamp)) {
-                    if (this.timestamp !== this.currentTimestamp) {
-                        this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
-                    }
-            } else {
-                //this.$delete(this.updated.video, 'timestamp')
-                this.$emit('delete-timestamp')
-            }
-        },
     },
     methods: {
         signIn: function (providerName) {
@@ -396,21 +400,37 @@ export default {
             })
             .catch((error) => console.log(error))
         },
-        getMatch(id) {
+        getMatch() {
             this.loadingMatch = true
-            this.$matches.get({id})
+            let ref = null
+
+            if (this.tournament) {
+                ref = this.$matches.get({tournament: this.query})
+            } else {
+                ref = this.$matches.get({id: this.query})
+            }
+
+            ref
             .then((response) => {
                 if (response.ok) {
-                    this.match = response.body.matches[0]
-                    this.updated= JSON.parse(JSON.stringify(this.match))
+                    this.matches = response.body.groups[0].matches
+                    this.updated= JSON.parse(JSON.stringify(this.matches))
 
-                    if (this.match.video) {
-                        this.url = this.match.video.url
-                        
-                        if (this.match.video.timestamp) {
-                            this.timestamp = this.match.video.timestamp
+                    this.urls = this.matches.map((match) => {
+                        if (match.video) {
+                            return match.video.url
                         }
-                    }
+                    })
+
+                    console.log(this.urls)
+
+                    this.timestamps = this.matches.map((match) => {
+                        if (match.video && match.video.timestamp) {
+                            return match.video.timestamp
+                        }
+                    })
+
+                    console.log(this.timestamps)
 
                     this.loadingMatch = false
                 }
@@ -418,10 +438,19 @@ export default {
             .catch((error) => console.log(error))
         },
         resetMatch() {
-            this.updated = JSON.parse(JSON.stringify(this.match))
-            this.url = (this.match.video ? this.match.video.url : null)
-            this.timestamp = (this.match.video ? this.match.video.timestamp : null)
-            this.tempUrl = this.url
+            this.updated = JSON.parse(JSON.stringify(this.matches))
+            this.urls = this.matches.map((match) => {
+                if (match.video) {
+                    return match.video.url
+                }
+            })
+            this.timestamps = this.matches.map((match) => {
+                if (match.video.timestamp) {
+                    return match.video.timestamp
+                }
+            })
+
+            this.tempUrl = this.urls
         },
         updateCharacter(character, i) {
             this.$set(this.updated.players[i], 'character', character)
@@ -429,6 +458,16 @@ export default {
         updateMatch() {
 
         },
+        changeTimestamp(timestamp, i) {
+            console.log(timestamp.match(/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/))
+            return (timestamp.match(this.$regex.strTimestamp) ?
+                timestamp.match(this.$regex.strTimestamp)[0] :
+                null
+            )
+        },
+        validateTimestamp(timestamp) {
+
+        }
     }
 }
 </script>

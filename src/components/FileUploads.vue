@@ -221,7 +221,7 @@ export default {
             progress: 0,
             errors: [],
             matchesLinked: false,
-            individualUrls: false,
+            individualUrls: true,
             individualMatches: true,
             staticUrl: null,
             uploadType: 'Casual',
@@ -491,6 +491,11 @@ export default {
         resetForm() {
             this.matches = []
             this.files = []
+            this.tournament = {
+                name: null,
+                num: null,
+                date: null
+            }
             this.matchCount = 0
             this.finished = false
         },

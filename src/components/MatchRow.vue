@@ -129,12 +129,9 @@
         </v-col>
       </v-col>
     </v-row>
-  <!--</v-col>-->
 </template>
 
 <script>
-import moment from 'moment'
-
 export default {
   name: 'MatchRow',
   props: {

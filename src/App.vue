@@ -171,4 +171,8 @@ export default {
   color: #5e5e5e !important;
 }
 
+::v-deep .preview .v-input--dense > .v-input__control > .v-input__slot {
+    margin-bottom: 5px !important;
+}
+
 </style>

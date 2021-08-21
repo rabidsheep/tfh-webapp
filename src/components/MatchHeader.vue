@@ -4,7 +4,8 @@
       class="btn">
         <router-link
         class="edit"
-        :to="`edit?id=${_id}`">
+        :to="`/`">
+        <!-- edit?id=${_id} -->
           <v-icon
           size="30px"
           color="accent">

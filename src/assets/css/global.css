@@ -270,7 +270,7 @@ a {
 }
 
 .match {
-    padding: 10px 0px;
+    padding: 15px 0px;
 }
 
 .match-group > div:not(:last-of-type):not(.header) {
@@ -414,14 +414,9 @@ a {
     margin-left: 0px;
 }
 
-.xsmall .match .player,
-.xsmall .match .link {
-    padding-top: 10px;
-}
-
 .xsmall .match .p2,
 .xsmall .match .video {
-    padding-bottom: 10px;
+    padding-top: 10px;
 }
 
 .small .match .player .character {

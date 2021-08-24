@@ -6,8 +6,12 @@
         class="edit"
         :to="{
           path: 'edit',
-          query: edit
-          
+          query: group.tournament ?
+          { tournamentId: group.id,
+          videoId: group.videoId,
+          fromUser: group.uploadedBy }
+           :
+          { matchId: group.id }
         }">
         <!-- edit?id=${_id} -->
           <v-icon
@@ -34,17 +38,17 @@
         <v-col
         cols="12">
           <v-row>
-            <template v-if="tournament">
-              <p>{{ tournament.name }}
+            <template v-if="group.tournament">
+              <p>{{ group.tournament.name }}
 
-              <template v-if="tournament.num">
-                {{ tournament.num }}
+              <template v-if="group.tournament.num">
+                {{ group.tournament.num }}
               </template>
               </p>
 
               <div class="mr-1 ml-1">|</div>
 
-              <p>{{ _id.tournament.date }}</p>
+              <p>{{ group.tournament.date }}</p>
             </template>
 
             <template v-else>
@@ -62,8 +66,9 @@ import moment from 'moment'
 export default {
   name: 'MatchHeader',
   props: {
-    _id: Object,
-    tournament: [Object, null],
+    group: Object,
+    matchId: [String, null],
+    tournamentId: [String, null],
     uploaded: String,
     timezone: String,
   },
@@ -78,39 +83,12 @@ export default {
   mounted() {
 
   },
-  computed: {
-    edit: function() {
-      return this.generateEditUrl(this.tournament)
-    }
-  },
   created() {
       /* convert timestamp to date and format it */
       this.date = moment(this.uploaded).local(true).format('MM-DD-YYYY')
       this.time = moment(this.uploaded).local(true).format('HH:mm')
   },
   methods: {
-    generateEditUrl(tournament) {
-      /*let edit = ''
-      if (tournament) {
-        edit = `edit?tournament.name=${tournament.name}`
-        
-        if (tournament.num) {
-          edit += `&tournament.num=${tournament.num}`
-        }
-        
-        edit += `&tournament.date=${tournament.date}`
-      } else {
-        edit = `edit?id=${this._id.id}`
-      }*/
-
-      if (tournament) {
-        return { tournament: JSON.stringify(tournament) }
-      } else {
-        return { id: this._id.id }
-      }
-
-      return edit
-    }
   }
 }
 </script>

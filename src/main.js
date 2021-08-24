@@ -6,6 +6,8 @@ import './plugins/globals.js'
 
 Vue.config.productionTip = false
 
+export const reset = new Vue()
+
 new Vue({
   vuetify,
   router,

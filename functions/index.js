@@ -38,8 +38,6 @@ api.get('/matches', (req, res) => {
     let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
     let query = {}
 
-    console.log(req.query)
-
     if (players) {
         for (let i = 0; i < players.length; i++) {
             if (players[i].name) {
@@ -55,22 +53,14 @@ api.get('/matches', (req, res) => {
 
         query = formatQuery(players, req.query.strict, unfiltered)
     } else {
-        query = (req.query.tournament ?
-            {'tournament': {
-                name: req.query.tournament.name,
-                num: req.query.tournament.num !== '' ? req.query.tournament.num : null,
-                date: req.query.tournament.date
-            }
-            } :
-            {'_id': mongo.ObjectId(req.query.id)}
-            
-            )
+        query = (req.query.tournamentId ?
+                { 'tournament.id': req.query.tournamentId,
+                'video.id': req.query.videoId,
+                'userId': req.query.fromUser } :
+            { '_id': mongo.ObjectId(req.query.matchId) }
+        )
     }
     
-    console.log(query)
-
-    
-
     const pipeline = [
         { '$match': query },
         { '$group': {
@@ -85,7 +75,10 @@ api.get('/matches', (req, res) => {
                             num: '$tournament.num',
                             date: '$tournament.date',
                         },
+                        id: '$tournament.id',
                         type: '$type',
+                        videoId: '$video.id',
+                        uploadedBy: '$userId',
                     },
                     else: {
                         '$cond': {
@@ -115,8 +108,10 @@ api.get('/matches', (req, res) => {
             },
             matches: {
                 '$push': {
+                    _id: '$_id',
                     userId: '$userId',
                     file: '$file',
+                    type: '$type',
                     p1: '$p1',
                     p2: '$p2',
                     uploadDate: '$uploadDate',
@@ -132,10 +127,8 @@ api.get('/matches', (req, res) => {
     .then((client) => {
         console.log('Connected @ %s', (new Date()).toLocaleString())
         console.log('Filtering with query:\n', query)
-        //let db = client.db('tfhr').collection('matches').find(query)
 
         return Promise.all([
-            //db,
             client
             .db('tfhr')
             .collection('matches')
@@ -160,7 +153,6 @@ api.get('/matches', (req, res) => {
     .then((results) => {
         return res.status(200).send({
             count: results[0].length,
-            //matches: results[1],
             groups: results[1]})
     })
     .catch((error) => res.status(400).send(error.toString()))
@@ -168,6 +160,161 @@ api.get('/matches', (req, res) => {
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
+    //let upload = req.body
+    let players = []
+    let form = parseInt(req.body.form)
+    
+
+    let matches = req.body.matches.map((match) => {
+        if (!players.includes(match.p1.name)) players.push(match.p1.name)
+        if (!players.includes(match.p2.name)) players.push(match.p2.name)
+
+        // might not need?
+        if (match.video && match.video.id && form !== 1) {
+            let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
+
+            return axios.get(url)
+            .then((youtube) => {
+                if (youtube.data.items.length > 0) {
+                    console.log("Successfully retrieved Youtube data")
+
+                    match.video.title = youtube.data.items[0].snippet.title
+                    match.video.date = youtube.data.items[0].snippet.publishedAt.split('T')[0]
+
+                    match.video.channel = {
+                        id: youtube.data.items[0].snippet.channelId,
+                        name: youtube.data.items[0].snippet.channelTitle
+                    }
+                    
+                } else {
+                    console.log("Failed to retrieve Youtube data")
+                }
+
+                return match
+            })
+            .catch((error) => res.status(400).send(error.toString()))
+        } else {
+            return match
+        }
+    })
+
+    let tournament = (req.body.matches[0].tournament ?
+        req.body.matches[0].tournament :
+        null)
+
+    // universal database call
+    let connectToDb = Promise.all(matches).then((matches) => {
+        return Promise.all([
+            matches,
+            MongoClient.connect(dbUrl, { useUnifiedTopology: true  })
+        ])
+    })
+
+    let chain = null
+
+    
+    if (tournament) {
+        // chain for tournament uploads
+        chain = connectToDb
+        .then((results) => {
+            let matches = results[0]
+            console.log('Connected.\nUploading match...')
+    
+            let db = results[1].db('tfhr')
+            return Promise.all([
+                db,
+                matches,
+                db.collection('tournaments')
+                .findOneAndUpdate(
+                    {
+                        name: tournament.name,
+                        num: tournament.num,
+                        date: tournament.date
+                    },
+                    
+                    {
+                        $set: {
+                            name: tournament.name,
+                            num: tournament.num,
+                            date: tournament.date
+                            
+                        },
+                    },
+                    { upsert: true, new: true }
+                )
+            ])
+        })
+        .then((results) => {
+            let db = results[0]
+            let matches = results[1]
+
+            let tournamentId = (results[2].value ?
+            results[2].value._id :
+            results[2].lastErrorObject.upserted).toString()
+
+            return Promise.all([
+                db,
+                matches.map((match) => {
+                    match.tournament.id = tournamentId
+                    return match
+                })
+            ])
+        })
+    } else {
+        // chain for casual uploads
+        chain = connectToDb.then((results) => {
+            let matches = results[0]
+            console.log('Connected.\nUploading match...')
+    
+            let db = results[1].db('tfhr')
+
+            
+            return Promise.all([
+                db,
+                matches,
+            ])
+        })
+    }
+    
+    // end of all chains
+    chain.then((results) => {
+        let db = results[0]
+        let matches = results[1]
+
+        return Promise.all([
+                db,
+                db.collection('matches')
+                .insertMany(matches),
+        ])
+    })
+    .then((results) => {
+        let db = results[0]
+        let matchIds = (Object.values(results[1].insertedIds)).map(id => id.toString())
+
+        console.log('Matches uploaded:')
+
+        for (id in matchIds) {
+            console.log(matchIds[id])
+        }
+
+        for (i in players) {
+            db.collection('players')
+            .updateOne(
+                { 'name': players[i] },
+                { $setOnInsert: { 'name': players[i] }},
+                { upsert: true }
+            )
+        }
+
+        return matchIds
+    })
+    .then((ids) => { 
+        return res.status(200).send({matchIds: ids})
+    })
+    .catch((error) => res.status(400).send(error.toString()))
+})
+
+api.put('/matches/update', (req, res) => {
     //let upload = req.body
     let players = []
     let matches = req.body.map((match) => {
@@ -203,10 +350,10 @@ api.put('/matches', (req, res) => {
     })
 
     Promise.all(matches).then((matches) => {
-        return Promise.all(
-            [matches,
-            MongoClient.connect(dbUrl, { useUnifiedTopology: true  })]
-            )
+        return Promise.all([
+            matches,
+            MongoClient.connect(dbUrl, { useUnifiedTopology: true  })
+        ])
     })
     .then((results) => {
         let matches = results[0]
@@ -214,42 +361,30 @@ api.put('/matches', (req, res) => {
 
         let db = results[1].db('tfhr')
         
-        return Promise.all([
-            db,
+        for (i in matches) {
+            console.log(matches[i].p1.name)
             db.collection('matches')
-            .insertMany(matches),      
-        ])
-    })
-    .then((results) => {
-        let db = results[0]
-        let matchIds = (Object.values(results[1].insertedIds)).map(id => id.toString())
-
-        console.log('Matches uploaded:')
-
-        for (id in matchIds) {
-            console.log(matchIds[id])
-        }
-
-        for (i in players) {
-            db.collection('players')
             .updateOne(
-                { 'name': players[i] },
-                { $setOnInsert: { 'name': players[i] }},
-                { upsert: true }
+                { _id: mongo.ObjectId(matches[i]._id) },
+                { $set: {
+                    p1: matches[i].p1,
+                    p2: matches[i].p2,
+                    video: matches[i].video,
+                }},
             )
         }
 
-        return matchIds
+        return null
     })
-    .then((ids) => { 
-        return res.status(200).send({matchIds: ids})
+    .then(() => { 
+        return res.status(200).send()
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** get list of currently existing players in db */
 api.get('/players', (req, res) => {
-    MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+    /*MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
         return client
         .db('tfhr')
@@ -259,6 +394,56 @@ api.get('/players', (req, res) => {
      .then((result) => {
         console.log('Returning players list.')
         return res.status(200).send({ players: result })
+    })
+    .catch((error) => res.status(400).send(error.toString()))*/
+
+    MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+    .then((client) => {
+        return client
+        .db('tfhr')
+        .collection('matches')
+        .aggregate([
+            {'$group': {
+                _id: null,
+                'p1': {'$addToSet': '$p1.name'},
+                'p2': {'$addToSet': '$p2.name'} 
+            }},
+            {'$project': {
+                'players': {'$setUnion': ['$p1', '$p2']}
+            }}
+        ])
+        .toArray()
+     })
+     .then((result) => {
+        console.log('Returning players list.')
+        return res.status(200).send({ players: result[0].players })
+    })
+    .catch((error) => res.status(400).send(error.toString()))
+})
+
+api.get('/tournaments', (req, res) => {
+    MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+    .then((client) => {
+        return client
+        .db('tfhr')
+        .collection('matches')
+        .aggregate([
+            {'$group': {
+                _id: '$tournament.name',
+                nums: {
+                    '$addToSet': {
+                        num: '$tournament.num',
+                        date: '$tournament.date'
+                    }
+                }
+            }}
+        ])
+        .toArray()
+     })
+     .then((result) => {
+        console.log('Returning tournament list.')
+        console.log(result)
+        return res.status(200).send({ tournaments: result })
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
@@ -274,16 +459,21 @@ api.get('/users', (req, res) => {
         res.status(403).send('Unauthorized')
     }
 
-    admin.auth()
-    .verifyIdToken(req.headers.authorization)
-    .then(() => {
-        console.log('Connecting to client')
-        return MongoClient.connect(dbUrl, { useUnifiedTopology: true })
-    })
+    if (dev) {
+        ref = MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+    } else {
+        ref = admin.auth()
+        .verifyIdToken(req.headers.authorization)
+        .then(() => {
+            return MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+        })
+    }
+
+    ref
     .then((client) => {
         console.log('Retrieving user info')
 
-        return client.db()
+        return client.db('tfhr')
         .collection('users')
         .find(req.query)
         .toArray()
@@ -302,14 +492,21 @@ api.put('/users', (req, res) => {
     }
 
     let user = req.body
+    let ref = null
 
-    admin.auth()
-    .verifyIdToken(req.headers.authorization)
-    .then(() => {
-        return MongoClient.connect(dbUrl, { useUnifiedTopology: true })
-    })
-    .then((client) => { 
-        client.db()
+    if (dev) {
+        ref = MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+    } else {
+        ref = admin.auth()
+        .verifyIdToken(req.headers.authorization)
+        .then(() => {
+            return MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+        })
+    }
+
+    ref.then((client) => { 
+        console.log('Creating user')
+        client.db('tfhr')
         .collection('users')
         .updateOne({ uid: user.uid }, { $set: { email: user.email } }, { upsert: true })
 
@@ -365,6 +562,7 @@ api.get('/youtube-data', (req, res) => {
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
+
 
 
 exports.api = functions.https.onRequest(api)

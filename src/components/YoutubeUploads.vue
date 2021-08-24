@@ -236,6 +236,7 @@ export default {
     },
     data: () => {
         return {
+            form: 1,
             valid: false,
             loading: false,
             url: '',
@@ -299,57 +300,44 @@ export default {
         },
         validateYoutubeID() {
 
-            this.vid = null
-            
-            if (this.$refs.url.valid) {
-                this.vid = this.url.match(this.$regex.ytId)[1]
-            } else {
-                this.invalidId = true;
-                return
-            }
+            this.vid = this.url.match(this.$regex.ytId)[1]
+
 
             this.url = "https://youtu.be/watch?v=" + this.vid
             this.loading = true
             
             this.video = {}
+            let youtubeRef = null
 
             if (process.env.NODE_ENV === "production") {
-                this.setAuthToken()
-                .then(() => {
+                youtubeRef = this.setAuthToken().then(() => {
                     console.log('Retrieving Youtube data')
                     return this.$youtubeData.get({ v: this.vid })
                 })
-                .then((response) => {
-                    this.loading = false
-                    this.error = false
-                    if (response.ok) {
-                        this.video = response.body
-                        this.invalidId = false
-                        this.currentDescription = this.video.description
-                        this.tournament.name = this.video.title
-                    }
-                })
-                .catch(() => {
-                    this.invalidId = true
-                    this.loading = false
-                })
             } else {
-                this.$youtubeData.get({ v: this.vid })
-                .then((response) => {
-                    this.loading = false
-                    this.error = false
-                    if (response.ok) {
-                        this.video = response.body
-                        this.invalidId = false
-                        this.currentDescription = this.video.description
-                        this.tournament.name = this.video.title
-                    }
-                })
-                .catch(() => {
-                    this.invalidId = true
-                    this.loading = false
-                })
+                youtubeRef = this.$youtubeData.get({ v: this.vid })
             }
+
+            youtubeRef.then((response) => {
+                
+                if (response.ok) {
+                    this.video = response.body
+                    this.invalidId = false
+                    this.currentDescription = this.video.description
+                    this.tournament.name = this.video.title
+                    this.tournament.date = this.video.date
+
+                    this.parseVideoDescription(this.currentDescription)
+                }
+                this.loading = false
+                this.error = false
+            })
+            .catch((error) => {
+                this.invalidId = true
+                this.loading = false
+                console.log(error)
+            })
+            
         },
         setAuthToken: function () {
             return this.$firebase.auth().currentUser.getIdToken()
@@ -442,7 +430,7 @@ export default {
 
             console.log(JSON.parse(JSON.stringify(matches)))
 
-            this.$matches.save(matches).then((response) => {
+            this.$matches.save({matches: matches, form: this.form}).then((response) => {
                 if (response.ok) {
                     console.log('Uploaded matches:')
                     for (const i in response.body.matchIds) {
@@ -491,6 +479,14 @@ export default {
             this.matches = []
             this.youtube = {}
             this.video = {}
+            this.vid = null
+            this.tournament = {
+                name: null,
+                num: null,
+                date: null
+            }
+            this.currentDescription = null
+            this.invalidId = false
             this.parsed = false
             this.url = null
             this.finished = false

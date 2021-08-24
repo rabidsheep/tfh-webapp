@@ -18,7 +18,7 @@
 
         <v-spacer />
 
-        <v-divider vertical />
+        <!--<v-divider vertical />
 
         <v-toolbar-items>
           <v-col
@@ -26,7 +26,7 @@
           align="center">
             {{ userId ? 'Signed In' : 'Logged Out' }}
           </v-col>
-        </v-toolbar-items>
+        </v-toolbar-items>-->
     </v-toolbar>
 
     <v-main>
@@ -57,64 +57,64 @@ export default {
       get userId() {
         return localStorage.getItem('user')
       },
-      userId: null,
+      user: null,
       componentKey: 0,
     }
   },
   mounted: function () {
-    if (!localStorage.getItem('user')) {
-      this.$firebase.auth()
+      /*this.$firebase.auth()
       .onAuthStateChanged((user) => {
           
         if (!user) {
-          
-          localStorage.removeItem('user')
+          console.log('User is signed out')
+          //this.user = this.$firebase.auth().currentUser
+          console.log(this.user)
           return null
-        }
+        } else {
+          
+          
+          if (process.env.NODE_ENV == "production") {
+            // only run this in production environment
+            console.log("Production Environment")
 
-        if (process.env.NODE_ENV == "production") {
-          console.log("Production Environment")
+            this.setAuthToken()
+            .then(() => {
+                console.log('Checking user')
+                this.loggingIn = true
+                return this.$users.get({ uid: user.uid })
+            })
+            .then((response) => {
+                let userData = response.body[0]
+                if (userData) {
+                    console.log("Retrieved user data")
 
-          this.setAuthToken()
-          .then(() => {
-              console.log('Checking user')
-              this.loggingIn = true
-              return this.$users.get({ uid: user.uid })
-          })
-          .then((response) => {
-              let user = response.body[0]
-              if (user) {
-                  console.log("Retrieved user data")
+                    this.isAdmin = userData.admin
+                    this.userId = user.uid
+                    //localStorage.setItem('user', user.uid)
+                } else {
+                    console.log("No account found")
+                }
 
-                  this.isAdmin = user.admin
-                  this.userId = user.uid
-
-                  localStorage.setItem('user', user.uid)
-              } else {
-                  console.log("Not logged in")
-                  localStorage.removeItem('user')
-              }
-          })
-          .catch((error) => {
-              console.log(error)
-          })
-      } else {
-          if (user) {
-              console.log('Signed in')
-              this.uid = user.uid
-              this.userId = user.uid
-              
-              localStorage.setItem('user', user.uid)
+                
+            })
+            .catch((error) => {
+                console.log(error)
+            })
           } else {
-            
-              localStorage.removeItem('user')
-              console.log('Signed out')
+            // only run this in dev environment
+            console.log("Development Environment")
+        
+            console.log('Signed in')
+            this.uid = user.uid
+            this.userId = user.uid
+            //this.user = this.$firebase.auth().currentUser
+            console.log(this.user)
           }
+
+          console.log('User is signed in')
         }
-      })
-    } else {
-      this.userId = localStorage.getItem('user')
-    }
+      })*/
+    
   },
   watch: {
     onScroll: function (event) {
@@ -134,7 +134,7 @@ export default {
       .catch((error) => console.log(error))
     },
     forceRerender(e) {
-      if (this.$route.path === '/' && e.ctrlKey === 'false') {
+      if (this.$route.path === '/' && e.ctrlKey !== 'false') {
         return this.componentKey === 0 ? 1 : 0
       }
     }

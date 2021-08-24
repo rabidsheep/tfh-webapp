@@ -205,6 +205,7 @@ export default {
     },
     data: () => {
         return {
+            form: 0,
             hidden: true,
             datepicker: false,
             date: null,
@@ -306,7 +307,7 @@ export default {
 
             console.log(JSON.parse(JSON.stringify(matches)))
 
-            this.$matches.save(matches).then((response) => {
+            this.$matches.save({matches: matches, form: this.form}).then((response) => {
                 if (response.ok) {
                     console.log('Uploaded matches:')
                     for (const i in response.body.matchIds) {

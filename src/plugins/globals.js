@@ -36,10 +36,15 @@ let matchesMethods = {
 }
 let matchesRes = Vue.resource(`${uri}/matches/`, {}, matchesMethods)
 
+let updateMethods = {
+  save: { method: 'PUT' },
+  delete: { method: 'DELETE' }
+}
+let updateRes = Vue.resource(`${uri}/matches/update`, {}, updateMethods)
+
 let filesMethods = {
   save: { method: 'PUT' }
 }
-
 let filesRes = Vue.resource(`${uri}/files`, {}, filesMethods)
 
 let playerMethods = {
@@ -53,6 +58,10 @@ let usersMethods = {
 }
 let usersRes = Vue.resource(`${uri}/users/`, {}, usersMethods)
 
+let tournamentMethods = {
+  get: { method: 'GET' }
+}
+let tournamentRes = Vue.resource(`${uri}/tournaments/`, {}, tournamentMethods)
 
 let youtubeMethods = {
   get: { method: 'GET' }
@@ -77,12 +86,20 @@ Vue.use({
       get () { return matchesRes }
     })
 
+    Object.defineProperty(Vue.prototype, '$update', {
+      get () { return updateRes }
+    })
+
     Object.defineProperty(Vue.prototype, '$players', {
       get () { return playerRes }
     })
 
     Object.defineProperty(Vue.prototype, '$users', {
       get () { return usersRes }
+    })
+
+    Object.defineProperty(Vue.prototype, '$tournaments', {
+      get () { return tournamentRes }
     })
 
     Object.defineProperty(Vue.prototype, '$youtubeData', {

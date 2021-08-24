@@ -35,6 +35,7 @@
 
                         <v-layout
                         class="body"
+                        v-show="!$firebase.auth().currentUser && !loggingIn"
                         column
                         justify-center
                         align-center>
@@ -42,27 +43,31 @@
                             color="button2"
                             height="50"
                             rounded
-                            v-show="!$firebase.auth().currentUser"
                             @click="signIn('google')">
                                 <v-icon left>mdi-google</v-icon>
                                 Google
                             </v-btn>
+                            <!--
+                            <v-btn height="50"
+                            v-show="!$firebase.auth().currentUser"
+                            @click="signIn('twitter')">
+                                <v-icon left>mdi-twitter</v-icon> Twitter
+                            </v-btn>
+                            -->
                         </v-layout>
 
                         <v-progress-linear
                         color="accent"
                         indeterminate
-                        v-show="$firebase.auth().currentUser || loggingIn"/>
+                        v-show="loggingIn"/>
 
-                        <template v-if="$firebase.auth().currentUser || loggingIn">
-                            <br />
+                        <template v-if="loggingIn">
+                            <div style="width: 100%;"><br /></div>
                             {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
                         </template>
 
                         
-                        <!--<v-btn height="50" v-show="!$firebase.auth().currentUser" @click="signIn('twitter')">
-                            <v-icon left>mdi-twitter</v-icon> Twitter
-                        </v-btn>-->
+                        
                     </v-layout>
                 </v-stepper-content>
 
@@ -151,7 +156,6 @@ export default {
     },
     name: 'Uploads',
     props: {
-        userId: [String, null]
     },
     data: () => {
         return {
@@ -167,98 +171,84 @@ export default {
             loggingIn: false,
         }
     },
+    watch: {
+    },
     mounted: function () {
-        if (!localStorage.getItem('user')) {
-            this.$firebase.auth().onAuthStateChanged((user) => {
-                
-                if (!user) {
-                    localStorage.removeItem('user')
+        if (this.$firebase.auth().currentUser) {
+            this.step = 2
+        } else {
+            this.step = 1
+        }
+
+        // auth state watcher
+        this.$firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                    this.uid = null
                     this.step = 1
                     return
-                }
+            } else {
+                let loginRef = null
 
                 if (process.env.NODE_ENV == "production") {
                     console.log("Production Environment")
 
-                    this.setAuthToken()
+                    loginRef = this.setAuthToken()
                     .then(() => {
                         console.log('Checking user')
-                        this.loggingIn = true
                         return this.$users.get({ uid: user.uid })
                     })
-                    .then((response) => {
-                        let userData = response.body[0]
-                        this.uid = user.uid
 
-                        if (userData) {
-                            console.log("Retrieved user data")
-                            localStorage.setItem('user', user.uid)
-
-                            this.isAdmin = userData.admin
-                            this.loading = false
-                            this.loggingIn = false
-                            
-                            this.step = 2
-                            
-                        } else {
-                            console.log("Creating new user")
-
-                            this.isRegistered = false
-
-                            let newUser = {
-                                uid: user.uid,
-                                email: user.email,
-                                admin: false
-                            }
-
-                            this.$users.save(newUser)
-                            .then(() => {
-                                console.log('User created')
-                                
-                                localStorage.setItem('user', user.uid)
-                                this.loading = false
-                                this.isRegistered = true
-                                this.loggingIn = false
-                                this.step = 2
-                                
-                            })
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error)
-                    })
                 } else {
-                    if (user) {
-                        console.log('Signed in')
+                    console.log("Dev Environment")
 
-                        localStorage.setItem('user', user.uid)
-                        this.uid = user.uid
-                        this.loading = false;
-                        this.step = 2
+                    loginRef = this.$users.get({ uid: user.uid })
+                }
+
+                loginRef.then((response) => {
+                    let userData = response.body[0]
+                    this.uid = user.uid
+
+                    if (userData) {
+                        console.log("Retrieved user data")
+
+                        this.isAdmin = userData.admin
                         
                     } else {
-                        console.log('Signed out')
+                        console.log("Creating new user")
 
-                        localStorage.removeItem('user')
+                        this.isRegistered = false
+
+                        let newUser = {
+                            uid: user.uid,
+                            email: user.email,
+                            admin: false
+                        }
+
+                        return this.$users.save(newUser)
+                        .then(() => {
+                            console.log('User created') 
+                        })
                     }
-
-                }
-            })
-        } else {
-            console.log("Skipping sign in")
-
-            this.uid = localStorage.getItem('user')
-            this.loading = false
-            this.step = 2
-        }
+                })
+                .then(() => {
+                    this.loading = false
+                    this.isRegistered = true
+                    this.loggingIn = false
+                    this.uid = user.uid
+                    this.step = 2
+                })
+                .catch((error) => {
+                    console.log(error)
+                })
+            }
+        })
     },
     methods: {
         signIn: function (providerName) {
+            this.loading = true
+            this.loggingIn = true
             this.$firebase.auth()
             .signInWithPopup(this.$providers[providerName])
-            .then(() => {
-                this.loading = false
-            })
             .catch((error) => {
                 console.log(error)
                 this.loading = false

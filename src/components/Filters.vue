@@ -56,8 +56,6 @@
                     <v-col
                     class="btns"
                     :cols="$vuetify.breakpoint.smAndDown ? 12 : 1">
-                        
-
                         <v-col
                         class="swap"
                         cols="12">
@@ -84,8 +82,74 @@
                         hide-details/>
                     </v-row>
                 </v-row>
+    
+                <v-row
+                justify="center"
+                class="tournaments">
+                    <v-col
+                    cols="4">
+                        <v-combobox
+                        clearable
+                        v-model="tournamentInfo.name"
+                        append-icon=""
+                        :menu-props="{
+                            contentClass: 'tournament-select-menu',
+                            bottom: true,
+                            offsetY: true,
+                            maxHeight: '200'
+                            }"
+                        label="Tournament"
+                        :items="tournamentList"
+                        item-text="_id"
+                        item-value="_id"
+                        :search-input.sync="tournamentSearch"
+                        @change="updateNumList(tournamentInfo.name)"
+                        counter="64">
+                            <template v-slot:no-data>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title>
+                                            No results matching "<strong>{{ tournamentSearch }}</strong>".
+                                        </v-list-item-title>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </template>
+                        </v-combobox>
+                    </v-col>
 
-                
+                    <v-col
+                    cols="1">
+                        <v-combobox
+                        clearable
+                        v-model="tournamentInfo.num"
+                        append-icon=""
+                        :menu-props="{
+                            contentClass: 'tournament-num-select-menu',
+                            bottom: true,
+                            offsetY: true,
+                            maxHeight: '200'
+                            }"
+                            
+                        minWidth="32px"
+                        label="No."
+                        :items="numList"
+                        :disabled="!tournamentInfo.name"
+                        item-text="num"
+                        item-value="num"
+                        :search-input.sync="numSearch"
+                        counter="64">
+                            <template v-slot:no-data>
+                                <v-list-item>
+                                    <v-list-item-content>
+                                        <v-list-item-title>
+                                            No results matching "<strong>{{ numSearch }}</strong>".
+                                        </v-list-item-title>
+                                    </v-list-item-content>
+                                </v-list-item>
+                            </template>
+                        </v-combobox>
+                    </v-col>
+                </v-row>
 
                 <v-row align="center" justify="center">
                     <v-btn
@@ -110,6 +174,7 @@ export default {
     },
     props: {
         players: Array,
+        tournament: Object,
     },
     data: () => {
         return {
@@ -117,11 +182,25 @@ export default {
                 {name: null, character: null},
                 {name: null, character: null}
             ],
+            tournamentInfo: {
+                name: null,
+                num: null,
+                date: null,
+            },
             search: [],
+            tournamentSearch: null,
             hidden: false,
             playerList: [],
             strict: false,
+            tournamentList: [],
+            numSearch: null,
+            numList: [],
+            dateList: [],
+            dateSearch: null,
         }
+    },
+    computed: {
+
     },
     watch: {
         'playerInfo': {
@@ -137,8 +216,21 @@ export default {
     mounted: function() {
         this.$emit('update-filter', this.playerInfo)
         this.loadPlayers()
+        this.loadTournaments()
     },
     methods: {
+        updateNumList(tournament) {
+            if (tournament) {
+                let index = this.tournamentList.findIndex((t) => 
+                 t._id === tournament._id
+            )
+
+                this.numList = this.tournamentList[index].nums
+            } else {
+                this.numList = null
+                this.dateList = null
+            }
+        },
         loadPlayers: function() {
 
             this.$players.get()
@@ -154,6 +246,21 @@ export default {
             })
             .catch((error) => console.log(error))
 
+        },
+        loadTournaments: function() {
+            this.$tournaments.get()
+            .then((response) => {
+                if (response.ok) {
+                    this.error = false
+                    this.tournamentList = response.body.tournaments
+                    console.log(this.tournamentList)
+                } else {
+                    this.error = true
+                    this.errorMsg = `${response.status}: ${response.statusText}`
+                    console.log("Error retrieving tournament list.\n", this.errorMsg)
+                }
+            })
+            .catch((error) => console.log(error))
         },
         selectCharacter: function (character, i) {
             if (character !== this.players[i].character) {

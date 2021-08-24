@@ -24,8 +24,7 @@
         v-for="(group, i) in groups"
         :key="i">
           <MatchHeader
-          :tournament="group._id.tournament ? group._id.tournament : null"
-          v-bind="group"
+          :group="group._id"
           :timezone="timezone"/>
 
           <MatchRow
@@ -90,6 +89,7 @@ export default {
         {name: null, character: null},
         {name: null, character: null}
       ],
+      user: null,
       strict: false,
       matches: [],
       groups: [],
@@ -103,7 +103,6 @@ export default {
     }
   },
   mounted() {
-    
   },
   watch: {
     'players': {

@@ -5,7 +5,7 @@
     justify="center">
       <v-col class="players" cols="10">
         <v-col
-        :cols="$vuetify.breakpoint.xsOnly ? 12 : 6"
+        :cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
         :class="`player p${i+1}`"
         v-for="(player, i) in [p1, p2]"
         :key="i">
@@ -25,7 +25,7 @@
         </v-col>
 
         <v-col
-        v-show="!$vuetify.breakpoint.xsOnly"
+        v-show="!$vuetify.breakpoint.smAndDown"
         class="vs">
         vs
         </v-col>
@@ -34,7 +34,7 @@
       <v-col
       class="links">
         <v-col
-        :cols="$vuetify.breakpoint.xsOnly? 12 : undefined"
+        :cols="$vuetify.breakpoint.smAndDown? 12 : undefined"
         :class="i === 1 ? 'file link' : 'video link'"
         v-for="i in 2"
         :key="i">

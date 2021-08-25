@@ -39,16 +39,9 @@
         cols="12">
           <v-row>
             <template v-if="group.tournament">
-              <p>{{ group.tournament.name }}
-
-              <template v-if="group.tournament.num">
-                {{ group.tournament.num }}
-              </template>
-              </p>
-
-              <div class="mr-1 ml-1">|</div>
-
-              <p>{{ group.tournament.date }}</p>
+              <p>{{ group.tournament.num ?
+                group.tournament.name + ' ' + group.tournament.num + ' | ' + group.tournament.date :
+                group.tournament.name + ' | ' + group.tournament.date }}</p>
             </template>
 
             <template v-else>
@@ -72,8 +65,6 @@ export default {
     uploaded: String,
     timezone: String,
   },
-  mounted: function() {
-  },
   data: () => {
     return {
       date: null,
@@ -81,14 +72,8 @@ export default {
     }
   },
   mounted() {
-
+    this.date = moment(this.uploaded).local(true).format('MM-DD-YYYY')
+    this.time = moment(this.uploaded).local(true).format('HH:mm')
   },
-  created() {
-      /* convert timestamp to date and format it */
-      this.date = moment(this.uploaded).local(true).format('MM-DD-YYYY')
-      this.time = moment(this.uploaded).local(true).format('HH:mm')
-  },
-  methods: {
-  }
 }
 </script>

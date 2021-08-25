@@ -30,17 +30,19 @@
     </v-toolbar>
 
     <v-main>
-      <v-layout column align-center>
+      <v-layout column align-center justify-center>
         <div id="router-view"
         :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
           <router-view :key="componentKey" />
         </div>
       </v-layout>
+
     </v-main>
 
-    <v-container class="footer">
+
+    <v-container id="footer" class="pb-4">
       <v-row>
-        <v-col class="copyright">
+        <v-col class="copyright pa-0">
           THEM’S FIGHTIN’ HERDS ® & © 2017-2020 Mane6, Inc.
           <br />
           THEM’S FIGHTIN’ HERDS is a registered trademark of Mane6, Inc.
@@ -54,10 +56,6 @@
 export default {
   data: () => {
     return {
-      get userId() {
-        return localStorage.getItem('user')
-      },
-      user: null,
       componentKey: 0,
     }
   },
@@ -176,6 +174,11 @@ export default {
 
 ::v-deep .preview .v-input--dense > .v-input__control > .v-input__slot {
     margin-bottom: 5px !important;
+}
+
+::v-deep .v-main__wrap {
+  display: flex;
+  padding: 24px 0px;
 }
 
 </style>

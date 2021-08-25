@@ -27,18 +27,18 @@ const itemsPerPage = 5
 
 /** retrieve match count and filter results */
 api.get('/matches', (req, res) => {
-    /*let query = (
-        req.query.players ?
-        formatQuery(req.query.players, req.query.strict) :
-        (req.query.id ? {'_id': mongo.ObjectId(req.query.id)} : {})
-    )*/
-    
-    let players = req.query.players
-    let unfiltered = true
-    let skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
     let query = {}
+    let skip = 0
 
-    if (players) {
+    if (req.query.filters) {
+        let players = req.query.filters.players
+        let strict = req.query.filters.strict
+        let tournament = req.query.filters.tournament.name ? req.query.filters.tournament : null
+        let type = req.query.filters.type
+        let unfiltered = true
+        skip = req.query.filters.page > 0 ? (req.query.filters.page - 1) * itemsPerPage : 0
+
+
         for (let i = 0; i < players.length; i++) {
             if (players[i].name) {
                 unfiltered = false
@@ -51,12 +51,14 @@ api.get('/matches', (req, res) => {
             }
         }
 
-        query = formatQuery(players, req.query.strict, unfiltered)
+        query = formatQuery(players, strict, unfiltered, tournament, type)
     } else {
-        query = (req.query.tournamentId ?
-                { 'tournament.id': req.query.tournamentId,
+        query = ( req.query.tournamentId ?
+            {
+                'tournament.id': req.query.tournamentId,
                 'video.id': req.query.videoId,
-                'userId': req.query.fromUser } :
+                'userId': req.query.fromUser
+            } :
             { '_id': mongo.ObjectId(req.query.matchId) }
         )
     }
@@ -81,6 +83,7 @@ api.get('/matches', (req, res) => {
                         uploadedBy: '$userId',
                     },
                     else: {
+                        // can probably delete conditional ?
                         '$cond': {
                             if: {
                                 '$eq': ['$linked', true]
@@ -95,11 +98,9 @@ api.get('/matches', (req, res) => {
                                 type: '$type',
                             }
                         }
-                        
                     }
                 }
             },
-            
             // initial upload date
             uploaded: {
                 '$first': {
@@ -129,6 +130,8 @@ api.get('/matches', (req, res) => {
         console.log('Filtering with query:\n', query)
 
         return Promise.all([
+            // for getting result count
+            // need to use length instead of count -- if no matches then count will be undefined
             client
             .db('tfhr')
             .collection('matches')
@@ -136,14 +139,13 @@ api.get('/matches', (req, res) => {
                 ...pipeline
             ])
             .toArray(),
+            // for getting matches to display on current page
             client
             .db('tfhr')
             .collection('matches')
             .aggregate([
                 ...pipeline,
-                { '$sort': {
-                    uploaded: -1,
-                }},
+                { '$sort': { uploaded: -1 } },
                 { '$skip': skip },
                 { '$limit': itemsPerPage }
             ])
@@ -153,14 +155,14 @@ api.get('/matches', (req, res) => {
     .then((results) => {
         return res.status(200).send({
             count: results[0].length,
-            groups: results[1]})
+            groups: results[1]
+        })
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
-    //let upload = req.body
     let players = []
     let form = parseInt(req.body.form)
     
@@ -198,9 +200,7 @@ api.put('/matches', (req, res) => {
         }
     })
 
-    let tournament = (req.body.matches[0].tournament ?
-        req.body.matches[0].tournament :
-        null)
+    let tournament = req.body.matches[0].tournament ? req.body.matches[0].tournament : null
 
     // universal database call
     let connectToDb = Promise.all(matches).then((matches) => {
@@ -212,7 +212,6 @@ api.put('/matches', (req, res) => {
 
     let chain = null
 
-    
     if (tournament) {
         // chain for tournament uploads
         chain = connectToDb
@@ -281,13 +280,18 @@ api.put('/matches', (req, res) => {
         let db = results[0]
         let matches = results[1]
 
-        return Promise.all([
+        /*return Promise.all([
                 db,
                 db.collection('matches')
                 .insertMany(matches),
+        ])*/
+
+        return Promise.all([
+            db.collection('matches')
+            .insertMany(matches),
         ])
     })
-    .then((results) => {
+    /*.then((results) => {
         let db = results[0]
         let matchIds = (Object.values(results[1].insertedIds)).map(id => id.toString())
 
@@ -296,7 +300,8 @@ api.put('/matches', (req, res) => {
         for (id in matchIds) {
             console.log(matchIds[id])
         }
-
+        
+        // add to players collection -- might not need?
         for (i in players) {
             db.collection('players')
             .updateOne(
@@ -310,12 +315,23 @@ api.put('/matches', (req, res) => {
     })
     .then((ids) => { 
         return res.status(200).send({matchIds: ids})
+    })*/
+    .then((results) => {
+        let matchIds = (Object.values(results[0].insertedIds)).map(id => id.toString())
+
+        console.log('Matches uploaded:')
+
+        for (id in matchIds) {
+            console.log(matchIds[id])
+        }
+
+        return res.status(200).send({matchIds: ids})
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
 
+/** update match info using edit page */
 api.put('/matches/update', (req, res) => {
-    //let upload = req.body
     let players = []
     let matches = req.body.map((match) => {
         if (!players.includes(match.p1.name)) players.push(match.p1.name)
@@ -362,7 +378,6 @@ api.put('/matches/update', (req, res) => {
         let db = results[1].db('tfhr')
         
         for (i in matches) {
-            console.log(matches[i].p1.name)
             db.collection('matches')
             .updateOne(
                 { _id: mongo.ObjectId(matches[i]._id) },
@@ -384,19 +399,6 @@ api.put('/matches/update', (req, res) => {
 
 /** get list of currently existing players in db */
 api.get('/players', (req, res) => {
-    /*MongoClient.connect(dbUrl, { useUnifiedTopology: true })
-    .then((client) => {
-        return client
-        .db('tfhr')
-        .collection('players')
-        .distinct('name')
-     })
-     .then((result) => {
-        console.log('Returning players list.')
-        return res.status(200).send({ players: result })
-    })
-    .catch((error) => res.status(400).send(error.toString()))*/
-
     MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
         return client
@@ -421,6 +423,7 @@ api.get('/players', (req, res) => {
     .catch((error) => res.status(400).send(error.toString()))
 })
 
+/** get list of tournaments */
 api.get('/tournaments', (req, res) => {
     MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
@@ -428,21 +431,40 @@ api.get('/tournaments', (req, res) => {
         .db('tfhr')
         .collection('matches')
         .aggregate([
+            { '$match': { 
+                'tournament': { '$ne': null }
+            }},
             {'$group': {
                 _id: '$tournament.name',
                 nums: {
+                    
                     '$addToSet': {
-                        num: '$tournament.num',
-                        date: '$tournament.date'
+                        '$cond': {
+                            if: {
+                                '$ne': ['$tournament.num', null]
+                            },
+                            then: {
+                                num: '$tournament.num',
+                                date: '$tournament.date'
+                            },
+                            else: {
+                                date: '$tournament.date'
+                            }
+                        }
                     }
+                    
                 }
+            }},
+            { '$sort': {
+                '_id': -1,
+                'nums.num': 1,
+                'nums.date': 1
             }}
         ])
         .toArray()
      })
      .then((result) => {
         console.log('Returning tournament list.')
-        console.log(result)
         return res.status(200).send({ tournaments: result })
     })
     .catch((error) => res.status(400).send(error.toString()))
@@ -572,29 +594,56 @@ exports.api = functions.https.onRequest(api)
 ************/
 
 // format query object for filtering matches
-function formatQuery(players, strict, unfiltered) {
+function formatQuery(players, strict, unfiltered, tournament, type) {
     let query = {}
+    let p1 = players[0]
+    let p2 = players[1]
 
     if (strict === 'false' && !unfiltered) {
         query = { $or: [] }
 
-        for (let i = 0; i < players.length; i++) {
-            if (players[i].name) {
-                query.$or.push({
-                    'p1.name': players[i].name
-                })
-                query.$or.push({
-                    'p2.name': players[i].name
-                })
+        // need help trimming this down
+        if (p1.name) {
+            query.$or[0] = {
+                'p1.name': p1.name,
+                ...query.$or[0]
             }
+            query.$or[1] = {
+                'p2.name': p1.name,
+                ...query.$or[1]
+            }
+        }
 
-            if (players[i].character) {
-                query.$or.push({
-                    'p1.character': players[i].character
-                })
-                query.$or.push({
-                    'p2.character': players[i].character
-                })
+        if (p2.name) {
+            query.$or[0] = {
+                'p2.name': p2.name,
+                ...query.$or[0]
+            }
+            query.$or[1] = {
+                'p1.name': p2.name,
+                ...query.$or[1]
+            }
+        }
+        
+        if (p1.character) {
+            query.$or[0] = {
+                'p1.character': p1.character,
+                ...query.$or[0]
+            }
+            query.$or[1] = {
+                'p2.character': p1.character,
+                ...query.$or[1]
+            }
+        }
+
+        if (p2.character) {
+            query.$or[0] = {
+                'p2.character': p2.character,
+                ...query.$or[0]
+            }
+            query.$or[1] = {
+                'p1.character': p2.character,
+                ...query.$or[1]
             }
         }
     } else if (strict === 'true' && !unfiltered) {      
@@ -606,6 +655,34 @@ function formatQuery(players, strict, unfiltered) {
             if (players[i].character) {
                 query[`p${i + 1}.character`] = players[i].character
             }
+        }
+    }
+
+    if (tournament) {
+        query = {
+            'tournament.name': tournament.name,
+            ...query
+        }
+
+        if (tournament.num) {
+            query = {
+                'tournament.num': tournament.num,
+                ...query
+            }
+        }
+    
+        if (tournament.date) {
+            query = {
+                'tournament.date': tournament.date,
+                ...query
+            }
+        }
+    }
+
+    if (type) {
+        query = {
+            'type': type,
+            ...query
         }
     }
 

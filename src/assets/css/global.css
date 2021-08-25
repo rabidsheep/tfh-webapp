@@ -141,10 +141,6 @@ a {
     padding: 0px;
 }
 
-#filters .wrapper {
-    margin: 12px auto !important;
-}
-
 .small #filters .wrapper {
     max-width: 90%;
 }
@@ -190,6 +186,24 @@ a {
     padding: 0px;
 }
 
+#filters .links > .col {
+    display: flex;
+    justify-content: center;
+}
+
+.xsmall #filters .links > label {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 5px;
+}
+
+#filters .links .file {
+    padding: 0px 10px;
+}
+
+.xsmall #filters .links .checkbox {
+    padding: 0px 10px;
+}
 
 
 /* desktop  */
@@ -197,6 +211,11 @@ a {
     flex-direction: row-reverse;
     padding-left: 0px;
     padding-right: 20px;
+}
+
+#filters .players {
+    display: flex;
+    flex-wrap: wrap;
 }
 
 #filters .player,
@@ -295,6 +314,17 @@ a {
 /** matchrow.vue **/
 .match {
     padding: 10px 0px;
+}
+
+
+.match .players,
+.header .btn {
+    padding-left: 10px !important;
+}
+
+.match .links,
+.header .data {
+    padding-right: 10px !important;
 }
 
 .match .col {
@@ -457,7 +487,6 @@ a {
 .small .match {
     justify-content: space-between;
 }
-
 
 .small .match .character-icon {
     margin-right: 15px;

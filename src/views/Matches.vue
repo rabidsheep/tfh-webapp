@@ -23,15 +23,19 @@
     v-show="!loadingPlayers && !loadingTournaments">
       <!-- filters box -->
       <Filters
-      :players="players"
-      :tournament="tournament"
-      :strict="strict"
-      :type="type"
+      :players="filters.players"
+      :tournament="filters.tournament"
+      :strict="filters.strict"
+      :type="filters.type"
+      :hasFile="filters.hasFile"
+      :hasVideo="filters.hasVideo"
       @update-name="updateName($event.name, $event.i)"
       @update-character="updateCharacter($event.character, $event.i)"
       @update-strictness="updateStrictness($event)"
       @update-type="updateType($event)"
       @update-tournament="updateTournament($event)"
+      @update-file-filter="updateHasFile($event)"
+      @update-video-filter="updateHasVideo($event)"
       @clear-filters="clearFilters()"
       @swap="swap()"
       @reset-strictness="strict = false"
@@ -91,12 +95,12 @@
         <v-spacer/>
         <v-pagination
         color="accent"
-        v-model="page"
+        v-model="filters.page"
         :length="resultsCount % this.$config.itemsPerPage === 0 ?
                   Math.floor(resultsCount / this.$config.itemsPerPage) :
                   Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
         :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
-        @input="getMatches({players: players, page: page, strict: strict, tournament: tournament, type: type})"
+        @input="getMatches(filters)"
         circle />
         <v-spacer />
       </v-layout>
@@ -122,20 +126,24 @@ export default {
     return {
       showToTop: false,
       hidden: false,
-      players: [
-        {name: null, character: null},
-        {name: null, character: null}
-      ],
-      tournament: {
-        name: null,
-        num: null,
-        date: null,
+      filters: {
+          players: [
+          {name: null, character: null},
+          {name: null, character: null}
+        ],
+        page: 1,
+        tournament: {
+          name: null,
+          num: null,
+          date: null,
+        },
+        strict: false,
+        type: null,
+        hasFile: false,
+        hasVideo: false,
       },
-      strict: false,
-      type: null,
       groups: [],
       resultsCount: null,
-      page: 1,
       lastVisible: null,
       error: false,
       errorMessage: '',
@@ -146,13 +154,7 @@ export default {
     }
   },
   mounted() {
-    this.getMatches({
-      players: this.players,
-      page: 1,
-      strict: this.strict,
-      type: this.type,
-      tournament: this.tournament,
-    })
+    this.getMatches(this.filters)
   },
   watch: {
   },
@@ -181,110 +183,88 @@ export default {
       .catch((error) => console.log(error))
     },
     updateCharacter(character, i) {
-      if (!this.players[i].character || this.players[i].character !== character) {
+      if (!this.filters.players[i].character || this.filters.players[i].character !== character) {
         // only update character if new character is not the same as current character
-        this.$set(this.players[i], 'character', character)
+        this.$set(this.filters.players[i], 'character', character)
+        this.filters.page = 1
 
-          this.getMatches({
-            players: this.players,
-            strict: this.strict,
-            page: 1,
-            tournament: this.tournament,
-            type: this.type
-          })
+        this.getMatches(this.filters)
       }
 
       
     },
     updateName(name, i) {
-      this.$set(this.players[i], 'name', name)
+      this.$set(this.filters.players[i], 'name', name)
+      this.filters.page = 1
 
-      this.page = 1
-
-      this.getMatches({
-        players: this.players,
-        strict: this.strict,
-        page: 1,
-        tournament: this.tournament,
-        type: this.type
-      })
+      this.getMatches(this.filters)
       
     },
     updateTournament(tournament) {
-      Object.assign(this.tournament, tournament)
-      this.page = 1
+      Object.assign(this.filters.tournament, tournament)
+      this.filters.page = 1
 
-      this.getMatches({
-        players: this.players,
-        strict: this.strict,
-        page: 1,
-        tournament: this.tournament,
-        type: this.type
-      })
+      this.getMatches(this.filters)
     },
     updateType(type) {
-      this.type = type
+      this.filters.type = type
+      this.filters.page = 1
 
-      this.page = 1
-
-      this.getMatches({
-        players: this.players,
-        strict: this.strict,
-        page: 1,
-        tournament: this.tournament,
-        type: this.type
-      })
+      this.getMatches(this.filters)
     },
     updateStrictness(strict) {
-      this.strict = strict
+      this.filters.strict = strict
+      this.filters.page = 1
 
-      this.page = 1
-
-      if (JSON.stringify(this.players[0]) !== JSON.stringify(this.players[1])) {
-        this.getMatches({
-            players: this.players,
-            page: 1,
-            strict: this.strict,
-            type: this.type,
-            tournament: this.tournament,
-          })
+      if (JSON.stringify(this.filters.players[0]) !== JSON.stringify(this.filters.players[1])) {
+        this.getMatches(this.filters)
       }
     },
+    updatePage(page) {
+      this.filters.page = page
+
+      this.getMatches(this.filters)
+    },
+    updateHasFile(hasFile) {
+      this.filters.hasFile = hasFile
+      this.filters.page = 1
+
+      this.getMatches(this.filters)
+    },
+    updateHasVideo(hasVideo) {
+      this.filters.hasVideo = hasVideo
+      this.filters.page = 1
+
+      this.getMatches(this.filters)
+    },
     clearFilters() {
-      this.type = null
-      this.players = [
+      this.filters.type = null
+
+      this.filters.players = [
         {name: null, character: null},
         {name: null, character: null}
       ]
-      this.tournament = {
+
+      this.filters.tournament = {
         name: null,
         num: null,
         date: null
       }
-      this.strict = false
-      this.page = 1
 
-      this.getMatches({
-        players: this.players,
-        strict: this.strict,
-        page: 1,
-        tournament: this.tournament,
-        type: this.type
-      })
+      this.filters.strict = false
+
+      this.filters.page = 1
+
+      this.getMatches(this.filters)
     },
     swap() {
-      if (JSON.stringify(this.players[0]) !== JSON.stringify(this.players[1])) {
-        var temp = this.players[0]
-        this.$set(this.players, 0, this.players[1])
-        this.$set(this.players, 1, temp)
+      if (JSON.stringify(this.filters.players[0]) !== JSON.stringify(this.filters.players[1])) {
+        var temp = this.filters.players[0]
+        this.$set(this.filters.players, 0, this.filters.players[1])
+        this.$set(this.filters.players, 1, temp)
+        this.filters.page = 1
 
-        this.getMatches({
-          players: this.players,
-          strict: this.strict,
-          page: 1,
-          tournament: this.tournament,
-          type: this.type
-        })
+        this.getMatches(this.filters)
       }
     },
     onScroll: function (event) {

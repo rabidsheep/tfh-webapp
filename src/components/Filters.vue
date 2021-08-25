@@ -13,9 +13,10 @@
                 <v-row
                 justify="center"
                 align="center"
-                class="wrapper">
+                class="ma-5">
                     <!-- player filters -->
-                    <v-row
+                    <v-col
+                    cols="12"
                     class="players"
                     align="center"
                     justify="center"> 
@@ -23,7 +24,7 @@
                         :class="`player p${i + 1}`"
                         v-for="(player, i) in playersFilter"
                         :key="i"
-                        :cols="$vuetify.breakpoint.smAndDown ? 12 : 5"> 
+                        :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"> 
                             <CharacterSelect
                             :currentCharacter="player.character? player.character : null"
                             :selectionEnabled="true"
@@ -79,8 +80,9 @@
                             </v-col>
                         </v-col>
 
-                        <v-row
-                        class="strictness mt-3 mb-5"
+                        <v-col
+                        cols="12"
+                        class="strictness mt-3 mb-3 pa-0"
                         justify="center">
                             <v-switch
                             color="accent"
@@ -90,8 +92,8 @@
                             value
                             @change="$emit('update-strictness', $event)"
                             hide-details/>
-                        </v-row>
-                    </v-row>
+                        </v-col>
+                    </v-col>
                     <!-- /player filters -->
 
                     <!-- tournament filters -->
@@ -100,9 +102,7 @@
                     class="tournaments">
                         <v-col
                         class="type"
-                        :cols="$vuetify.breakpoint.smAndUp ?
-                        ($vuetify.breakpoint.smOnly ? 12 : 3) :
-                        12">
+                        :cols="$vuetify.breakpoint.mdAndUp ? undefined : 12">
                             <v-select
                             clearable
                             v-model="typeFilter"
@@ -114,9 +114,7 @@
 
                         <v-col
                         class="tournament__name"
-                        :cols="$vuetify.breakpoint.smAndUp ?
-                        ($vuetify.breakpoint.smOnly ? 5 : 4) :
-                        9">
+                        :cols="$vuetify.breakpoint.mdAndUp ? 3 : 9">
                             <v-combobox
                             clearable
                             :disabled="type !== 'Tournament'"
@@ -151,9 +149,7 @@
 
                         <v-col
                         class="tournament__num"
-                        :cols="$vuetify.breakpoint.smAndUp ?
-                        ($vuetify.breakpoint.smOnly ? 2 : 1) :
-                        3">
+                        :cols="$vuetify.breakpoint.mdAndUp ? 2 : 3">
                             <v-combobox
                             clearable
                             v-model="tournamentFilter.num"
@@ -188,9 +184,7 @@
 
                         <v-col
                         class="tournament__date"
-                        :cols="$vuetify.breakpoint.smAndUp ?
-                        ($vuetify.breakpoint.smOnly ? 5 : 3) :
-                        12">
+                        :cols="$vuetify.breakpoint.mdAndUp ? 3 : 12">
                             <v-combobox
                             clearable
                             v-model="tournamentFilter.date"
@@ -227,37 +221,27 @@
                         </v-col>
                     </v-row>
                     <!-- /tournament filters -->
-                    
-                    <!--<v-layout
-                    class="loading"
-                    v-show="loadingPlayers || loadingTournaments"
-                    column
-                    justify-center
-                    align-center>
-                        <v-progress-circular
-                        v-show="loadingPlayers || loadingTournaments"
-                        indeterminate />
 
-                        <template v-if="loadingPlayers">
-                            Retrieving player list...
-                        </template>
-                        <br />
-                        <template v-if="loadingTournaments">
-                            Retrieving tournament list...
-                        </template>
-                    </v-layout>
+                    <v-row
+                    class="links mb-6" align="center" justify="center">
+                        <label>Show Only Matches With:</label>
 
-                    <v-col
-                    v-show="!loadingPlayers || !loadingTournaments"
-                    class="pa-0"
-                    cols="12"
-                    align="center">
-                        <v-btn
+                        <v-checkbox
+                        class="file checkbox ma-0"
+                        hide-details
                         color="accent"
-                        @click="clear()">
-                            Clear All
-                        </v-btn>
-                    </v-col>-->
+                        label="TFHR File"
+                        v-model="hasFileFilter"
+                        @change="$emit('update-file-filter', $event)" />
+
+                        <v-checkbox
+                        class="video checkbox ma-0"
+                        hide-details
+                        color="accent"
+                        label="Video"
+                        v-model="hasVideoFilter"
+                        @change="$emit('update-video-filter', $event)" />
+                    </v-row>
 
                     <v-col
                     class="pa-0"
@@ -293,6 +277,8 @@ function initializeData() {
         },
         strictFilter: false,
         typeFilter: null,
+        hasFileFilter: false,
+        hasVideoFilter: false,
         numList: [],
         dateList: [],
         playerSearch: [],
@@ -315,6 +301,8 @@ export default {
         tournament: Object,
         type: [String, null],
         strict: Boolean,
+        hasFile: Boolean,
+        hasVideo: Boolean,
     },
     data: () => {
         return {
@@ -350,6 +338,14 @@ export default {
         'type': function(type) {
             this.typeFilter = type
         },
+
+        'hasFile': function(hasFile) {
+            this.hasFileFilter = hasFile
+        },
+
+        'hasVideo': function(hasVideo) {
+            this.hasVideoFilter = hasVideo
+        }
     },
     mounted: function() {
         this.loadPlayers()

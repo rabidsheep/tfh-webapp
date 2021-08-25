@@ -32,9 +32,11 @@ api.get('/matches', (req, res) => {
 
     if (req.query.filters) {
         let players = req.query.filters.players
-        let strict = req.query.filters.strict
+        let strict = req.query.filters.strict === 'true' ? true : false
         let tournament = req.query.filters.tournament.name ? req.query.filters.tournament : null
         let type = req.query.filters.type
+        let hasFile = req.query.filters.hasFile === 'true' ? true : false
+        let hasVideo = req.query.filters.hasVideo === 'true' ? true : false
         let unfiltered = true
         skip = req.query.filters.page > 0 ? (req.query.filters.page - 1) * itemsPerPage : 0
 
@@ -51,7 +53,7 @@ api.get('/matches', (req, res) => {
             }
         }
 
-        query = formatQuery(players, strict, unfiltered, tournament, type)
+        query = formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo)
     } else {
         query = ( req.query.tournamentId ?
             {
@@ -594,12 +596,12 @@ exports.api = functions.https.onRequest(api)
 ************/
 
 // format query object for filtering matches
-function formatQuery(players, strict, unfiltered, tournament, type) {
+function formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo) {
     let query = {}
     let p1 = players[0]
     let p2 = players[1]
 
-    if (strict === 'false' && !unfiltered) {
+    if (!strict && !unfiltered) {
         query = { $or: [] }
 
         // need help trimming this down
@@ -646,7 +648,7 @@ function formatQuery(players, strict, unfiltered, tournament, type) {
                 ...query.$or[1]
             }
         }
-    } else if (strict === 'true' && !unfiltered) {      
+    } else if (strict && !unfiltered) {      
         for (let i = 0; i < players.length; i++) {
             if (players[i].name) {
                 query[`p${i + 1}.name`] = players[i].name
@@ -682,6 +684,20 @@ function formatQuery(players, strict, unfiltered, tournament, type) {
     if (type) {
         query = {
             'type': type,
+            ...query
+        }
+    }
+
+    if (hasFile) {
+        query = {
+            file: {'$ne': null},
+            ...query
+        }
+    }
+
+    if (hasVideo) {
+        query = {
+            video: {'$ne': null},
             ...query
         }
     }

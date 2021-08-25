@@ -2,7 +2,7 @@
   <v-app dark>
     <v-toolbar id="menubar" height="58px" maxHeight="58px" dense color="accent">
         <!-- replace <a> with <router-link> eventually -->
-        <router-link to="/" @click.native="componentKey = forceRerender($event)">
+        <router-link to="/" @click.native="forceRerender($event)">
             <img class="logo" src="./assets/img/pixel/1.png" />
         </router-link>
 
@@ -10,7 +10,7 @@
             fortnite gaming
         </v-toolbar-title>
 
-        <router-link to="/upload">
+        <router-link to="/upload" @click.native="forceRerender($event)">
             <v-btn icon>
                 <v-icon>mdi-plus-box</v-icon>
             </v-btn>
@@ -56,7 +56,7 @@
 export default {
   data: () => {
     return {
-      componentKey: 0,
+      componentKey: true,
     }
   },
   mounted: function () {
@@ -132,8 +132,8 @@ export default {
       .catch((error) => console.log(error))
     },
     forceRerender(e) {
-      if (this.$route.path === '/' && e.ctrlKey !== 'false') {
-        return this.componentKey === 0 ? 1 : 0
+      if ((this.$route.path === '/' || this.$route.path === '/upload') && !e.ctrlKey) {
+        this.componentKey = !this.componentKey
       }
     }
   }

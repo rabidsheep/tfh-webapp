@@ -7,14 +7,14 @@
       justify-center
       align-center>
           <v-progress-linear
-          class="mt-4"
+          class="progress"
           color="accent"
-          v-show="loadingPlayers || loadingTournaments"
           indeterminate />
 
-          <br />
-
-          Retrieving content...
+          <p>
+            <br />
+            Retrieving content...
+          </p>
       </div>
 
     <div
@@ -41,7 +41,7 @@
       <br />
 
       <v-progress-linear
-      style="margin: 20% 0"
+      style="margin: 15% 0"
       color="accent"
       v-show="loadingMatches"
       indeterminate />

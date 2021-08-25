@@ -25,17 +25,17 @@
                 
                 <!-- sign in -->
                 <v-stepper-content step="1">
-                    <v-layout
+                    <div
                     id="step__sign-in"
-                    class="step"
-                    column
-                    justify-center
-                    align-center>
+                    class="step">
                         <h1>Sign In</h1>
 
-                        <v-layout
+                        
+                        <br />
+
+                        <div
                         class="body"
-                        v-show="!$firebase.auth().currentUser && !loggingIn"
+                        v-show="allowLogin"
                         column
                         justify-center
                         align-center>
@@ -43,6 +43,7 @@
                             color="button2"
                             height="50"
                             rounded
+                            :disabled="!allowLogin"
                             @click="signIn('google')">
                                 <v-icon left>mdi-google</v-icon>
                                 Google
@@ -54,54 +55,61 @@
                                 <v-icon left>mdi-twitter</v-icon> Twitter
                             </v-btn>
                             -->
-                        </v-layout>
+                        </div>
 
-                        <v-progress-linear
-                        color="accent"
-                        indeterminate
-                        v-show="loggingIn"/>
+                        <div
+                        v-show="!loggingIn && !allowLogin || loggingIn">
+                            <v-progress-linear
+                            color="accent"
+                            indeterminate/>
 
-                        <template v-if="loggingIn">
-                            <div style="width: 100%;"><br /></div>
-                            {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
-                        </template>
+                            <br />
+
+                            <template v-if="!allowLogin && !loggingIn">
+                                Checking auth state...
+                            </template>
+
+                            <template v-if="loggingIn">
+                                {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
+                            </template>
+                        </div>
 
                         
                         
-                    </v-layout>
+                    </div>
                 </v-stepper-content>
 
                 <v-stepper-content step="2">
-                    <v-layout
+                    <div
                     id="step__select"
-                    class="step"
-                    column
-                    justify-center
-                    align-center>
+                    class="step">
                         <h1>Select Upload Type</h1>
 
-                        <v-layout
-                        column
-                        class="body"
-                        justify-center
-                        align-center>
-                            <v-btn
-                            color="button2"
-                            rounded
-                            @click="setUploadType('files')">
-                                <v-icon left>mdi-file</v-icon>
-                                TFHR File
-                            </v-btn>
+                        <br />
 
-                            <v-btn
-                            color="button2"
-                            rounded
-                            @click="setUploadType('youtube')">
-                                <v-icon left>mdi-youtube</v-icon>
-                                YouTube Link
-                            </v-btn>
-                        </v-layout>
-                    </v-layout>
+
+                        
+                        <v-btn
+                        color="button2"
+                        rounded
+                        @click="setUploadType('files')">
+                            <v-icon left>mdi-file</v-icon>
+                            TFHR File
+                        </v-btn>
+
+                        
+                        <br />
+                        
+
+                        <v-btn
+                        color="button2"
+                        rounded
+                        @click="setUploadType('youtube')">
+                            <v-icon left>mdi-youtube</v-icon>
+                            YouTube Link
+                        </v-btn>
+                        
+                    </div>
                 </v-stepper-content>
 
                 <!-- upload form -->
@@ -169,22 +177,20 @@ export default {
             isAdmin: false,
             isRegistered: true,
             loggingIn: false,
+            allowLogin: false,
         }
     },
     watch: {
     },
     mounted: function () {
-        if (this.$firebase.auth().currentUser) {
-            this.step = 2
-        } else {
-            this.step = 1
-        }
-
         // auth state watcher
         this.$firebase.auth().onAuthStateChanged((user) => {
             if (!user) {
                     this.uid = null
                     this.step = 1
+                    
+                    this.allowLogin = true
+                    console.log('User not found')
                     return
             } else {
                 let loginRef = null
@@ -245,12 +251,14 @@ export default {
     },
     methods: {
         signIn: function (providerName) {
+            this.allowLogin = false
             this.loading = true
             this.loggingIn = true
             this.$firebase.auth()
             .signInWithPopup(this.$providers[providerName])
             .catch((error) => {
                 console.log(error)
+                this.allowLogin = true
                 this.loading = false
             })
         },

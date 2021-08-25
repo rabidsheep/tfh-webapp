@@ -325,7 +325,7 @@ api.put('/matches', (req, res) => {
             console.log(matchIds[id])
         }
 
-        return res.status(200).send({matchIds: ids})
+        return res.status(200).send({matchIds: matchIds})
     })
     .catch((error) => res.status(400).send(error.toString()))
 })

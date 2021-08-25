@@ -53,25 +53,24 @@
                 
                 <!-- sign in -->
                 <v-stepper-content step="1">
-                    <v-layout
+                   <div
                     id="step__sign-in"
-                    class="step"
-                    column
-                    justify-center
-                    align-center>
+                    class="step">
                         <h1>Sign In</h1>
+                        
+                        <br />
 
-                        <div style="width:100%;"><br /></div>
-
-                        <v-layout
+                        <div
                         class="body"
+                        v-show="allowLogin"
                         column
                         justify-center
-                        v-show="!$firebase.auth().currentUser && !loggingIn"
                         align-center>
                             <v-btn
+                            color="button2"
                             height="50"
                             rounded
+                            :disabled="!allowLogin"
                             @click="signIn('google')">
                                 <v-icon left>mdi-google</v-icon>
                                 Google
@@ -83,101 +82,87 @@
                                 <v-icon left>mdi-twitter</v-icon> Twitter
                             </v-btn>
                             -->
-                        </v-layout>
+                        </div>
 
-                        <v-progress-linear
-                        color="accent"
-                        indeterminate
-                        v-show="loggingIn"/>
+                        <div
+                        v-show="!loggingIn && !allowLogin || loggingIn">
+                            <v-progress-linear
+                            color="accent"
+                            indeterminate/>
 
-                        <template v-if="loggingIn">
-                            <div style="width: 100%;"><br /></div>
-                            {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
-                        </template>
-                    </v-layout>
+                            <br />
+
+                            <template v-if="!allowLogin && !loggingIn">
+                                Checking auth state...
+                            </template>
+
+                            <template v-if="loggingIn">
+                                {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
+                            </template>
+                        </div>
+                    </div>
                 </v-stepper-content>
 
                 <v-stepper-content step="2">
-                    <center>
+                    <div
+                    id="step__edit"
+                    class="step">
                         <h1>Edit Match Details</h1>
-                        <p
-                        style="max-width: 99%;
-                        overflow: clip;
-                        white-space: break-spaces;
-                        text-overflow: ellipsis;">
-                            <template v-if="matchId">
-                                Match ID: {{ matchId }}
-                            </template>
-                            
-                            <!--
-                            <template v-if="tournament">
-                                {{ tournament.name }}
-
-                                <template v-if="tournament.num">
-                                    {{ tournament.num }}
-                                </template>
-
-                                <br />
-
-                                {{ tournament.date }}
-                            </template>
-                            -->
-                        </p>
-                    </center>
-                    
-                    <center v-show="loadingMatches">
-                        <br />
+                        
+                        <br /> 
+                        
                         <v-progress-circular
+                        v-show="loadingMatches"
                         indeterminate />
-                    </center>
 
-                    <v-form
-                    v-model="valid"
-                    ref="form"
-                    id="edit"
-                    v-if="!loading && Object.keys(original).length > 0 && !failedMatchGet">
-                        <div style="width: 100%;"><br /></div>
-                        
-                        <EditPreview
-                        v-for="(match, i) in updated"
-                        :key="i"
-                        :p1="match.p1"
-                        :p2="match.p2"
-                        :tournament="match.tournament ? match.tournament : null"
-                        :video="match.video ? match.video : null"
-                        :file="match.file ? match.file : null"
-                        :type="match.type"
-                        :resetData="resetData"
-                        @set-timestamp="setTimestamp($event, i)"
-                        @set-url="setUrl($event, i)"
-                        @delete-timestamp="deleteTimestamp(i)"
-                        @delete-video="deleteVideo(i)" />
-                        
-                        <v-row
-                        class="buttons"
-                        v-show="!loading && Object.keys(original).length > 0"
-                        align="center"
-                        justify="space-around">
-                            <v-col class="reset">
-                                <v-btn
-                                rounded
-                                color="accent"
-                                @click="resetMatches()">
-                                    Reset
-                                </v-btn>
-                            </v-col>
+                        <v-form
+                        v-model="valid"
+                        ref="form"
+                        id="edit"
+                        v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
+                            <EditPreview
+                            v-for="(match, i) in updated"
+                            :key="i"
+                            :p1="match.p1"
+                            :p2="match.p2"
+                            :tournament="match.tournament ? match.tournament : null"
+                            :video="match.video ? match.video : null"
+                            :file="match.file ? match.file : null"
+                            :type="match.type"
+                            :resetData="resetData"
+                            @set-timestamp="setTimestamp($event, i)"
+                            @set-url="setUrl($event, i)"
+                            @delete-timestamp="deleteTimestamp(i)"
+                            @delete-video="deleteVideo(i)" />
+                            
+                            <br />
 
-                            <v-col class="submit">
-                                <v-btn
-                                rounded
-                                :disabled="!valid || !changesFound"
-                                color="accent"
-                                @click="updateMatches()">
-                                    Submit
-                                </v-btn>
-                            </v-col>
-                        </v-row>
-                    </v-form>
+                            <v-row
+                            class="buttons"
+                            v-show="!loading && Object.keys(original).length > 0"
+                            align="center"
+                            justify="space-around">
+                                <v-col class="reset pr-5">
+                                    <v-btn
+                                    rounded
+                                    color="accent"
+                                    @click="resetMatches()">
+                                        Reset
+                                    </v-btn>
+                                </v-col>
+
+                                <v-col class="submit pl-5">
+                                    <v-btn
+                                    rounded
+                                    :disabled="!valid || !changesFound"
+                                    color="accent"
+                                    @click="updateMatches()">
+                                        Submit
+                                    </v-btn>
+                                </v-col>
+                            </v-row>
+                        </v-form>
+                    </div>
                 </v-stepper-content>
             </v-stepper-items>
         </v-stepper>
@@ -219,14 +204,18 @@ export default {
             loggingIn: false,
             loadingMatches: false,
             failedMatchGet: false,
+            allowLogin: false,
         }
     },
     mounted: function () {
     // auth state watcher
     this.$firebase.auth().onAuthStateChanged((user) => {
-        if (!user) {
+       if (!user) {
             this.uid = null
             this.step = 1
+            
+            this.allowLogin = true
+            console.log('User not found')
             return
         } else {
             this.loggingIn = true
@@ -287,6 +276,7 @@ export default {
                 this.isRegistered = true
                 this.loggingIn = false
                 this.step = 1
+                this.allowLogin = true
                 console.log(error)
             })
         }
@@ -310,6 +300,7 @@ export default {
     methods: {
         signIn: function (providerName) {
             this.loading = true
+            this.allowLogin = false
 
             this.$firebase.auth()
             .signInWithPopup(this.$providers[providerName])
@@ -318,6 +309,7 @@ export default {
             })
             .catch((error) => {
                 console.log(error)
+                this.allowLogin = true
                 this.loading = false
             })
         },

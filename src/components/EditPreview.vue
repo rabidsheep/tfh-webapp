@@ -63,7 +63,7 @@
             class="timestamp">
                 <v-text-field
                 v-model="timestamp"
-                :dense="$vuetify.breakpoint.mdAndUp && (type === 'Casual' ||  type === 'Tournament' && file)"
+                :dense="$vuetify.breakpoint.mdAndUp && (type === 'Casual' ||  type === 'Tournament' && file !== null)"
                 :rules="rules.timestamp"
                 :disabled="!video"
                 ref="timestamp"

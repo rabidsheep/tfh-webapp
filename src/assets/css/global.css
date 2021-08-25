@@ -61,6 +61,12 @@ a {
     align-self: center;
     text-align: center;
     width: 100%;
+    min-height: 100vh;
+    display: grid;
+}
+
+#index .loading .progress {
+    align-self: end;
 }
 
 /* display width */
@@ -276,6 +282,10 @@ a {
 
 #matches .header, #matches .header .v-divider {
     border-color: hsla(0,0%,100%,.2)
+}
+
+.matches__loading {
+    justify-self: center;
 }
 
 /* mobile */
@@ -530,9 +540,6 @@ a {
     flex-direction: column;
     width: 100%;
 }
-#uploads .step > .body {
-    margin-top: 10px;
-}
 
 #uploads .step {
     padding: 24px;
@@ -544,20 +551,22 @@ a {
     height: 50px;
 }
 
-#uploads #step__sign-in .v-progress-linear {
-    margin-top: 10px;
+.step > * {
+    width: 100%;
+    text-align: center;
 }
 
-#uploads #step__select .v-btn:not(:last-child) {
-    margin-bottom: 20px;
+#uploads #step__sign-in .v-btn,
+#uploads #step__select .v-btn {
+    display: block;
+    margin: auto;
+    width: auto;
 }
-
 
 #uploads #step__upload .heading {
     position: relative;
     width: 100%;
 }
-
 
 #uploads #step__upload .buttons :not(:last-child) {
     margin-right: 20px;
@@ -728,6 +737,7 @@ a {
 .preview {
     padding: 0px;
     padding-bottom: 10px;
+    padding-top: 10px;
 }
 
 .preview .col {
@@ -960,6 +970,7 @@ a {
 
 #edit .buttons > .col {
     display: flex;
+    padding: 0px;
 }
 
 #edit .buttons > .reset {

@@ -499,6 +499,7 @@ export default {
             }
             this.matchCount = 0
             this.finished = false
+            this.$refs.form.resetValidation()
         },
         removeMatch(i) {
             this.matches.splice(i, 1)

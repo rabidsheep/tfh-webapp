@@ -80,7 +80,7 @@
                         </v-col>
 
                         <v-row
-                        class="strictness"
+                        class="strictness mt-3 mb-5"
                         justify="center">
                             <v-switch
                             color="accent"

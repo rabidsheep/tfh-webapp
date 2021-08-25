@@ -357,7 +357,7 @@ a {
 }
 
 .match .links {
-    justify-content: space-around;
+    justify-content: end;
     align-content: space-between;
 }
 
@@ -442,7 +442,7 @@ a {
 }
 
 .wide .match .links .link {
-    max-width: min-content;
+    justify-content: end;
 }
 
 .wide .match .video .slash {
@@ -479,7 +479,7 @@ a {
 }
 
 .small .match .player {
-    max-width: 90%;
+    max-width: 100%;
 }
 
 .small .match .name {
@@ -493,9 +493,6 @@ a {
     -webkit-box-orient: vertical;
 }
 
-.small .match .links {
-    max-width: min-content;
-}
 .small .match .link .btn > * {
     align-self: center;
 }
@@ -504,7 +501,7 @@ a {
     display: flex;
 }
 .small .match .links > .link {
-    max-width: max-content;
+    justify-content: end;
 }
 
 .small .match .video .slash {

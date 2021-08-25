@@ -3,7 +3,7 @@
     class="match"
     align="center"
     justify="center">
-      <v-col class="players" cols="10">
+      <v-col class="players" :cols="$vuetify.breakpoint.smAndDown ? 10 : 10">
         <v-col
         :cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
         :class="`player p${i+1}`"

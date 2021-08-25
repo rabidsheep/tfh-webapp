@@ -112,6 +112,7 @@
                         <br /> 
                         
                         <v-progress-circular
+                        class="progress"
                         v-show="loadingMatches"
                         indeterminate />
 

@@ -1010,3 +1010,8 @@ a {
     overflow: clip;
     white-space: break-spaces;
 }
+
+#edit #step__edit .progress {
+    display: block;
+    margin: auto;
+}

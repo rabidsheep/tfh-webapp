@@ -104,6 +104,7 @@
                         ($vuetify.breakpoint.smOnly ? 12 : 3) :
                         12">
                             <v-select
+                            clearable
                             v-model="typeFilter"
                             :items="typeSelect"
                             label="Category"

@@ -38,7 +38,7 @@ api.get('/matches', (req, res) => {
         let hasFile = req.query.filters.hasFile === 'true' ? true : false
         let hasVideo = req.query.filters.hasVideo === 'true' ? true : false
         let unfiltered = true
-        skip = req.query.filters.page > 0 ? (req.query.filters.page - 1) * itemsPerPage : 0
+        skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
 
 
         for (let i = 0; i < players.length; i++) {
@@ -281,43 +281,11 @@ api.put('/matches', (req, res) => {
     chain.then((results) => {
         let db = results[0]
         let matches = results[1]
-
-        /*return Promise.all([
-                db,
-                db.collection('matches')
-                .insertMany(matches),
-        ])*/
-
         return Promise.all([
             db.collection('matches')
             .insertMany(matches),
         ])
     })
-    /*.then((results) => {
-        let db = results[0]
-        let matchIds = (Object.values(results[1].insertedIds)).map(id => id.toString())
-
-        console.log('Matches uploaded:')
-
-        for (id in matchIds) {
-            console.log(matchIds[id])
-        }
-        
-        // add to players collection -- might not need?
-        for (i in players) {
-            db.collection('players')
-            .updateOne(
-                { 'name': players[i] },
-                { $setOnInsert: { 'name': players[i] }},
-                { upsert: true }
-            )
-        }
-
-        return matchIds
-    })
-    .then((ids) => { 
-        return res.status(200).send({matchIds: ids})
-    })*/
     .then((results) => {
         let matchIds = (Object.values(results[0].insertedIds)).map(id => id.toString())
 
@@ -399,78 +367,95 @@ api.put('/matches/update', (req, res) => {
     .catch((error) => res.status(400).send(error.toString()))
 })
 
-/** get list of currently existing players in db */
-api.get('/players', (req, res) => {
+/** get list of tournaments */
+api.get('/filter/content', (req, res) => {
+
     MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
-        return client
-        .db('tfhr')
-        .collection('matches')
-        .aggregate([
-            {'$group': {
-                _id: null,
-                'p1': {'$addToSet': '$p1.name'},
-                'p2': {'$addToSet': '$p2.name'} 
-            }},
-            {'$project': {
-                'players': {'$setUnion': ['$p1', '$p2']}
-            }}
+        let db = client.db('tfhr').collection('matches')
+
+        return Promise.all([
+            fetchTournaments(db),
+            fetchPlayers(db),
+            fetchChannels(db)
         ])
-        .toArray()
      })
-     .then((result) => {
-        console.log('Returning players list.')
-        return res.status(200).send({ players: result[0].players })
+     .then((results) => {
+         console.log(results[1])
+        console.log('Returning tournament list.')
+        return res.status(200).send({
+            tournaments: results[0],
+            players: results[1][0].players,
+            channels: results[2][0].channels
+        })
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
 
 /** get list of tournaments */
-api.get('/tournaments', (req, res) => {
-    MongoClient.connect(dbUrl, { useUnifiedTopology: true })
-    .then((client) => {
-        return client
-        .db('tfhr')
-        .collection('matches')
-        .aggregate([
-            { '$match': { 
-                'tournament': { '$ne': null }
-            }},
-            {'$group': {
-                _id: '$tournament.name',
-                nums: {
-                    
-                    '$addToSet': {
-                        '$cond': {
-                            if: {
-                                '$ne': ['$tournament.num', null]
-                            },
-                            then: {
-                                num: '$tournament.num',
-                                date: '$tournament.date'
-                            },
-                            else: {
-                                date: '$tournament.date'
-                            }
+function fetchTournaments(db) {
+    const pipeline = [
+        {'$match': { 
+            'tournament': { '$ne': null }
+        }},
+        {'$group': {
+            _id: '$tournament.name',
+            nums: {
+                
+                '$addToSet': {
+                    '$cond': {
+                        if: {
+                            '$ne': ['$tournament.num', null]
+                        },
+                        then: {
+                            num: '$tournament.num',
+                            date: '$tournament.date'
+                        },
+                        else: {
+                            date: '$tournament.date'
                         }
                     }
-                    
                 }
-            }},
-            { '$sort': {
-                '_id': -1,
-                'nums.num': 1,
-                'nums.date': 1
-            }}
-        ])
-        .toArray()
-     })
-     .then((result) => {
-        console.log('Returning tournament list.')
-        return res.status(200).send({ tournaments: result })
-    })
-    .catch((error) => res.status(400).send(error.toString()))
-})
+                
+            }
+        }},
+        { '$sort': {
+            '_id': -1,
+            'nums.num': 1,
+            'nums.date': 1
+        }}
+    ]
+
+    return db.aggregate([...pipeline]).toArray()
+}
+
+/** get list of players */
+function fetchPlayers(db) {
+    const pipeline = [
+        {'$group': {
+            _id: null,
+            'p1': {'$addToSet': '$p1.name'},
+            'p2': {'$addToSet': '$p2.name'} 
+        }},
+        {'$project': {
+            'players': {'$setUnion': ['$p1', '$p2']}
+        }}
+    ]
+
+    return db.aggregate([...pipeline]).toArray()
+}
+
+function fetchChannels(db) {
+    const pipeline = [
+        {'$match': { 'channel': {'$ne': null} }},
+        {'$group': {
+            _id: null,
+            channels: {'$addToSet': '$channel'}
+        }
+    }]
+
+    return db.aggregate([...pipeline]).toArray()
+}
 
 /** authorize & verify user
  * verifyIdToken not currently working in dev environment???
@@ -598,60 +583,25 @@ exports.api = functions.https.onRequest(api)
 // format query object for filtering matches
 function formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo) {
     let query = {}
-    let p1 = players[0]
-    let p2 = players[1]
 
     if (!strict && !unfiltered) {
-        query = { $or: [] }
+        query = { $or: [{}, {}] }
 
-        // need help trimming this down
-        if (p1.name) {
-            query.$or[0] = {
-                'p1.name': p1.name,
-                ...query.$or[0]
+        for (let i = 0; i < players.length; i++) {
+            if (players[i].name) {
+                query.$or[0][`p1.name`] = new RegExp(['^' + players[i].name], 'i')
+                query.$or[1][`p2.name`] = new RegExp(['^' + players[i].name], 'i')
             }
-            query.$or[1] = {
-                'p2.name': p1.name,
-                ...query.$or[1]
-            }
-        }
 
-        if (p2.name) {
-            query.$or[0] = {
-                'p2.name': p2.name,
-                ...query.$or[0]
-            }
-            query.$or[1] = {
-                'p1.name': p2.name,
-                ...query.$or[1]
-            }
-        }
-        
-        if (p1.character) {
-            query.$or[0] = {
-                'p1.character': p1.character,
-                ...query.$or[0]
-            }
-            query.$or[1] = {
-                'p2.character': p1.character,
-                ...query.$or[1]
-            }
-        }
-
-        if (p2.character) {
-            query.$or[0] = {
-                'p2.character': p2.character,
-                ...query.$or[0]
-            }
-            query.$or[1] = {
-                'p1.character': p2.character,
-                ...query.$or[1]
+            if (players[i].character) {
+                query.$or[0][`p1.character`] = players[i].character
+                query.$or[1][`p2.character`] = players[i].character
             }
         }
     } else if (strict && !unfiltered) {      
         for (let i = 0; i < players.length; i++) {
             if (players[i].name) {
-                query[`p${i + 1}.name`] = players[i].name
+                query[`p${i + 1}.name`] = new RegExp(['^' + players[i].name], 'i')
             }
 
             if (players[i].character) {
@@ -662,7 +612,8 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
 
     if (tournament) {
         query = {
-            'tournament.name': tournament.name,
+            // allow partial matches for tournament names?
+            'tournament.name': new RegExp(['^' + tournament.name], 'i'),
             ...query
         }
 

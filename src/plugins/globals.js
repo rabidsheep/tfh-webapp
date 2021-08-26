@@ -47,21 +47,16 @@ let filesMethods = {
 }
 let filesRes = Vue.resource(`${uri}/files`, {}, filesMethods)
 
-let playerMethods = {
-  get: { method: 'GET' },
-}
-let playerRes = Vue.resource(`${uri}/players/`, {}, playerMethods)
-
 let usersMethods = {
   get: { method: 'GET' },
   save: { method: 'PUT' }
 }
 let usersRes = Vue.resource(`${uri}/users/`, {}, usersMethods)
 
-let tournamentMethods = {
+let filterContentMethods = {
   get: { method: 'GET' }
 }
-let tournamentRes = Vue.resource(`${uri}/tournaments/`, {}, tournamentMethods)
+let filterContentRes = Vue.resource(`${uri}/filter/content`, {}, filterContentMethods)
 
 let youtubeMethods = {
   get: { method: 'GET' }
@@ -89,17 +84,13 @@ Vue.use({
     Object.defineProperty(Vue.prototype, '$update', {
       get () { return updateRes }
     })
-
-    Object.defineProperty(Vue.prototype, '$players', {
-      get () { return playerRes }
-    })
-
+    
     Object.defineProperty(Vue.prototype, '$users', {
       get () { return usersRes }
     })
 
-    Object.defineProperty(Vue.prototype, '$tournaments', {
-      get () { return tournamentRes }
+    Object.defineProperty(Vue.prototype, '$filterContent', {
+      get () { return filterContentRes }
     })
 
     Object.defineProperty(Vue.prototype, '$youtubeData', {

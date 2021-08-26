@@ -42,7 +42,7 @@
                                 maxHeight: '200'
                                 }"
                             :hide-no-data="!playerSearch[i]"
-                            :label="`Player ${i + 1}`"
+                            :label="strictFilter ? `P${i + 1} Name` : `Player Name`"
                             :items="playerList"
                             :search-input.sync="playerSearch[i]"
                             :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
@@ -102,7 +102,7 @@
                     class="tournaments">
                         <v-col
                         class="type"
-                        :cols="$vuetify.breakpoint.mdAndUp ? undefined : 12">
+                        :cols="$vuetify.breakpoint.mdAndUp ? 3 : 12">
                             <v-select
                             clearable
                             v-model="typeFilter"
@@ -114,7 +114,7 @@
 
                         <v-col
                         class="tournament__name"
-                        :cols="$vuetify.breakpoint.mdAndUp ? 3 : 9">
+                        :cols="$vuetify.breakpoint.mdAndUp ? 4 : undefined">
                             <v-combobox
                             clearable
                             :disabled="type !== 'Tournament'"
@@ -161,7 +161,7 @@
                                 maxHeight: '200'
                                 }"
                             dense
-                            label="No."
+                            label="No. #"
                             :hide-no-data="!numSearch"
                             :items="numList"
                             item-text="num"
@@ -222,6 +222,74 @@
                     </v-row>
                     <!-- /tournament filters -->
 
+                    <!--<v-col
+                    class="videos"
+                    cols="12">
+                        <v-col
+                        class="channel"
+                        cols="5">
+                            <v-combobox
+                            clearable
+                            v-model="channelFilter.name"
+                            append-icon=""
+                            :menu-props="{
+                                contentClass: 'channel-select-menu',
+                                bottom: true,
+                                offsetY: true,
+                                maxHeight: '200'
+                                }"
+                            dense
+                            label="Channel"
+                            :hide-no-data="!channelSearch"
+                            :items="channelList"
+                            item-text="name"
+                            @change="updateChannel($event)"
+                            :search-input.sync="channelSearch">
+                                <template v-slot:no-data>
+                                    <v-list-item>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                No results matching "<strong>{{ channelSearch }}</strong>".
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </template>
+                            </v-combobox>
+                        </v-col>
+
+                        <v-col
+                        class="video"
+                        cols="5">
+                            <v-combobox
+                            clearable
+                            v-model="videoFilter.title"
+                            append-icon=""
+                            :menu-props="{
+                                contentClass: 'video-select-menu',
+                                bottom: true,
+                                offsetY: true,
+                                maxHeight: '200'
+                                }"
+                            dense
+                            label="Video"
+                            :hide-no-data="!videoSearch"
+                            :items="videoList"
+                            item-text="title"
+                            @change="updateVideo($event)"
+                            :search-input.sync="videoSearch">
+                                <template v-slot:no-data>
+                                    <v-list-item>
+                                        <v-list-item-content>
+                                            <v-list-item-title>
+                                                No results matching "<strong>{{ videoSearch }}</strong>".
+                                            </v-list-item-title>
+                                        </v-list-item-content>
+                                    </v-list-item>
+                                </template>
+                            </v-combobox>
+                        </v-col>
+                    </v-col>-->
+
                     <v-row
                     class="links mb-6" align="center" justify="center">
                         <label>Show Only Matches With:</label>
@@ -232,7 +300,7 @@
                         color="accent"
                         label="TFHR File"
                         v-model="hasFileFilter"
-                        @change="$emit('update-file-filter', $event)" />
+                        @change="$emit('update-hasfile', $event)" />
 
                         <v-checkbox
                         class="video checkbox ma-0"
@@ -240,7 +308,7 @@
                         color="accent"
                         label="Video"
                         v-model="hasVideoFilter"
-                        @change="$emit('update-video-filter', $event)" />
+                        @change="$emit('update-hasvideo', $event)" />
                     </v-row>
 
                     <v-col
@@ -264,7 +332,6 @@ import CharacterSelect from './CharacterSelect.vue'
 
 function initializeData() {
     return {
-        
         hidden: false,
         playersFilter: [
             {name: null, character: null},
@@ -275,19 +342,29 @@ function initializeData() {
             num: null,
             date: null,
         },
+        channelFilter: {
+            id: null,
+            name: null,
+        },
+        videoFilter: {
+            id: null,
+            title: null,
+        },
         strictFilter: false,
         typeFilter: null,
         hasFileFilter: false,
         hasVideoFilter: false,
         numList: [],
         dateList: [],
+        videoList: [],
         playerSearch: [],
         tournamentSearch: null,
         numSearch: null,
         dateSearch: null,
+        channelSearch: null,
+        videoSearch: null,
         typeSelect: ['Casual', 'Tournament'],
         tournamentIndex: null,
-        
     }
 }
 
@@ -299,6 +376,8 @@ export default {
     props: {
         players: Array,
         tournament: Object,
+        channel: Object,
+        video: Object,
         type: [String, null],
         strict: Boolean,
         hasFile: Boolean,
@@ -307,10 +386,9 @@ export default {
     data: () => {
         return {
             ...initializeData(),
-            loadingPlayers: true,
-            loadingTournaments: true,
             playerList: [],
             tournamentList: [],
+            channelList: []
         }
     },
     watch: {
@@ -345,38 +423,35 @@ export default {
 
         'hasVideo': function(hasVideo) {
             this.hasVideoFilter = hasVideo
+        },
+
+        'channel': {
+            handler: function(channel) {
+                this.channelFilter = channel
+            },
+            deep: true,
+        },
+        'channelFilter.name': function() {
+            //console.log(JSON.parse(JSON.stringify(this.channelFilter)))
         }
     },
     mounted: function() {
-        this.loadPlayers()
-        this.loadTournaments()
+        this.loadContent()
     },
     methods: {
-        // retrieve player list
-        loadPlayers: function() {
-            this.$players.get()
+        // retrieve content for dropdown lists
+        loadContent: function() {
+            this.$filterContent.get()
             .then((response) => {
                 if (response.ok) {
                     this.error = false
-                    this.playerList = response.body.players
-                } else {
-                    this.error = true
-                    this.errorMsg = `${response.status}: ${response.statusText}`
-                    console.log("Error retrieving player list.\n", this.errorMsg)
-                }
 
-                this.$emit('loaded-players')
-            })
-            .catch((error) => console.log(error))
-
-        },
-        // retrieve tournament list
-        loadTournaments: function() {
-            this.$tournaments.get()
-            .then((response) => {
-                if (response.ok) {
-                    this.error = false
                     this.tournamentList = response.body.tournaments
+                    this.playerList = response.body.players
+                    this.channelList = response.body.channels
+
+                    //console.log(JSON.parse(JSON.stringify(this.channelList)))
+                    //console.log(this.playerList)
                     //console.log(JSON.parse(JSON.stringify(this.tournamentList)))
                 } else {
                     this.error = true
@@ -384,7 +459,7 @@ export default {
                     console.log("Error retrieving tournament list.\n", this.errorMsg)
                 }
 
-                this.$emit('loaded-tournaments')
+                this.$emit('loaded-filter-content')
             })
             .catch((error) => console.log(error))
         },
@@ -427,8 +502,6 @@ export default {
         },
         // update date list
         updateDate() {
-            
-            
             if (!this.tournamentFilter.num && this.tournamentFilter.name) {
                 // if no num is selected...
                 this.dateList = this.tournamentList[this.tournamentIndex].nums.map((n) => n.date)
@@ -447,6 +520,12 @@ export default {
             this.$emit('update-tournament', this.tournamentFilter)
 
             //console.log(JSON.parse(JSON.stringify(this.dateList)))
+        },
+        updateChannel(channel) {
+            //console.log(channel)
+            if (channel.id !== this.channel.id) {
+                this.$emit('update-channel', channel)
+            }
         },
         // clear filters
         clear() {

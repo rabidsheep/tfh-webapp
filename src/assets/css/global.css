@@ -191,14 +191,25 @@ a {
     justify-content: center;
 }
 
+#filters .links > label {
+    color: #bcbcbc;
+}
+
 .xsmall #filters .links > label {
     width: 100%;
     text-align: center;
     margin-bottom: 5px;
+    
 }
 
 #filters .links .file {
     padding: 0px 10px;
+}
+
+#filters .tournament__num {
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
 }
 
 .xsmall #filters .links .checkbox {

@@ -73,7 +73,7 @@
                         <v-text-field
                         dense
                         v-model="tournament.num"
-                        label="No." />
+                        label="No. #" />
                     </v-col>
 
                     <v-col

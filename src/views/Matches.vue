@@ -2,7 +2,7 @@
   <div id="index">
       <div
       class="loading"
-      v-if="loadingPlayers || loadingTournaments"
+      v-if="loadingFilterContent"
       column
       justify-center
       align-center>
@@ -20,27 +20,30 @@
     <div
     class="index__body"
     v-scroll="onScroll"
-    v-show="!loadingPlayers && !loadingTournaments">
+    v-show="!loadingFilterContent">
       <!-- filters box -->
       <Filters
-      :players="filters.players"
-      :tournament="filters.tournament"
+      :players="filters.deep.players"
+      :tournament="filters.deep.tournament"
+      :channel="filters.deep.channel"
+      :video="filters.deep.video"
+      :type="filters.deep.type"
+      :hasFile="filters.deep.hasFile"
+      :hasVideo="filters.deep.hasVideo"
       :strict="filters.strict"
-      :type="filters.type"
-      :hasFile="filters.hasFile"
-      :hasVideo="filters.hasVideo"
-      @update-name="updateName($event.name, $event.i)"
-      @update-character="updateCharacter($event.character, $event.i)"
-      @update-strictness="updateStrictness($event)"
-      @update-type="updateType($event)"
-      @update-tournament="updateTournament($event)"
-      @update-file-filter="updateHasFile($event)"
-      @update-video-filter="updateHasVideo($event)"
+      @update-name="filters.deep.players[$event.i].name = $event.name"
+      @update-character="filters.deep.players[$event.i].character = $event.character"
+      @update-strictness="filters.strict = $event"
+      @update-type="filters.deep.type = $event"
+      @update-tournament="filters.deep.tournament = $event"
+      @update-hasfile="filters.deep.hasFile = $event"
+      @update-hasvideo="filters.deep.hasVideo = $event"
+      @update-channel="filters.deep.channel = $event"
+      @update-video="filters.deep.video = $event"
       @clear-filters="clearFilters()"
       @swap="swap()"
       @reset-strictness="strict = false"
-      @loaded-players="loadingPlayers = false"
-      @loaded-tournaments="loadingTournaments = false" />
+      @loaded-filter-content="loadingFilterContent = false" />
       
       <br />
 
@@ -95,12 +98,12 @@
         <v-spacer/>
         <v-pagination
         color="accent"
-        v-model="filters.page"
+        v-model="page"
         :length="resultsCount % this.$config.itemsPerPage === 0 ?
                   Math.floor(resultsCount / this.$config.itemsPerPage) :
                   Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
         :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
-        @input="getMatches(filters)"
+        @input="getMatches(filters, page)"
         circle />
         <v-spacer />
       </v-layout>
@@ -127,21 +130,31 @@ export default {
       showToTop: false,
       hidden: false,
       filters: {
+        deep: {
           players: [
-          {name: null, character: null},
-          {name: null, character: null}
-        ],
-        page: 1,
-        tournament: {
-          name: null,
-          num: null,
-          date: null,
+            {name: null, character: null},
+            {name: null, character: null}
+          ],
+          tournament: {
+            name: null,
+            num: null,
+            date: null,
+          },
+          channel: {
+            id: null,
+            name: null,
+          },
+          video: {
+            id: null,
+            title: null,
+          },
+          hasFile: false,
+          hasVideo: false,
+          type: null,
         },
         strict: false,
-        type: null,
-        hasFile: false,
-        hasVideo: false,
       },
+      page: 1,
       groups: [],
       resultsCount: null,
       lastVisible: null,
@@ -149,28 +162,50 @@ export default {
       errorMessage: '',
       timezone: new Date().toLocaleTimeString('en-us',{timeZoneName:'short'}).split(' ')[2],
       loadingMatches: false,
-      loadingPlayers: true,
-      loadingTournaments: true,
+      loadingFilterContent: true,
+      stop: false,
+      oldStrict: false
     }
   },
   mounted() {
-    this.getMatches(this.filters)
+    this.getMatches(this.filters, 1)
   },
   watch: {
+    'filters.deep': {
+      handler: function() {
+          this.page = 1
+          this.getMatches(this.filters, 1)
+      },
+      deep: true
+    },
+    'filters.strict': function() {
+      let p1 = JSON.stringify(this.filters.deep.players[0])
+      let p2 = JSON.stringify(this.filters.deep.players[1])
+
+      // do not update matches if sides are the same OR filters were just cleared
+      if (!this.stop && p1 !== p2) {
+        this.page = 1
+        this.getMatches(this.filters, 1)
+      }
+    }
   },
   methods: {
-    getMatches: function (filters) {
+    getMatches: function (filters, page) {
       this.loadingMatches = true
 
-      this.$matches.get({filters})
+      this.$matches.get({
+        filters: {
+          strict: filters.strict,
+          ...filters.deep
+        },
+        page: page
+      })
       .then((response) => {
         if (response.ok) {
           this.error = false
-          //this.matches = response.body.matches
           this.groups = response.body.groups
           //console.log(JSON.parse(JSON.stringify(this.groups)))
           this.resultsCount = response.body.count
-
           //console.log(this.resultsCount)
         } else {
           this.error = true
@@ -179,92 +214,52 @@ export default {
         }
 
         this.loadingMatches = false
+        this.stop = false
       })
       .catch((error) => console.log(error))
     },
-    updateCharacter(character, i) {
-      if (!this.filters.players[i].character || this.filters.players[i].character !== character) {
-        // only update character if new character is not the same as current character
-        this.$set(this.filters.players[i], 'character', character)
-        this.filters.page = 1
+    clearFilters() {
+      this.stop = true
 
-        this.getMatches(this.filters)
+      this.filters = {
+        deep: {
+          players: [
+            {name: null, character: null},
+            {name: null, character: null}
+          ],
+          tournament: {
+            name: null,
+            num: null,
+            date: null,
+          },
+          channel: {
+            id: null,
+            name: null,
+          },
+          hasFile: false,
+          hasVideo: false,
+          type: null,
+        },
+        strict: false,
       }
-
-      
+    },
+    updateCharacter(character, i) {
+      if (this.filters.deep.players[i].character !== character) {
+        this.filters.deep.players[i].character = character
+      }
     },
     updateName(name, i) {
-      this.$set(this.filters.players[i], 'name', name)
-      this.filters.page = 1
-
-      this.getMatches(this.filters)
-      
-    },
-    updateTournament(tournament) {
-      Object.assign(this.filters.tournament, tournament)
-      this.filters.page = 1
-
-      this.getMatches(this.filters)
-    },
-    updateType(type) {
-      this.filters.type = type
-      this.filters.page = 1
-
-      this.getMatches(this.filters)
-    },
-    updateStrictness(strict) {
-      this.filters.strict = strict
-      this.filters.page = 1
-
-      if (JSON.stringify(this.filters.players[0]) !== JSON.stringify(this.filters.players[1])) {
-        this.getMatches(this.filters)
+      if (this.filters.deep.players[i].name !== name) {
+        this.filters.deep.players[i].name = name
       }
-    },
-    updatePage(page) {
-      this.filters.page = page
-
-      this.getMatches(this.filters)
-    },
-    updateHasFile(hasFile) {
-      this.filters.hasFile = hasFile
-      this.filters.page = 1
-
-      this.getMatches(this.filters)
-    },
-    updateHasVideo(hasVideo) {
-      this.filters.hasVideo = hasVideo
-      this.filters.page = 1
-
-      this.getMatches(this.filters)
-    },
-    clearFilters() {
-      this.filters.type = null
-
-      this.filters.players = [
-        {name: null, character: null},
-        {name: null, character: null}
-      ]
-
-      this.filters.tournament = {
-        name: null,
-        num: null,
-        date: null
-      }
-
-      this.filters.strict = false
-
-      this.filters.page = 1
-
-      this.getMatches(this.filters)
     },
     swap() {
-      if (JSON.stringify(this.filters.players[0]) !== JSON.stringify(this.filters.players[1])) {
-        var temp = this.filters.players[0]
-        this.$set(this.filters.players, 0, this.filters.players[1])
-        this.$set(this.filters.players, 1, temp)
-        this.filters.page = 1
+      let p1 = JSON.stringify(this.filters.deep.players[0])
+      let p2 = JSON.stringify(this.filters.deep.players[1])
 
-        this.getMatches(this.filters)
+      // do not swap if sides are the same
+      if (p1 !== p2) {
+        this.filters.deep.players = [this.filters.deep.players[1], this.filters.deep.players[0]]
       }
     },
     onScroll: function (event) {

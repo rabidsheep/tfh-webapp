@@ -31,6 +31,7 @@ api.get('/matches', (req, res) => {
     let skip = 0
 
     if (req.query.filters) {
+        console.log(req.query.filters.strict)
         let players = req.query.filters.players
         let strict = req.query.filters.strict === 'true' ? true : false
         let tournament = req.query.filters.tournament.name ? req.query.filters.tournament : null
@@ -177,26 +178,7 @@ api.put('/matches', (req, res) => {
         if (match.video && match.video.id && form !== 1) {
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
 
-            return axios.get(url)
-            .then((youtube) => {
-                if (youtube.data.items.length > 0) {
-                    console.log("Successfully retrieved Youtube data")
-
-                    match.video.title = youtube.data.items[0].snippet.title
-                    match.video.date = youtube.data.items[0].snippet.publishedAt.split('T')[0]
-
-                    match.video.channel = {
-                        id: youtube.data.items[0].snippet.channelId,
-                        name: youtube.data.items[0].snippet.channelTitle
-                    }
-                    
-                } else {
-                    console.log("Failed to retrieve Youtube data")
-                }
-
-                return match
-            })
-            .catch((error) => res.status(400).send(error.toString()))
+            return fetchYoutubeData(match, url)
         } else {
             return match
         }
@@ -310,26 +292,7 @@ api.put('/matches/update', (req, res) => {
         if (match.video && match.video.id) {
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
 
-            return axios.get(url)
-            .then((youtube) => {
-                if (youtube.data.items.length > 0) {
-                    console.log("Successfully retrieved Youtube data")
-
-                    match.video.title = youtube.data.items[0].snippet.title
-                    match.video.date = youtube.data.items[0].snippet.publishedAt.split('T')[0]
-
-                    match.video.channel = {
-                        id: youtube.data.items[0].snippet.channelId,
-                        name: youtube.data.items[0].snippet.channelTitle
-                    }
-                    
-                } else {
-                    console.log("Failed to retrieve Youtube data")
-                }
-
-                return match
-            })
-            .catch((error) => res.status(400).send(error.toString()))
+            return fetchYoutubeData(match, url)
         } else {
             return match
         }
@@ -381,7 +344,6 @@ api.get('/filter/content', (req, res) => {
         ])
      })
      .then((results) => {
-         console.log(results[1])
         console.log('Returning tournament list.')
         return res.status(200).send({
             tournaments: results[0],
@@ -392,70 +354,7 @@ api.get('/filter/content', (req, res) => {
     .catch((error) => res.status(400).send(error.toString()))
 })
 
-/** get list of tournaments */
-function fetchTournaments(db) {
-    const pipeline = [
-        {'$match': { 
-            'tournament': { '$ne': null }
-        }},
-        {'$group': {
-            _id: '$tournament.name',
-            nums: {
-                
-                '$addToSet': {
-                    '$cond': {
-                        if: {
-                            '$ne': ['$tournament.num', null]
-                        },
-                        then: {
-                            num: '$tournament.num',
-                            date: '$tournament.date'
-                        },
-                        else: {
-                            date: '$tournament.date'
-                        }
-                    }
-                }
-                
-            }
-        }},
-        { '$sort': {
-            '_id': -1,
-            'nums.num': 1,
-            'nums.date': 1
-        }}
-    ]
 
-    return db.aggregate([...pipeline]).toArray()
-}
-
-/** get list of players */
-function fetchPlayers(db) {
-    const pipeline = [
-        {'$group': {
-            _id: null,
-            'p1': {'$addToSet': '$p1.name'},
-            'p2': {'$addToSet': '$p2.name'} 
-        }},
-        {'$project': {
-            'players': {'$setUnion': ['$p1', '$p2']}
-        }}
-    ]
-
-    return db.aggregate([...pipeline]).toArray()
-}
-
-function fetchChannels(db) {
-    const pipeline = [
-        {'$match': { 'channel': {'$ne': null} }},
-        {'$group': {
-            _id: null,
-            channels: {'$addToSet': '$channel'}
-        }
-    }]
-
-    return db.aggregate([...pipeline]).toArray()
-}
 
 /** authorize & verify user
  * verifyIdToken not currently working in dev environment???
@@ -556,7 +455,7 @@ api.get('/youtube-data', (req, res) => {
             return res.status(200).send({
                 id: req.query.v,
                 title: youtube.data.items[0].snippet.title,
-                date: youtube.data.items[0].snippet.publishedAt.split('T')[0],
+                date: formatDate(youtube.data.items[0].snippet.publishedAt.split('T')[0]),
                 description: youtube.data.items[0].snippet.description,
                 channel: {
                     id: youtube.data.items[0].snippet.channelId,
@@ -580,28 +479,70 @@ exports.api = functions.https.onRequest(api)
 * FUNCTIONS *
 ************/
 
+function formatDate(date) {
+    if (!date) return null
+
+    const [year, month, day] = date.split('-')
+    return `${month}-${day}-${year}`
+}
+
 // format query object for filtering matches
 function formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo) {
     let query = {}
+    let p1 = players[0]
+    let p2 = players[1]
 
     if (!strict && !unfiltered) {
         query = { $or: [{}, {}] }
 
-        for (let i = 0; i < players.length; i++) {
-            if (players[i].name) {
-                query.$or[0][`p1.name`] = new RegExp(['^' + players[i].name], 'i')
-                query.$or[1][`p2.name`] = new RegExp(['^' + players[i].name], 'i')
+        // need help trimming this down
+        if (p1.name) {
+            query.$or[0] = {
+                'p1.name': p1.name,
+                ...query.$or[0]
             }
+            query.$or[1] = {
+                'p2.name': p1.name,
+                ...query.$or[1]
+            }
+        }
 
-            if (players[i].character) {
-                query.$or[0][`p1.character`] = players[i].character
-                query.$or[1][`p2.character`] = players[i].character
+        if (p2.name) {
+            query.$or[0] = {
+                'p2.name': p2.name,
+                ...query.$or[0]
+            }
+            query.$or[1] = {
+                'p1.name': p2.name,
+                ...query.$or[1]
+            }
+        }
+        
+        if (p1.character) {
+            query.$or[0] = {
+                'p1.character': p1.character,
+                ...query.$or[0]
+            }
+            query.$or[1] = {
+                'p2.character': p1.character,
+                ...query.$or[1]
+            }
+        }
+
+        if (p2.character) {
+            query.$or[0] = {
+                'p2.character': p2.character,
+                ...query.$or[0]
+            }
+            query.$or[1] = {
+                'p1.character': p2.character,
+                ...query.$or[1]
             }
         }
     } else if (strict && !unfiltered) {      
         for (let i = 0; i < players.length; i++) {
             if (players[i].name) {
-                query[`p${i + 1}.name`] = new RegExp(['^' + players[i].name], 'i')
+                query[`p${i + 1}.name`] = players[i].name
             }
 
             if (players[i].character) {
@@ -654,4 +595,93 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
     }
 
     return query
+}
+
+/** get list of tournaments */
+function fetchTournaments(db) {
+    const pipeline = [
+        {'$match': { 
+            'tournament': { '$ne': null }
+        }},
+        {'$group': {
+            _id: '$tournament.name',
+            nums: {
+                
+                '$addToSet': {
+                    '$cond': {
+                        if: {
+                            '$ne': ['$tournament.num', null]
+                        },
+                        then: {
+                            num: '$tournament.num',
+                            date: '$tournament.date'
+                        },
+                        else: {
+                            date: '$tournament.date'
+                        }
+                    }
+                }
+                
+            }
+        }},
+        { '$sort': {
+            '_id': -1,
+            'nums.num': 1,
+            'nums.date': 1
+        }}
+    ]
+
+    return db.aggregate([...pipeline]).toArray()
+}
+
+/** get list of players */
+function fetchPlayers(db) {
+    const pipeline = [
+        {'$group': {
+            _id: null,
+            'p1': {'$addToSet': '$p1.name'},
+            'p2': {'$addToSet': '$p2.name'} 
+        }},
+        {'$project': {
+            'players': {'$setUnion': ['$p1', '$p2']}
+        }}
+    ]
+
+    return db.aggregate([...pipeline]).toArray()
+}
+
+/** get list of channels */
+function fetchChannels(db) {
+    const pipeline = [
+        {'$match': { 'channel': {'$ne': null} }},
+        {'$group': {
+            _id: null,
+            channels: {'$addToSet': '$channel'}
+        }
+    }]
+
+    return db.aggregate([...pipeline]).toArray()
+}
+
+function fetchYoutubeData(match, url) {
+    return axios.get(url)
+    .then((youtube) => {
+        if (youtube.data.items.length > 0) {
+            console.log("Successfully retrieved Youtube data")
+
+            match.video.title = youtube.data.items[0].snippet.title
+            match.video.date = formatDate(youtube.data.items[0].snippet.publishedAt.split('T')[0])
+
+            match.video.channel = {
+                id: youtube.data.items[0].snippet.channelId,
+                name: youtube.data.items[0].snippet.channelTitle
+            }
+            
+        } else {
+            console.log("Failed to retrieve Youtube data")
+        }
+
+        return match
+    })
+    .catch((error) => res.status(400).send(error.toString()))
 }

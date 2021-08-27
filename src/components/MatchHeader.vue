@@ -45,7 +45,7 @@
             </template>
 
             <template v-else>
-              <p>Casual</p>
+              <p>{{ matchDate ? `Casual | ` + matchDate.date : `Casual` }}</p>
             </template>
           </v-row>
         </v-col>
@@ -64,6 +64,7 @@ export default {
     tournamentId: [String, null],
     uploaded: String,
     timezone: String,
+    matchDate: [Object, null],
   },
   data: () => {
     return {

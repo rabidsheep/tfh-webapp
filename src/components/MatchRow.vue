@@ -54,26 +54,14 @@
                       v-bind="attrs"
                       v-on="on"
                       size="36px"
-                      color="#171717">
+                      color="accent">
                         mdi-download
                       </v-icon>
                     </a>
                   </template>
 
                   <template v-else-if="!file">
-                    <v-icon
-                    class="base"
-                    size="36px">
-                      mdi-download
-                    </v-icon>
-
-                    <div
-                    class="slash">
-                      <v-icon
-                      size="36px">
-                        mdi-slash-forward
-                      </v-icon>
-                    </div>
+                    <DownloadOff />
                   </template>
                 </div>
               </template>
@@ -95,19 +83,7 @@
             :class="video ? 'btn' : 'btn disabled'">
             <div style="position: relative;">
               <template v-if="!video">
-                <v-icon
-                class="base"
-                size="36px">
-                  mdi-youtube
-                </v-icon>
-
-                <div
-                class="slash">
-                  <v-icon
-                  size="36px">
-                    mdi-slash-forward
-                  </v-icon>
-                </div>
+                <YoutubeOff />
               </template>
 
               <a
@@ -132,8 +108,15 @@
 </template>
 
 <script>
+import DownloadOff from '.././assets/img/download-off.vue'
+import YoutubeOff from '.././assets/img/youtube-off.vue'
+
 export default {
   name: 'MatchRow',
+  components: {
+    DownloadOff,
+    YoutubeOff,
+  },
   props: {
     version: Number,
     p1: Object,

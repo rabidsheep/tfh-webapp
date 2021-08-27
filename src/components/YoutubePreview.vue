@@ -1,41 +1,57 @@
 <template>
     <v-row
     class="preview">
-    <v-col
-    :cols="$vuetify.breakpoint.xsOnly ? 2 : undefined"
-    class="leader">
         <v-col
-        justify="center"
-        class="counter">
-            {{ index + 1 }}
+        class="header pb-4"
+        :cols="12">
+            <button
+            class="remove mr-3"
+            @click.prevent="$emit('remove')">
+                <RemoveButton />
+            </button>
+
+
+            <v-divider />
+
+            <v-col
+            justify="center"
+            class="counter mx-4">
+                <h4>Match #{{ index + 1 }}</h4>
+            </v-col>
+
+            <v-divider />
+                
+                <button
+                :disabled="firstMatch"
+                :class="!firstMatch ? `move up ml-3` : `move up ml-3 disabled`"
+                @click.prevent="$emit('move-up')">
+                    <UpButton />
+                </button>
+
+                <button
+                :disabled="lastMatch"
+                :class="!lastMatch ? `move down ml-3` : `move up ml-3 disabled`"
+                @click.prevent="$emit('move-down')">
+                    <DownButton />
+                </button>
+
+            <!--
+                <button
+                class="icon-btn roundbtn move-up sm button3 mdi-arrow-up-bold mr-2 ml-3"
+                @click.prevent="$emit('move-up')" />
+
+                <button
+                class="icon-btn roundbtn sm move-down button3 mdi-arrow-down-bold"
+                @click.prevent="$emit('move-down')" />
+                --->
         </v-col>
 
-
         <v-col
-        justify="center"
-        class="remove">
-            <v-btn
-            :ripple="false"
-            fab
-            height="24px"
-            width="24px"
-            @click="$emit('remove')"
-            color="accent">
-                <v-icon size="15px">
-                    mdi-close-thick
-                </v-icon>
-            </v-btn>
-        </v-col>
-
-        
-        
-    </v-col>
-
-        <v-col
-        class="players"
-        :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : 8">
-            <v-row
-            align-self="center">
+        class="preview__data"
+        cols="12">
+            <v-col
+            class="players"
+            :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : 8">
                 <v-col
                 :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : 12) : undefined"
                 :class="`player p${i+1}`"
@@ -46,7 +62,7 @@
                     :index="i"
                     :selectionEnabled="true"
                     :anyEnabled="false"
-                    @character-select="$emit('update-character', { character: $event, index: i })"/>
+                    @character-select="$emit('update-character', { character: $event, index: i })" />
                                     
                     <v-text-field
                     v-model="player.name"
@@ -55,8 +71,17 @@
                     :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
                     maxLength="64"
                     counter="64"
-                    required
-                    />
+                    required />
+
+                    <v-select
+                    v-model="player.character"
+                    :items="$characters"
+                    :rules="rules.character"
+                    item-text="name"
+                    item-value="name"
+                    :return-object="false"
+                    style="display:none"
+                    required />
                 </v-col>
                 
                 <v-col
@@ -67,29 +92,63 @@
                 class="vs">
                     vs.
                 </v-col>
-            </v-row>
-        </v-col>
+            </v-col>
 
         <v-col
-        class="timestamp"
-        :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? undefined : 3) : 3">
-                <v-col class="field" :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? undefined : undefined) : undefined">
+        class="timestamp-file"
+        :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? undefined : 3) : undefined">
+            <v-col
+            class="timestamp"
+            :cols="$vuetify.breakpoint.xsOnly ? undefined : 12">
                 <v-text-field
+                prepend-icon="mdi-timer-outline"
                 v-model="video.timestamp"
-                :dense="$vuetify.breakpoint.xsOnly"
+                :dense="!$vuetify.breakpoint.smOnly"
+                hide-details
                 :rules="!timestampRequired ? rules.timestamp.req : rules.timestamp.noReq"
                 label="Timestamp"
                 :required="timestampRequired" />
-                </v-col>
+            </v-col>
+            
+            <v-col
+            class="file"
+            :cols="$vuetify.breakpoint.xsOnly ? undefined : 12">
+                <v-text-field
+                v-model="file"
+                prepend-icon="mdi-paperclip"
+                :dense="!$vuetify.breakpoint.smOnly"
+                hide-details
+                label="File"
+                @click="selectFiles()"
+                @click:clear="$emit('remove-file', file)"
+                clearable />
+
+                <input
+                style="display: none;"
+                ref="uploadFilesBtn"
+                type="file"
+                accept=".tfhr"
+                @change="$emit('add-file', $event.target.files[0])"
+                required />
+            </v-col>
+        </v-col>
         </v-col>
     </v-row>
 </template>
 
 <script>
 import CharacterSelect from './CharacterSelect.vue'
+import RemoveButton from '.././assets/img/remove'
+import DownButton from '.././assets/img/down'
+import UpButton from '.././assets/img/up'
 
 export default {
-    components: { CharacterSelect },
+    components: {
+        CharacterSelect,
+        RemoveButton,
+        DownButton,
+        UpButton
+    },
     name: 'YoutubePreview',
     props: {
         p1: Object,
@@ -103,11 +162,19 @@ export default {
             url: String,
         },
         timestampRequired: Boolean,
+        lastMatch: Boolean,
+        firstMatch: Boolean,
+        fileName: [String, null]
+    },
+    watch: {
+
     },
     data: () => {
         return {
             hidden: true,
             valid: false,
+            file: null,
+            isSelecting: false,
             rules: {
                 name: [
                     v => !!v || 'Required'
@@ -121,10 +188,28 @@ export default {
                         v => !v || v && /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/.test(v) || 'Invalid format'
                     ]
                 },
+                character: [
+                    v => !!v || 'Required'
+                ]
             }
         }
     },
+    watch: {
+        'fileName': function(name) {
+            this.file = name
+        }
+    },
     methods: {
+        /* makes visible upload button act like html file upload button */
+        selectFiles() {
+            this.isSelecting = true
+
+            window.addEventListener('focus', () => {
+                this.isSelecting = false
+            }, { once: true })
+
+            this.$refs.uploadFilesBtn.click()
+        },
     }
 }
 </script>

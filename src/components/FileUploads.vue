@@ -125,6 +125,7 @@
                     :key="i"
                     :index="i"
                     v-bind="match"
+                    :disableDatePicker="uploadType === 'Tournament' ? true : false"
                     :uploading="uploading"
                     :video="match.video ? match.video : null"
                     :staticUrl="staticUrl"
@@ -193,6 +194,7 @@
 <script>
 import FilePreview from './FilePreview.vue'
 import StatusOverlay from './StatusOverlay.vue'
+import moment from 'moment'
 
 export default {
     components: {
@@ -259,12 +261,6 @@ export default {
     mounted() {
     },
     methods: {
-        formatDate(date) {
-            if (!date) return null
-
-            const [year, month, day] = date.split('-')
-            return `${month}-${day}-${year}`
-        },
         /* makes visible upload button act like html file upload button */
         selectFiles() {
             this.isSelecting = true
@@ -401,37 +397,49 @@ export default {
 
                 reader.onload = function(e) {
                     if (that.matches.length < that.uploadLimit) {
-                        that.parseFileData(e.target.result, file.name, files, i)
+                        let hex = that.buf2hex(e.target.result)
+                        that.parseFileData(hex, file.name, files, i)
                     }
                 }
 
-                reader.readAsText(file, "UTF-8")
+                reader.readAsArrayBuffer(file)
             })(this, files, i)
+        },
+        /** converts array buffer to string */
+        buf2hex(buffer) {
+            return [...new Uint8Array(buffer)]
+                .map(x => x.toString(16).padStart(2, '0'))
+                .join('')
+        },
+        /* converts hex values to human language */
+        hex2a(x) {
+            var hex = x.toString();//force conversion
+            var str = '';
+            for (var i = 0; i < hex.length; i += 2)
+                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
+            return str;
         },
         /**
          * parses file data
-         * regex stuff for future reference:
-         * full filename (YYYY-MM-DD_HH-mm-ss_Character1_Character2.tfhr)
-         * [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}\_[A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}\.tfhr
-         * date & time only:
-         * [0-9]{4}\-[0-9]{2}\-[0-9]{2}\_[0-9]{2}\-[0-9]{2}\-[0-9]{2}
-         * characters only:
-         * [A-Za-z]{3,8}\_vs\_[A-Za-z]{3,8}
-         * 
          * p1 hex @ offset 8-72
          * p2 hex @ offset 73-137
+         * file date @ offset 96-99
          * character hexes @ 197-213 (max)
          */
-        parseFileData(result, fileName, files, i) {
-            
+        parseFileData(hex, fileName, files, i) {
+                        
             // error if file uses non-.tfhr extension
             if (fileName.substring(fileName.length - 5, fileName.length) !== '.tfhr') {
                 this.setErrors('extension', fileName)
             } else if (this.matches.find(m => m.file.name === fileName)) {
                 this.setErrors('duplicate', fileName)
             } else {  
-                let playerNames = result.substring(8, 137).replace(/\0{1,65}/g, '\n').split('\n', 2)
-                let characterNames = result.substring(197,213).match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
+                let fileText = this.hex2a(hex)
+                let hexTime = hex.substring(300,308).match(/.{1,2}/g).reverse().join('')
+                let timestamp = new Date(parseInt(hexTime, 16) * 1000).toISOString().split('T')
+
+                let playerNames = fileText.substring(8, 137).replace(/\0{1,65}/g, '\n').split('\n', 2)
+                let characterNames = fileText.substring(197,213).match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
 
                 // error if player or character names cannot be parsed
                 if ( playerNames.length !== 2 || characterNames.length !== 2) {
@@ -439,10 +447,14 @@ export default {
                 } else {
                     let match = {
                         userId: this.uid,
+                        matchDate: {
+                            date: timestamp[0],
+                            time: timestamp[1]
+                        },
                         file: {
                             url: null,
                             name: fileName,
-                            version: result.charCodeAt(146),
+                            version: fileText.charCodeAt(146),
                         },
                         p1: {
                             name: playerNames[0],
@@ -551,7 +563,13 @@ export default {
             } else {
                  delete this.matches[i].video
             }
-        }
+        },
+        formatDate (date) {
+            if (!date) return null
+
+            const [year, month, day] = date.split('-')
+            return `${month}-${day}-${year}`
+        },
         
     }
 }

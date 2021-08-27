@@ -18,7 +18,11 @@ const themes = {
     warning: '#FB8C00',
     error: '#FF5252',
     youtubeBtn: '#d52726',
-    button2: '#212121'
+    button2: '#212121',
+    button3: '#089a49',
+    button4: '#171717',
+    buttonDisabled: '#5e5e5e',
+    matchRowHover: '#2e2e2e',
   },
   oleander: {
     background: {

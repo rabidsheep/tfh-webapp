@@ -181,4 +181,9 @@ export default {
   padding: 24px 0px;
 }
 
+::v-deep .mdi {
+  display: flex !important;
+  
+}
+
 </style>

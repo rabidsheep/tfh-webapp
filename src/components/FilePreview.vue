@@ -3,25 +3,55 @@
         <v-col
         cols="12"
         class="header">
-            <v-btn
-            :ripple="false"
-            class="remove"
-            fab
-            height="24px"
-            width="24px"
-            @click="$emit('remove')"
-            color="accent">
-                <v-icon size="15px">
-                    mdi-close-thick
-                </v-icon>
-            </v-btn>
+            <v-col
+            :cols="$vuetify.breakpoint.smAndDown ? undefined : 8"
+            class="filename">
+                <v-btn
+                :ripple="false"
+                class="remove"
+                fab
+                height="24px"
+                width="24px"
+                @click="$emit('remove')"
+                color="accent">
+                    <v-icon size="15px">
+                        mdi-close-thick
+                    </v-icon>
+                </v-btn>
+                
+                <h4>
+                    {{ index + 1 + '. ' + file.name}}
+                </h4>
+            </v-col>
             
-            <h4>
-                {{ index + 1 }}. {{ file.name }}
-            </h4>
-        </v-col>
+            <v-col class="date">
+                <v-menu
+                v-model="datepicker"
+                :close-on-content-click="false"
+                :nudge-right="40"
+                transition="scale-transition"
+                offset-y
+                min-width="auto">
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-text-field
+                        single-line
+                        class="date__field"
+                        v-model="dateFormatted"
+                        label="Date"
+                        required
+                        prepend-icon="mdi-calendar"
+                        :disabled="disableDatePicker"
+                        v-bind="attrs"
+                        v-on="on" />
+                    </template>
 
-        <div style="width:100%;"><br /></div>
+                    <v-date-picker
+                    :disabled="disableDatePicker"
+                    v-model="date"
+                    @input="datepicker = false" />
+                </v-menu>
+            </v-col>
+        </v-col>
 
         <v-col
         class="file-info"
@@ -35,7 +65,7 @@
                 <CharacterSelect
                 :currentCharacter ="player.character"
                 :index="i"
-                :selectionEnabled="false"
+                :selectionEnabled="true"
                 :anyEnabled="false"
                 @character-select="$emit('update-character', { character: $event, index: i})"/>
                                 
@@ -46,6 +76,7 @@
                 :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
                 maxLength="64"
                 counter="64"
+                single-line
                 required
                 />
             </v-col>
@@ -65,6 +96,7 @@
             cols="12"
             class="link">
                 <v-text-field
+                single-line
                 ref="url"
                 :dense="$vuetify.breakpoint.mdAndUp"
                 v-model="url"
@@ -81,6 +113,7 @@
             cols="12"
             class="timestamp">
                 <v-text-field
+                single-line
                 v-model="timestamp"
                 :dense="$vuetify.breakpoint.mdAndUp"
                 @blur="timestamp = ( timestamp && timestamp.match(/((?:[0-9]{1,2})h)?((?:[0-9]{1,3})m)?((?:[0-9]{1,5})s)?/g)
@@ -122,6 +155,8 @@ export default {
         currentTimestamp: [String, null],
         individual: Boolean,
         staticUrl: [String, null],
+        matchDate: [Object, null],
+        disableDatePicker: Boolean,
     },
     data: () => {
         return {
@@ -130,6 +165,9 @@ export default {
             url: null,
             tempUrl: null,
             timestamp: null,
+            datepicker: false,
+            date: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
+            dateFormatted: null,
             rules: {
                 name: [
                     v => !!v || 'Required'
@@ -142,6 +180,11 @@ export default {
                     v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
                 ],
             }
+        }
+    },
+    mounted() {
+        if (this.matchDate) {
+            this.dateFormatted = this.formatDate(this.matchDate.date)
         }
     },
     // test url: https://www.youtube.com/watch?v=uciAaVk3xaE
@@ -186,6 +229,10 @@ export default {
                 this.$emit('delete-timestamp')
             }
         },
+        'date': function(v) {
+            this.$emit('update-match-date', new Date(v).toISOString().split('T'))
+            this.dateFormatted = this.formatDate(v)
+        }
     },
     methods: {
         remove: function() {
@@ -197,7 +244,13 @@ export default {
             if (i === 0 && !individual) {
                 this.$emit('update-static-url', temp)
             }
-        }
+        },
+        formatDate (date) {
+            if (!date) return null
+
+            const [year, month, day] = date.split('-')
+            return `${month}-${day}-${year}`
+        },
     }
 }
 </script>
@@ -213,6 +266,20 @@ export default {
 
 .wide .upload__match {
     flex-wrap: nowrap;
+}
+
+.small #files .header .date {
+    min-width: 120px;
+    max-width: 160px;
+}
+
+.xsmall #files .header .date {
+    min-width: 120px;
+    max-width: 120px;
+}
+
+.small .header {
+    justify-content: space-between;
 }
 
 .wide .p1 >>> .v-input__append-inner {

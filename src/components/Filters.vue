@@ -535,7 +535,7 @@ export default {
             let tournament = Object.values(this.tournamentFilter).every ( e => e === null )
 
             // if anything has been changed, clear the filter (this prevents unnecessary calls to the server)
-            if (!p1 || !p2 || !tournament || this.type || this.strict && !p1 || this.strict && !p2) {
+            if (!p1 || !p2 || !tournament || this.type || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter) {
                 Object.assign(this.$data, { 
                     ...initializeData(),
                     loadingPlayers: this.loadingPlayers,

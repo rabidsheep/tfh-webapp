@@ -46,23 +46,26 @@
             color="accent">
               <template v-slot:activator="{on, attrs}">
                 <div
-                :class="file ? 'btn' : 'btn disabled'"
-                style="position: relative;">
-                  <template v-if="file">
-                    <a :href="file.url" >
-                      <v-icon
-                      v-bind="attrs"
-                      v-on="on"
-                      size="36px"
-                      color="accent">
-                        mdi-download
-                      </v-icon>
-                    </a>
-                  </template>
+                :class="file ? 'btn' : 'btn disabled'">
+                  <a :href="file.url"
+                  v-if="file">
+                    <v-icon
+                    v-bind="attrs"
+                    v-on="on"
+                    size="36px"
+                    color="accent">
+                      mdi-download
+                    </v-icon>
+                  </a>
 
-                  <template v-else-if="!file">
-                    <DownloadOff />
-                  </template>
+                  <v-icon
+                  v-else-if="!file"
+                  v-bind="attrs"
+                  v-on="on"
+                  size="36px"
+                  color="buttonDisabled">
+                    mdi-download-off
+                  </v-icon>
                 </div>
               </template>
 
@@ -81,16 +84,11 @@
           <template v-else>
             <div
             :class="video ? 'btn' : 'btn disabled'">
-            <div style="position: relative;">
-              <template v-if="!video">
-                <YoutubeOff />
-              </template>
-
               <a
-              v-else-if="video"
+              v-if="video"
               :href="video.timestamp ?
-              `${video.url}&t=${video.timestamp}` :
-              `${video.url}`"
+              `https://youtu.be/${video.id}&t=${video.timestamp}` :
+              `https://youtu.be/${video.id}`"
               :target="`_blank`">
                 <v-icon
                 color="accent"
@@ -99,7 +97,9 @@
                   mdi-youtube
                 </v-icon>
               </a>
-              </div>
+
+              <YoutubeOff
+              v-else-if="!video" />
             </div>
           </template>
         </v-col>
@@ -108,13 +108,11 @@
 </template>
 
 <script>
-import DownloadOff from '.././assets/img/download-off.vue'
 import YoutubeOff from '.././assets/img/youtube-off.vue'
 
 export default {
   name: 'MatchRow',
   components: {
-    DownloadOff,
     YoutubeOff,
   },
   props: {

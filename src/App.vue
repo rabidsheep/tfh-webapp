@@ -3,12 +3,15 @@
     <v-toolbar id="menubar" height="58px" maxHeight="58px" dense color="accent">
         <!-- replace <a> with <router-link> eventually -->
         <router-link to="/" @click.native="forceRerender($event)">
-            <img class="logo" src="./assets/img/pixel/1.png" />
+          <div class="logo">
+            <img src="./assets/img/pixel/1.png" alt="fortnite gaming"/>
+          
+          <v-toolbar-title class="name">
+              fortnite gaming
+          </v-toolbar-title>
+          </div>
         </router-link>
 
-        <v-toolbar-title>
-            fortnite gaming
-        </v-toolbar-title>
 
         <router-link to="/upload" @click.native="forceRerender($event)">
             <v-btn icon>
@@ -157,11 +160,11 @@ export default {
 }
 
 ::v-deep #filters__main {
-  background: var(--v-background-darken1);
+  background: var(--v-subBackground-base);
 }
 
 ::v-deep .theme--dark.v-stepper {
-  background: var(--v-background-darken1);
+  background: var(--v-subBackground-base);
 }
 
 ::v-deep .v-menu__content.player-select-menu {
@@ -184,6 +187,10 @@ export default {
 ::v-deep .mdi {
   display: flex !important;
   
+}
+
+::v-deep .v-text-field__slot > input {
+    text-overflow: ellipsis;
 }
 
 </style>

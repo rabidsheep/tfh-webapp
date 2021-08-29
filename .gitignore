@@ -6,6 +6,7 @@
 *Config.js
 /functions/*Config.js
 * copy.vue
+/backup
 
 # Log files
 npm-debug.log*

@@ -65,14 +65,14 @@ let youtubeDataRes = Vue.resource(`${uri}/youtube-data/`, {}, youtubeMethods)
 
 Vue.prototype.$version = 2;
 Vue.prototype.$characters = [
-  {name: 'Any Character', value: null, devName: '', id: 0, names: ['Any Character', 'Any']},
-  {name: 'Arizona', value: 'Arizona', devName: 'Cow', id: 1, names: ['Arizona', 'Ari', 'Cow']},
-  {name: 'Oleander', value: 'Oleander', devName: 'Uni', id: 2, names: ['Oleander', 'Ole', 'Uni']},
-  {name: 'Paprika', value: 'Paprika', devName: 'Paca', id: 3, names: ['Paprika', 'Pap', 'Paca']},
-  {name: 'Pom', value: 'Pom', devName: 'Pom', id: 4, names: ['Pom']},
-  {name: 'Shanty', value: 'Shanty', devName: 'Shanty', id: 5, names: ['Shanty']},
-  {name: 'Tianhuo', value: 'Tianhuo', devName: 'Tianhuo', id: 6, names: ['Tianhuo', 'Tian']},
-  {name: 'Velvet', value: 'Velvet', devName: 'Velvet', id: 7, names: ['Velvet', 'Vel']}
+  {name: 'Any Character', value: null, devName: '', img: 'Any', names: ['Any', '?', '???']},
+  {name: 'Arizona', value: 'Arizona', devName: 'Cow', img: 'Arizona', names: ['Arizona', 'Ari', 'Cow']},
+  {name: 'Oleander', value: 'Oleander', devName: 'Uni', img: 'Oleander', names: ['Oleander', 'Ole', 'Uni']},
+  {name: 'Paprika', value: 'Paprika', devName: 'Paca',  img: 'Paprika', names: ['Paprika', 'Pap', 'Paca']},
+  {name: 'Pom', value: 'Pom', devName: 'Pom', img: 'Pom', names: ['Pom']},
+  {name: 'Shanty', value: 'Shanty', devName: 'Shanty', img: 'Shanty', names: ['Shanty', 'Sha']},
+  {name: 'Tianhuo', value: 'Tianhuo', devName: 'Tianhuo', img: 'Tianhuo', names: ['Tianhuo', 'Tian']},
+  {name: 'Velvet', value: 'Velvet', devName: 'Velvet', img: 'Velvet', names: ['Velvet', 'Vel']}
 ]
 
 Vue.use({

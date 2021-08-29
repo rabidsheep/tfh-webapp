@@ -87,8 +87,6 @@
 
                         <br />
 
-
-                        
                         <v-btn
                         color="button2"
                         rounded
@@ -96,11 +94,9 @@
                             <v-icon left>mdi-file</v-icon>
                             TFHR File
                         </v-btn>
-
                         
                         <br />
                         
-
                         <v-btn
                         color="button2"
                         rounded
@@ -108,7 +104,6 @@
                             <v-icon left>mdi-youtube</v-icon>
                             YouTube Link
                         </v-btn>
-                        
                     </div>
                 </v-stepper-content>
 
@@ -124,7 +119,7 @@
                         column
                         align-center
                         justify-center
-                        class="heading">
+                        class="heading mb-6">
                             <v-btn
                             color="button2"
                             class="back"
@@ -137,6 +132,8 @@
 
                             <h1>Upload Matches</h1>
                         </v-layout>
+
+                        <br />
                         
                         <FileUploads
                         v-if="uploadType == 'files'"
@@ -287,6 +284,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../assets/css/uploads.css';
+
   .v-stepper >>> .v-stepper__wrapper {
       overflow: visible !important;
   }

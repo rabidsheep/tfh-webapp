@@ -268,3 +268,8 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+@import '../assets/css/matches.css';
+@import '../assets/css/filters.css';
+</style>

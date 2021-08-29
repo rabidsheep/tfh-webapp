@@ -42,7 +42,7 @@ api.get('/matches', (req, res) => {
         skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
 
 
-        for (let i = 0; i < players.length; i++) {
+        for (let i = 0; i < 2; i++) {
             if (players[i].name) {
                 unfiltered = false
                 break
@@ -84,24 +84,12 @@ api.get('/matches', (req, res) => {
                         type: '$type',
                         videoId: '$video.id',
                         uploadedBy: '$userId',
+                        uploadId: '$uploadId',
                     },
                     else: {
-                        // can probably delete conditional ?
-                        '$cond': {
-                            if: {
-                                '$eq': ['$linked', true]
-                            },
-                            then: {
-                                uploadId: '$uploadId',
-                                linked: true,
-                                type: '$type',
-                            },
-                            else: {
-                                id: '$_id',
-                                type: '$type',
-                            }
-                        }
-                    }
+                        uploadId: '$uploadId',
+                        type: '$type',
+                    },
                 }
             },
             // initial upload date
@@ -166,14 +154,15 @@ api.get('/matches', (req, res) => {
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
-    let players = []
     let form = parseInt(req.body.form)
+    let uploadId = mongo.ObjectId().toString()
+    let tournament = req.body.matches[0].tournament ? req.body.matches[0].tournament : null
     
 
     let matches = req.body.matches.map((match) => {
-        if (!players.includes(match.p1.name)) players.push(match.p1.name)
-        if (!players.includes(match.p2.name)) players.push(match.p2.name)
-
+        if (!tournament) match.uploadId = mongo.ObjectId().toString()
+        else match.uploadId = uploadId
+        
         // might not need?
         if (match.video && match.video.id && form !== 1) {
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
@@ -183,8 +172,6 @@ api.put('/matches', (req, res) => {
             return match
         }
     })
-
-    let tournament = req.body.matches[0].tournament ? req.body.matches[0].tournament : null
 
     // universal database call
     let connectToDb = Promise.all(matches).then((matches) => {
@@ -201,7 +188,7 @@ api.put('/matches', (req, res) => {
         chain = connectToDb
         .then((results) => {
             let matches = results[0]
-            console.log('Connected.\nUploading match...')
+            console.log('Connected.\nUpdating tournaments collection...')
     
             let db = results[1].db('tfhr')
             return Promise.all([
@@ -234,6 +221,7 @@ api.put('/matches', (req, res) => {
             let tournamentId = (results[2].value ?
             results[2].value._id :
             results[2].lastErrorObject.upserted).toString()
+
 
             return Promise.all([
                 db,
@@ -273,9 +261,7 @@ api.put('/matches', (req, res) => {
 
         console.log('Matches uploaded:')
 
-        for (id in matchIds) {
-            console.log(matchIds[id])
-        }
+        for (id in matchIds) console.log(matchIds[id])
 
         return res.status(200).send({matchIds: matchIds})
     })
@@ -284,11 +270,7 @@ api.put('/matches', (req, res) => {
 
 /** update match info using edit page */
 api.put('/matches/update', (req, res) => {
-    let players = []
     let matches = req.body.map((match) => {
-        if (!players.includes(match.p1.name)) players.push(match.p1.name)
-        if (!players.includes(match.p2.name)) players.push(match.p2.name)
-
         if (match.video && match.video.id) {
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
 
@@ -318,6 +300,7 @@ api.put('/matches/update', (req, res) => {
                     p1: matches[i].p1,
                     p2: matches[i].p2,
                     video: matches[i].video,
+                    channel: matches[i].channel,
                 }},
             )
         }
@@ -361,7 +344,7 @@ api.get('/filter/content', (req, res) => {
 */
 api.get('/users', (req, res) => {
     //console.log(admin.auth())
-    console.log('--> Verifying User <--')
+    console.log('Verifying User')
     if (!req.headers.authorization && !dev) {
         console.log('Unauthorized')
         res.status(403).send('Unauthorized')
@@ -416,7 +399,11 @@ api.put('/users', (req, res) => {
         console.log('Creating user')
         client.db('tfhr')
         .collection('users')
-        .updateOne({ uid: user.uid }, { $set: { email: user.email } }, { upsert: true })
+        .updateOne(
+            { uid: user.uid },
+            { $set: { email: user.email } },
+            { upsert: true }
+        )
 
         return user
     })
@@ -540,7 +527,7 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
             }
         }
     } else if (strict && !unfiltered) {      
-        for (let i = 0; i < players.length; i++) {
+        for (let i = 0; i < 2; i++) {
             if (players[i].name) {
                 query[`p${i + 1}.name`] = players[i].name
             }
@@ -670,9 +657,8 @@ function fetchYoutubeData(match, url) {
             console.log("Successfully retrieved Youtube data")
 
             match.video.title = youtube.data.items[0].snippet.title
-            match.video.date = formatDate(youtube.data.items[0].snippet.publishedAt.split('T')[0])
 
-            match.video.channel = {
+            match.channel = {
                 id: youtube.data.items[0].snippet.channelId,
                 name: youtube.data.items[0].snippet.channelTitle
             }

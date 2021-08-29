@@ -13,7 +13,7 @@
                 <v-row
                 justify="center"
                 align="center"
-                class="ma-5">
+                class="wrapper">
                     <!-- player filters -->
                     <v-col
                     cols="12"
@@ -26,7 +26,7 @@
                         :key="i"
                         :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"> 
                             <CharacterSelect
-                            :currentCharacter="player.character? player.character : null"
+                            :currentCharacter="player.character? player.character : `Any`"
                             :selectionEnabled="true"
                             :anyEnabled="true"
                             @character-select="selectCharacter($event, i)"/>
@@ -79,21 +79,20 @@
                                 </v-btn>
                             </v-col>
                         </v-col>
-
-                        <v-col
-                        cols="12"
-                        class="strictness mt-3 mb-3 pa-0"
-                        justify="center">
-                            <v-switch
-                            color="accent"
-                            v-model="strictFilter"
-                            class="checkbox"
-                            label="Strict Player Sides"
-                            value
-                            @change="$emit('update-strictness', $event)"
-                            hide-details/>
-                        </v-col>
                     </v-col>
+
+                    <div
+                    class="strictness mt-3 mb-3 pa-0"
+                    justify="center">
+                        <v-switch
+                        color="accent"
+                        v-model="strictFilter"
+                        class="checkbox"
+                        label="Strict Player Sides"
+                        value
+                        @change="$emit('update-strictness', $event)"
+                        hide-details/>
+                    </div>
                     <!-- /player filters -->
 
                     <!-- tournament filters -->
@@ -295,7 +294,7 @@
                         <label>Show Only Matches With:</label>
 
                         <v-checkbox
-                        class="file checkbox ma-0"
+                        class="file checkbox"
                         hide-details
                         color="accent"
                         label="TFHR File"
@@ -303,7 +302,7 @@
                         @change="$emit('update-hasfile', $event)" />
 
                         <v-checkbox
-                        class="video checkbox ma-0"
+                        class="video checkbox"
                         hide-details
                         color="accent"
                         label="Video"
@@ -312,7 +311,6 @@
                     </v-row>
 
                     <v-col
-                    class="pa-0"
                     cols="12"
                     align="center">
                         <v-btn

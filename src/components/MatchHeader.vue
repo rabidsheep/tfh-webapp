@@ -4,6 +4,7 @@
       class="btn">
         <router-link
         class="edit"
+        title="Edit Data"
         :to="{
           path: 'edit',
           query: group.tournament ?

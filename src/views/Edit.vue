@@ -437,12 +437,10 @@ export default {
 </script>
 
 <style scoped>
+@import '../assets/css/edit.css';
+
 .v-stepper >>> .v-stepper__wrapper {
     overflow: visible !important;
-}
-
-.upload .player >>> .v-input__slot::before {
-    width: calc(100% - 1px);
 }
 
 .wide .p1 >>> .v-input__append-inner {

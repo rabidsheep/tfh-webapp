@@ -4,41 +4,40 @@
         <v-col
         class="file-info align-center"
         :cols="$vuetify.breakpoint.smAndDown ? 12 : 8">
-            <v-col
-            :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
-            :class="`player p${i+1}`"
-            v-for="(player, i) in [p1, p2]"
-            :key="i"
-            :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
-                <CharacterSelect
-                :currentCharacter ="player.character"
-                :index = "i"
-                :selectionEnabled="false"
-                :anyEnabled="false"
-                @character-select="$emit('update-character', { character: $event, index: i})"/>
-                                
-                <v-text-field
-                v-model="player.name"
-                :rules="rules.name"
-                :label="`Player ${i + 1}`"
-                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
-                maxLength="64"
-                counter="64"
-                required
-                />
-            </v-col>
+            <template v-for="(player, i) in [p1, p2]">
+                <v-col
+                :class="`player p${i+1}`"
+                :key="i"
+                :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
+                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
+                    <CharacterSelect
+                    :currentCharacter ="player.character"
+                    :index="i"
+                    :selectionEnabled="false"
+                    :anyEnabled="false"
+                    @character-select="$emit('update-character', { character: $event, index: i})" />
+                                    
+                    <v-text-field
+                    :label="`Player ${i + 1}`"
+                    v-model="player.name"
+                    maxLength="64"
+                    counter="64"
+                    required
+                    :rules="rules.name"
+                    :reverse="i === 0 && !$vuetify.breakpoint.smAndDown" />
+                </v-col>
+            </template>
             
             <v-col
+            v-if="!$vuetify.breakpoint.smAndDown"
             cols="1"
             align="center"
             justify="center"
-            class="vs"
-            v-if="!$vuetify.breakpoint.smAndDown">
+            class="vs">
                 vs.
             </v-col>
         </v-col>
             
-
         <v-col
         class="youtube"
         :cols="$vuetify.breakpoint.smAndDown ? 12 : 4 ">
@@ -72,8 +71,6 @@
                 label="Timestamp"/>
             </v-col>
         </v-col>
-
-        
     </v-row>
 </template>
 
@@ -171,10 +168,6 @@ export default {
 </script>
 
 <style scoped>
-.upload .player >>> .v-input__slot::before {
-    width: calc(100% - 1px);
-}
-
 .wide .p1 >>> .v-input__append-inner {
     padding-left: 0px;
     padding-right: 4px;

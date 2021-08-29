@@ -36,16 +36,16 @@ let matchesMethods = {
 }
 let matchesRes = Vue.resource(`${uri}/matches/`, {}, matchesMethods)
 
+let updateMethods = {
+  save: { method: 'PUT' },
+  delete: { method: 'DELETE' }
+}
+let updateRes = Vue.resource(`${uri}/matches/update`, {}, updateMethods)
+
 let filesMethods = {
   save: { method: 'PUT' }
 }
-
 let filesRes = Vue.resource(`${uri}/files`, {}, filesMethods)
-
-let playerMethods = {
-  get: { method: 'GET' },
-}
-let playerRes = Vue.resource(`${uri}/players/`, {}, playerMethods)
 
 let usersMethods = {
   get: { method: 'GET' },
@@ -53,6 +53,10 @@ let usersMethods = {
 }
 let usersRes = Vue.resource(`${uri}/users/`, {}, usersMethods)
 
+let filterContentMethods = {
+  get: { method: 'GET' }
+}
+let filterContentRes = Vue.resource(`${uri}/filter/content`, {}, filterContentMethods)
 
 let youtubeMethods = {
   get: { method: 'GET' }
@@ -61,14 +65,14 @@ let youtubeDataRes = Vue.resource(`${uri}/youtube-data/`, {}, youtubeMethods)
 
 Vue.prototype.$version = 2;
 Vue.prototype.$characters = [
-  {name: 'Any Character', devName: '', id: 0, names: ['Any Character', 'Any']},
-  {name: 'Arizona', devName: 'Cow', id: 1, names: ['Arizona', 'Ari', 'Cow']},
-  {name: 'Oleander', devName: 'Uni', id: 2, names: ['Oleander', 'Ole', 'Uni']},
-  {name: 'Paprika', devName: 'Paca', id: 3, names: ['Paprika', 'Pap', 'Paca']},
-  {name: 'Pom', devName: 'Pom', id: 4, names: ['Pom']},
-  {name: 'Shanty', devName: 'Shanty', id: 5, names: ['Shanty']},
-  {name: 'Tianhuo', devName: 'Tianhuo', id: 6, names: ['Tianhuo', 'Tian']},
-  {name: 'Velvet', devName: 'Velvet', id: 7, names: ['Velvet', 'Vel']}
+  {name: 'Any Character', value: null, devName: '', img: 'Any', names: ['Any', '?', '???']},
+  {name: 'Arizona', value: 'Arizona', devName: 'Cow', img: 'Arizona', names: ['Arizona', 'Ari', 'Cow']},
+  {name: 'Oleander', value: 'Oleander', devName: 'Uni', img: 'Oleander', names: ['Oleander', 'Ole', 'Uni']},
+  {name: 'Paprika', value: 'Paprika', devName: 'Paca',  img: 'Paprika', names: ['Paprika', 'Pap', 'Paca']},
+  {name: 'Pom', value: 'Pom', devName: 'Pom', img: 'Pom', names: ['Pom']},
+  {name: 'Shanty', value: 'Shanty', devName: 'Shanty', img: 'Shanty', names: ['Shanty', 'Sha']},
+  {name: 'Tianhuo', value: 'Tianhuo', devName: 'Tianhuo', img: 'Tianhuo', names: ['Tianhuo', 'Tian']},
+  {name: 'Velvet', value: 'Velvet', devName: 'Velvet', img: 'Velvet', names: ['Velvet', 'Vel']}
 ]
 
 Vue.use({
@@ -77,12 +81,16 @@ Vue.use({
       get () { return matchesRes }
     })
 
-    Object.defineProperty(Vue.prototype, '$players', {
-      get () { return playerRes }
+    Object.defineProperty(Vue.prototype, '$update', {
+      get () { return updateRes }
     })
-
+    
     Object.defineProperty(Vue.prototype, '$users', {
       get () { return usersRes }
+    })
+
+    Object.defineProperty(Vue.prototype, '$filterContent', {
+      get () { return filterContentRes }
     })
 
     Object.defineProperty(Vue.prototype, '$youtubeData', {

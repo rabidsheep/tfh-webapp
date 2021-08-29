@@ -25,75 +25,86 @@
                 
                 <!-- sign in -->
                 <v-stepper-content step="1">
-                    <v-layout
+                    <div
                     id="step__sign-in"
-                    class="step"
-                    column
-                    justify-center
-                    align-center>
+                    class="step">
                         <h1>Sign In</h1>
 
-                        <v-layout
+                        
+                        <br />
+
+                        <div
                         class="body"
+                        v-show="allowLogin"
                         column
                         justify-center
                         align-center>
                             <v-btn
+                            color="button2"
                             height="50"
                             rounded
-                            v-show="!$firebase.auth().currentUser"
+                            :disabled="!allowLogin"
                             @click="signIn('google')">
                                 <v-icon left>mdi-google</v-icon>
                                 Google
                             </v-btn>
-                        </v-layout>
+                            <!--
+                            <v-btn height="50"
+                            v-show="!$firebase.auth().currentUser"
+                            @click="signIn('twitter')">
+                                <v-icon left>mdi-twitter</v-icon> Twitter
+                            </v-btn>
+                            -->
+                        </div>
 
-                        <v-progress-linear
-                        color="accent"
-                        indeterminate
-                        v-show="$firebase.auth().currentUser || loggingIn"/>
+                        <div
+                        v-show="!loggingIn && !allowLogin || loggingIn">
+                            <v-progress-linear
+                            color="accent"
+                            indeterminate/>
 
-                        <template v-if="$firebase.auth().currentUser || loggingIn">
                             <br />
-                            {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
-                        </template>
+
+                            <template v-if="!allowLogin && !loggingIn">
+                                Checking auth state...
+                            </template>
+
+                            <template v-if="loggingIn">
+                                {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
+                            </template>
+                        </div>
 
                         
-                        <!--<v-btn height="50" v-show="!$firebase.auth().currentUser" @click="signIn('twitter')">
-                            <v-icon left>mdi-twitter</v-icon> Twitter
-                        </v-btn>-->
-                    </v-layout>
+                        
+                    </div>
                 </v-stepper-content>
 
                 <v-stepper-content step="2">
-                    <v-layout
+                    <div
                     id="step__select"
-                    class="step"
-                    column
-                    justify-center
-                    align-center>
+                    class="step">
                         <h1>Select Upload Type</h1>
 
-                        <v-layout
-                        column
-                        class="body"
-                        justify-center
-                        align-center>
-                            <v-btn
-                            rounded
-                            @click="setUploadType('files')">
-                                <v-icon left>mdi-file</v-icon>
-                                TFHR File
-                            </v-btn>
+                        <br />
 
-                            <v-btn
-                            rounded
-                            @click="setUploadType('youtube')">
-                                <v-icon left>mdi-youtube</v-icon>
-                                YouTube Link
-                            </v-btn>
-                        </v-layout>
-                    </v-layout>
+                        <v-btn
+                        color="button2"
+                        rounded
+                        @click="setUploadType('files')">
+                            <v-icon left>mdi-file</v-icon>
+                            TFHR File
+                        </v-btn>
+                        
+                        <br />
+                        
+                        <v-btn
+                        color="button2"
+                        rounded
+                        @click="setUploadType('youtube')">
+                            <v-icon left>mdi-youtube</v-icon>
+                            YouTube Link
+                        </v-btn>
+                    </div>
                 </v-stepper-content>
 
                 <!-- upload form -->
@@ -108,8 +119,9 @@
                         column
                         align-center
                         justify-center
-                        class="heading">
+                        class="heading mb-6">
                             <v-btn
+                            color="button2"
                             class="back"
                             x-small
                             fab
@@ -120,6 +132,8 @@
 
                             <h1>Upload Matches</h1>
                         </v-layout>
+
+                        <br />
                         
                         <FileUploads
                         v-if="uploadType == 'files'"
@@ -147,7 +161,6 @@ export default {
     },
     name: 'Uploads',
     props: {
-        user: [String, null]
     },
     data: () => {
         return {
@@ -161,84 +174,88 @@ export default {
             isAdmin: false,
             isRegistered: true,
             loggingIn: false,
+            allowLogin: false,
         }
     },
+    watch: {
+    },
     mounted: function () {
-        if (!this.user) {
-            this.$firebase.auth().onAuthStateChanged((user) => {
-                
-                if (!user) {
+        // auth state watcher
+        this.$firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                    this.uid = null
                     this.step = 1
+                    
+                    this.allowLogin = true
+                    console.log('User not found')
                     return
-                }
+            } else {
+                let loginRef = null
 
                 if (process.env.NODE_ENV == "production") {
                     console.log("Production Environment")
 
-                    this.setAuthToken()
+                    loginRef = this.setAuthToken()
                     .then(() => {
                         console.log('Checking user')
-                        this.loggingIn = true
                         return this.$users.get({ uid: user.uid })
                     })
-                    .then((response) => {
-                        let userData = response.body[0]
-                        if (userData) {
-                            console.log("Retrieved user data")
 
-                            this.isAdmin = userData.admin
-                            this.step = 2
-                            this.loading = false
-                            this.loggingIn = false
-                        } else {
-                            console.log("Creating new user")
-                            this.isRegistered = false
-
-                            let newUser = {
-                                uid: user.uid,
-                                email: user.email,
-                                admin: false
-                            }
-
-                            this.$users.save(newUser)
-                            .then(() => {
-                                this.step = 2
-                                this.loading = false
-                                this.isRegistered = true
-                                this.loggingIn = false
-                            })
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error)
-                    })
                 } else {
-                    if (user) {
-                        console.log('Signed in')
-                        this.uid = user.uid
-                        this.step = 2
-                    } else {
-                        console.log('Signed out')
-                    }
+                    console.log("Dev Environment")
 
-                    this.loading = false;
+                    loginRef = this.$users.get({ uid: user.uid })
                 }
-            })
-        } else {
-            this.uid = this.user
-            this.step = 2
-            this.loading = false
-        }
+
+                loginRef.then((response) => {
+                    let userData = response.body[0]
+                    this.uid = user.uid
+
+                    if (userData) {
+                        console.log("Retrieved user data")
+
+                        this.isAdmin = userData.admin
+                        
+                    } else {
+                        console.log("Creating new user")
+
+                        this.isRegistered = false
+
+                        let newUser = {
+                            uid: user.uid,
+                            email: user.email,
+                            admin: false
+                        }
+
+                        return this.$users.save(newUser)
+                        .then(() => {
+                            console.log('User created') 
+                        })
+                    }
+                })
+                .then(() => {
+                    this.loading = false
+                    this.isRegistered = true
+                    this.loggingIn = false
+                    this.uid = user.uid
+                    this.step = 2
+                })
+                .catch((error) => {
+                    console.log(error)
+                })
+            }
+        })
     },
     methods: {
         signIn: function (providerName) {
+            this.allowLogin = false
+            this.loading = true
+            this.loggingIn = true
             this.$firebase.auth()
             .signInWithPopup(this.$providers[providerName])
-            .then(() => {
-                this.loading = false
-            })
             .catch((error) => {
                 console.log(error)
+                this.allowLogin = true
                 this.loading = false
             })
         },
@@ -267,6 +284,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../assets/css/uploads.css';
+
   .v-stepper >>> .v-stepper__wrapper {
       overflow: visible !important;
   }

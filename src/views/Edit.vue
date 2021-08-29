@@ -1,5 +1,40 @@
 <template>
-    <v-container v-if="id" id="edits">
+    <v-container v-if="tournamentId || matchId" id="edit">
+        <v-overlay v-show="uploading || finished">
+            <v-container fluid fill-height>
+                <v-layout class="status" column justify-center align-center>
+                    <template v-if="uploading">
+                        <h1>Uploading...</h1>
+
+                        <br />
+
+                        <v-progress-linear
+                        color="accent"
+                        indeterminate />
+                    </template>
+
+                    <template v-else-if="finished">
+                        <v-icon
+                        class="green--text lighten-2"
+                        large>
+                            mdi-check-circle
+                        </v-icon>
+
+                        <h1>
+                            Upload Finished
+                        </h1>
+
+                        <v-btn
+                        rounded
+                        @click="reload()"
+                        color="accent">
+                            OK
+                        </v-btn>
+                    </template>
+                </v-layout>
+            </v-container>
+        </v-overlay>
+
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>
@@ -18,172 +53,117 @@
                 
                 <!-- sign in -->
                 <v-stepper-content step="1">
-                    <v-layout
+                   <div
                     id="step__sign-in"
-                    class="step"
-                    column
-                    justify-center
-                    align-center>
+                    class="step">
                         <h1>Sign In</h1>
-
+                        
                         <br />
 
-                        <v-progress-linear
-                        color="accent"
-                        indeterminate
-                        v-show="$firebase.auth().currentUser"/>
-
-                        <v-layout
+                        <div
                         class="body"
+                        v-show="allowLogin"
                         column
                         justify-center
                         align-center>
                             <v-btn
+                            color="button2"
                             height="50"
                             rounded
-                            v-show="!$firebase.auth().currentUser && !uid"
+                            :disabled="!allowLogin"
                             @click="signIn('google')">
                                 <v-icon left>mdi-google</v-icon>
                                 Google
                             </v-btn>
-                        </v-layout>
-                        <!--<v-btn height="50" v-show="!$firebase.auth().currentUser" @click="signIn('twitter')">
-                            <v-icon left>mdi-twitter</v-icon> Twitter
-                        </v-btn>-->
-                    </v-layout>
+                            <!--
+                            <v-btn height="50"
+                            v-show="!$firebase.auth().currentUser"
+                            @click="signIn('twitter')">
+                                <v-icon left>mdi-twitter</v-icon> Twitter
+                            </v-btn>
+                            -->
+                        </div>
+
+                        <div
+                        v-show="!loggingIn && !allowLogin || loggingIn">
+                            <v-progress-linear
+                            color="accent"
+                            indeterminate/>
+
+                            <br />
+
+                            <template v-if="!allowLogin && !loggingIn">
+                                Checking auth state...
+                            </template>
+
+                            <template v-if="loggingIn">
+                                {{ isRegistered ? 'Verifying user...' : 'Registering user...'}}
+                            </template>
+                        </div>
+                    </div>
                 </v-stepper-content>
 
                 <v-stepper-content step="2">
-                    <center>
+                    <div
+                    id="step__edit"
+                    class="step">
                         <h1>Edit Match Details</h1>
-                        <pre v-if="id"
-                        style="max-width: 99%;
-                        overflow: clip;
-                        white-space: break-spaces;
-                        text-overflow: ellipsis;">Match ID: {{ id }} </pre>
-                        <pre v-if="match.file"
-                        style="max-width: 99%;
-                        overflow: clip;
-                        white-space: break-spaces;
-                        text-overflow: ellipsis;">{{ match.file.name }}</pre>
-                    </center>
-                    
-                    
-                    
-                    <center v-show="loadingMatch">
-                        <br />
+                        
+                        <br /> 
+                        
                         <v-progress-circular
+                        class="progress"
+                        v-show="loadingMatches"
                         indeterminate />
-                    </center>
 
-                    <v-form
-                    v-model="valid"
-                    ref="form"
-                    id="edit">
-                        <div style="width: 100%;"><br /></div>
-                        
-                        <v-row
-                        v-show="!loading && Object.keys(match).length > 0"
-                        class="preview">
-                            <v-col
-                            class="file-info align-center"
-                            :cols="$vuetify.breakpoint.smAndDown ? 12 : 8">
-                                <v-col
-                                :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
-                                :class="`player p${i+1}`"
-                                v-for="(player, i) in updated.players"
-                                :key="i"
-                                :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
-                                    <CharacterSelect
-                                    :currentCharacter ="player.character"
-                                    :index = "i"
-                                    :selectionEnabled="false"
-                                    :anyEnabled="false"
-                                    @character-select="$emit('update-character', { character: $event, index: i})"/>
-                                                    
-                                    <v-text-field
-                                    v-model="player.name"
-                                    :rules="rules.name"
-                                    :label="`Player ${i + 1}`"
-                                    :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
-                                    maxLength="64"
-                                    counter="64"
-                                    required
-                                    />
-                                </v-col>
-                                
-                                <v-col
-                                cols="1"
-                                align="center"
-                                justify="center"
-                                class="vs"
-                                v-if="!$vuetify.breakpoint.smAndDown">
-                                    vs.
-                                </v-col>
-                            </v-col>
-                                
-
-                            <v-col
-                            class="youtube"
-                            :cols="$vuetify.breakpoint.smAndDown ? 12 : 4 ">
-                                <v-row
-                                class="link">
-                                    <v-text-field
-                                    ref="url"
-                                    v-model="url"
-                                    :dense="$vuetify.breakpoint.mdAndUp"
-                                    @blur="url = tempUrl"
-                                    :clearable="!match.file ? false : true"
-                                    :rules="!match.file ? rules.url.req : rules.url.noReq"
-                                    :disabled="!match.file ? true : false"
-                                    :required="!match.file ? true : false"
-                                    :label="match.file ? `YouTube Link (Optional)` : `YouTube Link (Required)`"
-                                    prepend-icon="mdi-youtube" />
-                                </v-row>
-
-                                <v-row
-                                class="timestamp">
-                                    <v-text-field
-                                    v-model="timestamp"
-                                    :dense="$vuetify.breakpoint.mdAndUp"
-                                    @blur="timestamp = ( timestamp ? timestamp.match($regex.strTimestamp)[0] : null )"
-                                    :rules="rules.timestamp"
-                                    :disabled="!url || !$refs.url.valid"
-                                    ref="timestamp"
-                                    clearable
-                                    prepend-icon="mdi-timer-outline"
-                                    label="Timestamp"/>
-                                </v-row>
-                            </v-col>
-
+                        <v-form
+                        v-model="valid"
+                        ref="form"
+                        id="edit"
+                        v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
+                            <EditPreview
+                            v-for="(match, i) in updated"
+                            :key="i"
+                            :p1="match.p1"
+                            :p2="match.p2"
+                            :tournament="match.tournament ? match.tournament : null"
+                            :video="match.video ? match.video : null"
+                            :file="match.file ? match.file : null"
+                            :type="match.type"
+                            :resetData="resetData"
+                            @set-timestamp="setTimestamp($event, i)"
+                            @set-url="setUrl($event, i)"
+                            @delete-timestamp="deleteTimestamp(i)"
+                            @delete-video="deleteVideo(i)" />
                             
-                        </v-row>
-                        
-                        <v-row
-                        class="buttons"
-                        v-show="!loading && Object.keys(match).length > 0"
-                        align="center"
-                        justify="space-around">
-                            <v-col class="reset">
-                                <v-btn
-                                rounded
-                                color="accent"
-                                @click="resetMatch()">
-                                    Reset
-                                </v-btn>
-                            </v-col>
+                            <br />
 
-                            <v-col class="submit">
-                                <v-btn
-                                rounded
-                                :disabled="!valid || !changesFound"
-                                color="accent"
-                                @click="updateMatch()">
-                                    Submit
-                                </v-btn>
-                            </v-col>
-                        </v-row>
-                    </v-form>
+                            <v-row
+                            class="buttons"
+                            v-show="!loading && Object.keys(original).length > 0"
+                            align="center"
+                            justify="space-around">
+                                <v-col class="reset pr-5">
+                                    <v-btn
+                                    rounded
+                                    color="accent"
+                                    @click="resetMatches()">
+                                        Reset
+                                    </v-btn>
+                                </v-col>
+
+                                <v-col class="submit pl-5">
+                                    <v-btn
+                                    rounded
+                                    :disabled="!valid || !changesFound"
+                                    color="accent"
+                                    @click="updateMatches()">
+                                        Submit
+                                    </v-btn>
+                                </v-col>
+                            </v-row>
+                        </v-form>
+                    </div>
                 </v-stepper-content>
             </v-stepper-items>
         </v-stepper>
@@ -191,177 +171,137 @@
 </template>
 
 <script>
-import CharacterSelect from '.././components/CharacterSelect.vue'
+import EditPreview from '.././components/EditPreview.vue'
 import 'firebase/storage'
 
 
 export default {
     name: 'Edit',
     components: {
-        CharacterSelect,
+        EditPreview
     },
     props: {
-        id: String,
-        user: [String, null]
+        tournamentId: [String, null],
+        matchId: [String, null],
+        videoId: [String, null],
+        fromUser: [String, null]
     },
     data: () => {
         return {
+            query: null,
             uid: null,
             hidden: true,
             loading: false,
             step: 1,
-            match: {},
+            original: {},
             updated: {},
             valid: false,
+            uploading: false,
+            finished: false,
             changesFound: false,
-            url: null,
-            tempUrl: null,
-            timestamp: null,
+            resetData: false,
             isAdmin: false,
             isRegistered: true,
             loggingIn: false,
-            loadingMatch: false,
-            rules: {
-                name: [
-                    v => !!v || 'Required'
-                ],
-                url: {
-                    req: [
-                        v => !!v || 'Required',
-                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
-                    ],
-                    noReq: [
-                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
-                    ]
-                },
-                timestamp: [
-                    v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
-                ],
-            },
+            loadingMatches: false,
+            failedMatchGet: false,
+            allowLogin: false,
         }
     },
     mounted: function () {
-        if (this.id && !this.user) {
-            this.$firebase.auth().onAuthStateChanged((user) => {
-                
-                if (!user) {
-                    this.step = 1
-                    return
-                }
+    // auth state watcher
+    this.$firebase.auth().onAuthStateChanged((user) => {
+       if (!user) {
+            this.uid = null
+            this.step = 1
+            
+            this.allowLogin = true
+            console.log('User not found')
+            return
+        } else {
+            this.loggingIn = true
+            this.uid = user.uid
 
-                if (process.env.NODE_ENV == "production") {
-                    console.log("Production Environment")
+            let loginRef = null
 
-                    this.setAuthToken()
-                    .then(() => {
-                        console.log('Checking user')
-                        this.loggingIn = true
-                        return this.$users.get({ uid: user.uid })
-                    })
-                    .then((response) => {
-                        let userData = response.body[0]
-                        if (userData) {
-                            console.log("Retrieved user data")
+            if (process.env.NODE_ENV == "production") {
+                console.log("Production Environment")
 
-                            this.isAdmin = userData.admin
-                            this.loading = false
-                            this.loggingIn = false
-                            this.getMatch(this.id)
-                            this.step = 2
-                            
-                        } else {
-                            console.log("Creating new user")
-                            this.isRegistered = false
+                loginRef = this.setAuthToken()
+                .then(() => {
+                    console.log('Checking user')
+                    return this.$users.get({ uid: user.uid })
+                })
 
-                            let newUser = {
-                                uid: user.uid,
-                                email: user.email,
-                                admin: false
-                            }
+            } else {
+                console.log("Dev Environment")
 
-                            this.$users.save(newUser)
-                            .then(() => {
-                                this.loading = false
-                                this.isRegistered = true
-                                this.loggingIn = false
-                                this.getMatch(this.id)
-                                this.step = 2
-                                
-                            })
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error)
-                    })
+                loginRef = this.$users.get({ uid: user.uid })
+            }
+
+            loginRef.then((response) => {
+                let userData = response.body[0]
+
+                if (userData) {
+                    console.log("Retrieved user data")
+                    this.isAdmin = userData.admin
                 } else {
-                    if (user) {
-                        
-                        this.loading = false;
-                        this.getMatch(this.id)
-                        console.log('Signed in')
-                        this.uid = user.uid
-                        this.step = 2
-                    } else {
-                        console.log('Signed out')
+                    console.log("Creating new user")
+
+                    this.isRegistered = false
+
+                    let newUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        admin: false
                     }
 
+                    return this.$users.save(newUser)
+                    .then(() => {
+                        console.log('User created') 
+                    })
                 }
             })
-        } else if (this.id && this.user) {
-            this.getMatch(this.id)
-            this.uid = this.user
-            this.step = 2
-            this.loading = false
-            console.log("Skipping sign in")
+            .then(() => {
+                this.loading = false
+                this.loadingMatches = true
+                this.isRegistered = true
+                this.loggingIn = false
+                this.step = 2
+                
+                this.getMatches()
+            })
+            .catch((error) => {
+
+                this.loading = false
+                this.isRegistered = true
+                this.loggingIn = false
+                this.step = 1
+                this.allowLogin = true
+                console.log(error)
+            })
         }
+    })
+        
     },
     watch: {
         'updated': {
             deep: true,
             handler(newVal) {
                 /* only allow submission if user changed anything */
-                if (JSON.stringify(newVal) !== JSON.stringify(this.match)) {
+                if (JSON.stringify(newVal) !== JSON.stringify(this.original)) {
                     this.changesFound = true
                 } else {
                     this.changesFound = false
                 }
             }
         },
-        'url': function(v) {
-            if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
-                this.tempUrl = v.match(this.$regex.ytUrl)[0]
-
-                if (this.tempUrl && !this.video || this.tempUrl !== this.video.url) {
-                    this.$emit('set-url', this.tempUrl)
-                }
-                
-                if (this.$regex.urlTimestamp.test(v) && v.match(this.$regex.urlTimestamp)[1] !== this.timestamp) {
-                    this.timestamp = v.match(this.$regex.urlTimestamp)[1]
-                }
-            } else {
-                this.tempUrl = (this.video ? this.video.url : null)
-                this.timestamp = (this.video && this.video.timestamp ? this.video.timestamp : null)
-                this.$emit('delete-video')
-                return null
-            }
-        },
         
-        'timestamp': function(v) {
-            if (v && v.match(this.$regex.strTimestamp)) {
-                    if (this.timestamp !== this.currentTimestamp) {
-                        this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
-                    }
-            } else {
-                //this.$delete(this.updated.video, 'timestamp')
-                this.$emit('delete-timestamp')
-            }
-        },
     },
     methods: {
         signIn: function (providerName) {
             this.loading = true
+            this.allowLogin = false
 
             this.$firebase.auth()
             .signInWithPopup(this.$providers[providerName])
@@ -370,6 +310,7 @@ export default {
             })
             .catch((error) => {
                 console.log(error)
+                this.allowLogin = true
                 this.loading = false
             })
         },
@@ -382,50 +323,124 @@ export default {
             })
             .catch((error) => console.log(error))
         },
-        getMatch(id) {
-            this.loadingMatch = true
-            this.$matches.get({id})
+        getMatches() {
+            this.loadingMatches = true
+
+            let ref = null
+
+            if (this.tournamentId) {
+                ref = 
+                this.$matches.get({tournamentId: this.tournamentId, videoId: this.videoId, fromUser: this.fromUser})
+            } else {
+                ref = this.$matches.get({matchId: this.matchId})
+            }
+
+            ref
             .then((response) => {
                 if (response.ok) {
-                    this.match = response.body.matches[0]
-                    this.updated= JSON.parse(JSON.stringify(this.match))
+                    this.original = response.body.groups[0].matches
+                    this.updated= JSON.parse(JSON.stringify(this.original))
 
-                    if (this.match.video) {
-                        this.url = this.match.video.url
-                        
-                        if (this.match.video.timestamp) {
-                            this.timestamp = this.match.video.timestamp
-                        }
-                    }
-
-                    this.loadingMatch = false
+                    this.loadingMatches = false
                 }
             })
-            .catch((error) => console.log(error))
+            .catch((error) => {
+                 console.log(error)
+                 this.loadingMatches = false
+                 this.failedMatchGet = true
+            })
         },
-        resetMatch() {
-            this.updated = JSON.parse(JSON.stringify(this.match))
-            this.url = (this.match.video ? this.match.video.url : null)
-            this.timestamp = (this.match.video ? this.match.video.timestamp : null)
-            this.tempUrl = this.url
+        resetMatches() {
+            this.updated = JSON.parse(JSON.stringify(this.original))
+            this.resetData = !this.resetData
         },
         updateCharacter(character, i) {
             this.$set(this.updated.players[i], 'character', character)
         },
-        updateMatch() {
+        updateMatches() {
+            this.uploading = true
+            let updated = this.updated.filter((match) => {
+                let i = this.original.findIndex(original => 
+                    original._id === match._id
+                )
+
+                if (JSON.stringify(match) !== JSON.stringify(this.original[i])) {
+                    return true
+                } else {
+                    return false
+                }
+            })
+            .map((match) => {
+                return match
+            })
+
+            console.log(JSON.parse(JSON.stringify(updated)))
+
+            
+
+            this.$update.save(updated)
+            .then((response) => {
+                if (response.ok) {
+                    console.log('Updates successful')
+                } else {
+                    console.log('Updates failed')
+                }
+                this.uploading = false
+                this.finished = true
+            })
+            .catch((error) => {
+                console.log(error)
+                this.uploading = false
+                this.finished = true
+            })
 
         },
+        setUrl(url, i) {
+            console.log('setting video')
+            if (!this.updated[i].video) {
+                
+                this.$set(this.updated[i], 'video', {})
+            }
+
+            if (this.updated[i].video.url !== url || !this.updated[i].video.url) {
+                this.$set(this.updated[i].video, 'url', 'https://youtu.be/watch?v=' + url.match(this.$regex.ytId)[1])
+                this.$set(this.updated[i].video, 'id', url.match(this.$regex.ytId)[1])
+            }
+
+            if (i === 0 && !this.individualUrls) {
+                this.staticUrl = url
+                console.log(url)
+            }
+        },
+        setTimestamp(timestamp, i) {
+            if (this.updated[i].video && !this.updated[i].video.timestamp || this.updated[i].video.timestamp !== timestamp) {
+                this.$set(this.updated[i].video, 'timestamp', timestamp)
+            }
+        },
+        deleteVideo(i) {
+            if (this.updated[i].video) {
+                console.log('deleting video')
+                this.$delete(this.updated[i], 'video')
+            }
+        },
+        deleteTimestamp(i) {
+            if (this.updated[i].video && this.updated[i].video.timestamp) {
+                console.log('deleting timestamp')
+                this.$delete(this.updated[i].video, 'timestamp')
+            }
+        },
+        reload() {
+            this.$router.go(this.$router.currentRoute)
+        }
     }
 }
 </script>
 
 <style scoped>
+@import '../assets/css/edit.css';
+
 .v-stepper >>> .v-stepper__wrapper {
     overflow: visible !important;
-}
-
-.upload .player >>> .v-input__slot::before {
-    width: calc(100% - 1px);
 }
 
 .wide .p1 >>> .v-input__append-inner {

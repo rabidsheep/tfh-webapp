@@ -1,15 +1,14 @@
 import Vue from 'vue'
-import Vuetify from 'vuetify'
+import Vuetify from 'vuetify/lib'
 import 'vuetify/dist/vuetify.min.css'
-import '@mdi/font/css/materialdesignicons.css' // Ensure you are using css-loader
+import '@mdi/font/css/materialdesignicons.min.css' // Ensure you are using css-loader
 Vue.use(Vuetify)
 
 const themes = {
   arizona: {
-    background: {
-      base: '#3a3939',
-      darken1: '#2e2e2e',
-    },
+    background: '#3a3939',
+    subBackground: '#2e2e2e',
+    subBackground2: '#212121',
     text: '#ffffff',
     accent: '#b21d45',
     primary: '#ffffff',
@@ -17,42 +16,11 @@ const themes = {
     info: '#2196F3',
     warning: '#FB8C00',
     error: '#FF5252',
-    youtubeBtn: '#d52726',
-  },
-  oleander: {
-    background: {
-      base: '#3a3939',
-      darken1: '#2e2e2e',
-    },
-    text: '#ffffff',
-    accent: '#8e0d57',
-    primary: '#fffff',
-    secondary: '#2e2e2e',
-    success: '#4CAF50',
-    info: '#2196F3',
-    warning: '#FB8C00',
-    error: '#FF5252'
-  },
-  paprika: {
-
-  },
-  pom: {
-    background: {
-      base: '#f1f1f1',
-      darken1: '#cbcbcb',
-    },
-    text: '#f7e0f4',
-    accent: '#f7e0f4',
-    primary: '#786d89',
-  },
-  shanty: {
-
-  },
-  tianhuo: {
-
-  },
-  velvet: {
-
+    button2: '#212121',
+    button3: '#628f3a',
+    button4: '#171717',
+    buttonDisabled: '#5e5e5e',
+    matchRowHover: '#2e2e2e',
   },
 }
 
@@ -63,7 +31,7 @@ export default new Vuetify({
     },
     breakpoint: {
       thresholds: {
-        xs: 600,
+        xs: 650,
         sm: 800,
         md: 900,
         lg: 1280,

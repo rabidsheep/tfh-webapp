@@ -1,34 +1,51 @@
 <template>
   <v-app dark>
-    <v-toolbar maxHeight="50px" dense color="accent">
+    <v-toolbar id="menubar" height="58px" maxHeight="58px" dense color="accent">
         <!-- replace <a> with <router-link> eventually -->
-        <a href="/">
-            <img class="logo" src="./assets/img/pixel/1.png" />
-        </a>
+        <router-link to="/" @click.native="forceRerender($event)">
+          <div class="logo">
+            <img src="./assets/img/pixel/1.png" alt="fortnite gaming"/>
+          
+          <v-toolbar-title class="name">
+              fortnite gaming
+          </v-toolbar-title>
+          </div>
+        </router-link>
 
-        <v-toolbar-title>
-            fortnite gaming
-        </v-toolbar-title>
 
-        <router-link :user="user" to="/upload">
+        <router-link to="/upload" @click.native="forceRerender($event)">
             <v-btn icon>
                 <v-icon>mdi-plus-box</v-icon>
             </v-btn>
         </router-link>
+
+        <v-spacer />
+
+        <!--<v-divider vertical />
+
+        <v-toolbar-items>
+          <v-col
+          justify="center"
+          align="center">
+            {{ userId ? 'Signed In' : 'Logged Out' }}
+          </v-col>
+        </v-toolbar-items>-->
     </v-toolbar>
 
     <v-main>
-      <v-layout column align-center>
+      <v-layout column align-center justify-center>
         <div id="router-view"
         :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
-          <router-view :user="user" />
+          <router-view :key="componentKey" />
         </div>
       </v-layout>
+
     </v-main>
 
-    <v-container class="footer">
+
+    <v-container id="footer" class="pb-4">
       <v-row>
-        <v-col class="copyright">
+        <v-col class="copyright pa-0">
           THEM’S FIGHTIN’ HERDS ® & © 2017-2020 Mane6, Inc.
           <br />
           THEM’S FIGHTIN’ HERDS is a registered trademark of Mane6, Inc.
@@ -42,50 +59,63 @@
 export default {
   data: () => {
     return {
-      user: null,
+      componentKey: true,
     }
   },
   mounted: function () {
-    this.$firebase.auth()
-    .onAuthStateChanged((user) => {
+      /*this.$firebase.auth()
+      .onAuthStateChanged((user) => {
+          
+        if (!user) {
+          console.log('User is signed out')
+          //this.user = this.$firebase.auth().currentUser
+          console.log(this.user)
+          return null
+        } else {
+          
+          
+          if (process.env.NODE_ENV == "production") {
+            // only run this in production environment
+            console.log("Production Environment")
+
+            this.setAuthToken()
+            .then(() => {
+                console.log('Checking user')
+                this.loggingIn = true
+                return this.$users.get({ uid: user.uid })
+            })
+            .then((response) => {
+                let userData = response.body[0]
+                if (userData) {
+                    console.log("Retrieved user data")
+
+                    this.isAdmin = userData.admin
+                    this.userId = user.uid
+                    //localStorage.setItem('user', user.uid)
+                } else {
+                    console.log("No account found")
+                }
+
+                
+            })
+            .catch((error) => {
+                console.log(error)
+            })
+          } else {
+            // only run this in dev environment
+            console.log("Development Environment")
         
-      if (!user) {
-        return null
-      }
-
-      if (process.env.NODE_ENV == "production") {
-        console.log("Production Environment")
-
-        this.setAuthToken()
-        .then(() => {
-            console.log('Checking user')
-            this.loggingIn = true
-            return this.$users.get({ uid: user.uid })
-        })
-        .then((response) => {
-            let userData = response.body[0]
-            if (userData) {
-                console.log("Retrieved user data")
-
-                this.isAdmin = userData.admin
-                this.user = userData
-            } else {
-                console.log("Not logged in")
-            }
-        })
-        .catch((error) => {
-            console.log(error)
-        })
-    } else {
-        if (user) {
             console.log('Signed in')
             this.uid = user.uid
-            this.user = user.uid
-        } else {
-            console.log('Signed out')
+            this.userId = user.uid
+            //this.user = this.$firebase.auth().currentUser
+            console.log(this.user)
+          }
+
+          console.log('User is signed in')
         }
-      }
-    })
+      })*/
+    
   },
   watch: {
     onScroll: function (event) {
@@ -104,6 +134,11 @@ export default {
       })
       .catch((error) => console.log(error))
     },
+    forceRerender(e) {
+      if ((this.$route.path === '/' || this.$route.path === '/upload') && !e.ctrlKey) {
+        this.componentKey = !this.componentKey
+      }
+    }
   }
 }
 </script>
@@ -120,12 +155,16 @@ export default {
   color: var(--v-text-base);
 }
 
+::v-deep .v-toolbar__content {
+  padding-right: 0px !important;
+}
+
 ::v-deep #filters__main {
-  background: var(--v-background-darken1);
+  background: var(--v-subBackground-base);
 }
 
 ::v-deep .theme--dark.v-stepper {
-  background: var(--v-background-darken1);
+  background: var(--v-subBackground-base);
 }
 
 ::v-deep .v-menu__content.player-select-menu {
@@ -134,6 +173,24 @@ export default {
 
 ::v-deep .theme--dark.v-icon.v-icon.v-icon--disabled {
   color: #5e5e5e !important;
+}
+
+::v-deep .preview .v-input--dense > .v-input__control > .v-input__slot {
+    margin-bottom: 5px !important;
+}
+
+::v-deep .v-main__wrap {
+  display: flex;
+  padding: 24px 0px;
+}
+
+::v-deep .mdi {
+  display: flex !important;
+  
+}
+
+::v-deep .v-text-field__slot > input {
+    text-overflow: ellipsis;
 }
 
 </style>

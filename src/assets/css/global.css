@@ -12,27 +12,85 @@
     margin: 0px !important;
 }
 
-img.logo {
+.logo {
     height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.logo img {
+    height: 48px;
+    width: 61.2px;
     image-rendering: optimizeQuality;
     padding-right: 10px;
     display: inline-block;
 }
 
+.logo .name {
+    display: inline-block;
+}
+
 #router-view {
-    padding-top: 30px;
     width: 90%;
     max-width: 960px;
-    padding-bottom: 30px;
+    height: 100%;
 }
 
 a {
     text-decoration: none;
 }
 
+.p1 {
+    order: 1;
+}
+
+.p2 {
+    order: 3;
+}
+
+.vs {
+    order: 2;
+    display: flex;
+    justify-content: center;
+    margin: 0px 10px;
+}
+
+#footer {
+    padding: 0px;
+    margin: 0px;
+    max-width: 100%;
+}
+
 .copyright {
     text-align: center;
     font-size: 12px;
+}
+
+
+#index {
+    height: 100%;
+    display: grid;
+}
+
+#index .loading {
+    align-self: center;
+    text-align: center;
+    width: 100%;
+    min-height: 100vh;
+    display: grid;
+}
+
+
+#index .loading .progress {
+    align-self: end;
+}
+
+picture.icon {
+    height: 56px;
+}
+
+picture.icon source, picture.icon img {
+    height: 56px;
 }
 
 /* display width */
@@ -83,746 +141,13 @@ a {
     margin-right: 10px;
 }
 
-/** filters.vue **/
 
-/* general */
-#filters {
-    margin: auto;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    width: 100%;
-}
-
-#filters__toggle {
-    width: 100%;
-    border: 1px solid black !important;
-    border-radius: 0px;
-}
-
-#filters__main {
-    border: 1px solid black;
-    border-top: none;
-    transition: all 0.5s;
-    position: relative;
-    max-width: 95%;
-    padding: 0px;
-}
-
-#filters .wrapper {
-    margin: 12px;
-}
-
-#filters .player {
-    display: flex;
-    width: 100%;
-}
-
-
-#filters .p1 {
-    order: 1;
-}
-
-#filters .btns {
-    order: 2;
-    min-width: max-content;
-    text-align: center;
-    align-self: center;
-    padding: 0px;
-}
-
-#filters .col {
-    padding-top: 0px;
-}
-
-#filters .btns > .col {
-    display: flex;
-    justify-content: center;
-    padding: 0px;
-}
-
-#filters .strictness {
-    margin-bottom: 10px !important;
-    order: 4;
-}
-
-#filters .p2 {
-    order: 3;
-}
-
-#filters .checkbox {
-    max-width: max-content;
-    margin: 0px;
-    padding: 0px;
-}
-
-/* desktop  */
-.wide #filters .p1 {
-    flex-direction: row-reverse;
-    margin-right: 12px;
-}
-
-.wide #filters .p2 {
-    margin-left: 12px;
-}
-
-.wide #filters 
-
-/* mobile */
-.small #filters .player {
-    padding-top: 0px;
-    padding-bottom: 0px;
-}
-
-/* matches.vue */
-
-/* general */
-#matches > .match:not(:last-child) {
-    border-bottom: 2px solid;
-}
-
-/** matchrow.vue **/
-.match {
-    padding: 10px 0px;
-}
-
-.match .col {
-    padding: 0px;
-}
-
-.match .unique .edit .v-icon,
-.match .unique .comment .v-icon {
-    margin-top: -2px;
-}
-
-.p1 {
-    order: 1;
-}
-
-.p2 {
-    order: 3;
-}
-
-.vs {
-    order: 2;
-    display: flex;
-    justify-content: center;
-    margin: 0px 10px;
-}
-
-.match .character-icon {
-    height: 52px;
-    cursor: pointer;
-}
-
-.match .player {
-    display: flex;
-    align-content: center;
-}
-
-.match .player .name {
-    cursor: pointer;
-    margin: 0px;
-    height: min-content;
-    flex-wrap: nowrap;
-}
-
-.match .links > .row {
-    justify-content: space-between;
-    align-content: space-between;
-}
-
-.match .links .video > .btn > div > .v-icon {
-    margin-top: -1px;
-}
-
-.match .slash {
-    position: absolute;
-    -webkit-transform: rotateZ(118deg);
-    transform: rotateZ(118deg) scaleY(1.4);
-    text-shadow: -3px 0px #3a3939;
-}
-
-.match .disabled .v-icon {
-    color: #5e5e5e !important;
-}
-
-.match .players .player,
-.match .players .vs {
-    align-items: center;
-}
-
-.match .comment .v-icon:focus::after {
-    background: transparent;
-}
-
-.match .comment.msg {
-    border-radius: 10px;
-    margin-top: 5px;
-}
-
-.match .comment.msg > p {
-    margin: 5px;
-}
-
-/* desktop */
-.wide .match .unique {
-    text-align: center;
-}
-
-.wide .match .players {
-    width: 50%;
-}
-
-.wide .match .p1 {
-    text-align: right;
-    justify-content: flex-end;
-}
-
-.wide .match .p1 .character-icon {
-    order: 2;
-}
-
-.wide .match .p1 .character-icon {
-    margin-left: 15px;
-}
-
-.wide .match .p2 .character-icon {
-    margin-right: 15px;
-}
-
-.wide .match .players .name {
-    word-break: break-word;
-    overflow: clip;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-}
-
-
-
-.wide .match .links .link {
-    max-width: min-content;
-}
-
-.wide .match .video .slash {
-    top: -5%;
-}
-
-.wide .match .file .slash {
-    top: -2%;
-}
-
-/* mobile */
-.small .match .unique {
-    width: 100%;
-    border-bottom: 1px dashed grey;
-    padding-bottom: 10px;
-    min-width: max-content;
-    flex-wrap: nowrap;
-    min-width: 100%;
-    overflow: clip;
-    
-}
-
-.small .match .date,
-.small .match .time {
-    margin-top: 2px;
-}
-
-.small .match .time {
-    white-space: nowrap;
-    overflow: clip;
-    text-overflow: ellipsis;
-    line-height: 1;
-    min-width: 1%;
-}
-
-.small .match .players {
-    width: 80%;
-}
-
-.small .match .links {
-    width: 20%;
-}
-
-.small .match {
-    justify-content: space-between;
-}
-
-.small .match .character-icon {
-    margin-right: 15px;
-}
-
-.small .match .edit,
-.small .match .unique .comment {
-    max-height: 24px;
-}
-
-.small .match .divider {
-    display: inline-block;
-}
-
-
-.small .match .player,
-.small .match .link {
-    padding-top: 10px;
-}
-
-.small .match .player .character {
-    padding-right: 10px;
-}
-
-.small .match .link > *,
-.small .match .player {
-    min-height: 52px;
-}
-
-.small .match .players > .row {
-    max-width: 100%;
-}
-
-.small .match .player {
-    max-width: 80%;
-}
-
-.small .match .name {
-    overflow: clip;
-    text-overflow: ellipsis;
-    max-width: 90%;
-    word-break: break-all;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;
-}
-
-.small .match .link .btn > * {
-    align-self: center;
-}
-
-.small .match .link .btn {
-    display: flex;
-}
-
-.small .match .links {
-    max-width: max-content;
-}
-
-.small .match .links > .row {
-    max-width: min-content; 
-}
-
-.small .match .links > .row > .link {
-    max-width: max-content;
-}
-
-.small .match .video .slash {
-    top: -6%;
-}
-.small .match .file .slash {
-    top: 10%;
-}
-
-.match .unique .comment .v-icon {
-    margin-top: 2px;
-}
-
-/** uploadform.vue **/
-
-/* general */
-#uploads {
-    width: 100%;
-}
-
-#uploads h1 {
-    text-align: center;
-}
-
-#uploads .v-stepper__content {
-    padding: 0px;
-}
-
-#uploads .v-file-input {
-    width: 80%;
-    margin: auto;
-}
-
-#uploads .preview:not(:last-child) {
-    border-bottom: 1px solid white;
-}
-
-#uploads .preview {
-    width: 100%;
-}
-
-#uploads .form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-}
-#uploads .step > .body {
-    margin-top: 10px;
-}
-
-#uploads .step {
-    padding: 24px;
-}
-
-#uploads .step .v-btn:not(.back):not(.remove) {
-    max-width: min-content;
-    flex-wrap: wrap;
-    height: 50px;
-}
-
-#uploads #step__sign-in .v-progress-linear {
-    margin-top: 10px;
-}
-
-#uploads #step__select .v-btn:not(:last-child) {
-    margin-bottom: 20px;
-}
-
-
-#uploads #step__upload .heading {
-    position: relative;
-    width: 100%;
-}
-
-
-#uploads #step__upload .buttons :not(:last-child) {
-    margin-right: 20px;
-}
-
-#uploads .form .message > div {
-    margin: auto;
-}
-
-#uploads .preview__match {
-    flex-wrap: nowrap;
-}
-
-#uploads #files .body .preview:not(:first-child) {
-    padding-top: 15px;
-}
-
-/** statusoverlay.vue **/
-
-#uploads .v-overlay .v-progress-linear {
-    margin: 20px 0px;
-    height: 50px;
-    border-radius: 10px;
-    -webkit-border-radius: 10px;
-}
-
-#uploads .v-overlay__content {
-    background-color: #171717
-}
-
-#uploads .v-overlay__content .status > div {
-    width: 80%;
-}
-
-#uploads .v-overlay .v-btn {
-    margin-top: 10px;
-}
-
-/* desktop */
-.wide #uploads .v-overlay__content {
-    width: 600px;
-}
-
-.wide #uploads .back {
-    position: absolute;
-    margin: auto;
-    left: 15px;
-    bottom: 0;
-    top: 0;
-}
-
-/* mobile */
-.small #uploads .v-overlay__content {
-    width: 80%;
-}
-
-/** youtubeuploads.vue **/
-#youtube .body {
-    width: 100%;
-}
-
-#youtube .body .data {
-    width: 80%;
-}
-
-.small #youtube .body .data {
-    width: 100%;
-}
-
-#youtube .body .data .row,
-#youtube .body .data  {
-    justify-content: space-between;
-}
-
-#youtube .body .data > .row {
-    width: 100%;
-}
-
-#youtube .datetitle > div {
-    max-width: 40%;
-}
-
-.wide #youtube .desc {
-    min-height: 150px;
-}
-
-.wide #youtube .desc > .v-textarea {
-    max-width: 70%;
-}
-
-#youtube .desc > .v-textarea .v-messages {
-    max-width: max-content;
-}
-
-#youtube .desc > .v-textarea .v-text-field__details {
-    justify-content: end;
-}
-
-#youtube .desc-buttons {
-    padding: 0px;
-    display: flex;
-}
-
-#youtube .desc-buttons > .col {
-    padding: 0px;
-    display: flex;
-    justify-content: center;
-    align-content: center;
-}
-
-#youtube .url-input{
-    display: flex;
-    justify-content: space-around;
-}
-
-/* desktop */
-.wide #youtube .desc-buttons {
-    min-height: inherit;
-    align-content: space-evenly;
-    flex-wrap: wrap;
-    max-width: min-content;
-}
-
-.wide #youtube .url-input {
-    width: 50%;
-}
-
-.wide #youtube .players > .row {
-    flex-wrap: nowrap;
-}
-
-.wide #youtube .url-input .v-input {
-    max-width: 80%;
-}
-
-/* mobile */
-.small #youtube .url-input {
-    width: 100%;
-    flex-wrap: nowrap;
-}
-
-
-.small #youtube .url-input .v-input {
-    max-width: 70%;
-}
-
-.small #youtube .desc-buttons {
-    flex-wrap: wrap;
-    justify-content: space-evenly;
-    align-content: flex-start;
-}
-
-.small #youtube .desc-buttons > .col {
-    padding: 5px 0px;
-}
-
-
-/** filepreview.vue + videopreview.vue **/
-
-/* general */
-.preview {
-    padding: 0px;
-    padding-bottom: 10px;
-}
-
-.preview .col {
-    padding: 0px;
-}
-
-.preview .player {
-    display: flex;
-    align-items: center;
-}
-
-.preview .players .p1 {
-    order: 1;
-}
-
-.preview .vs {
-    order: 2;
-    align-items: center;
-}
-
-.preview .players .p2 {
-    order: 3;
-}
-
-.preview .youtube {
-    order: 4;
-}
-
-.preview .col.comment {
-    order: 3;
-}
-
-.preview .v-textarea.comment .v-text-field__slot {
-    height: 100%;
-}
-
-.wide .preview .v-textarea.comment {
-    height: 100%;
-    margin-top: 6px;
-}
-
-.preview .file-info {
- display: flex;
- flex-wrap: wrap;
-}
-
-.preview .youtubelink {
-    display: flex;
-}
-
-/* desktop */
-.wide .preview .vs {
-    margin: auto;
-}
-
-/*.wide #files .preview .link,
-.wide #edit .preview .link {
-    height: 76px;
-    align-items: center;
-}*/
-
-.wide .preview .p1 {
-    flex-direction: row-reverse;
-}
-
-.wide .preview .youtube {
-    padding-left: 10px;
-}
-
-/** filepreview.vue **/
-
-/* general */
-#files .preview .header  {
-    display: flex;
-    max-width: 100%;
-}
-
-#files .preview .header h4 {
-    max-width: 85%;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    overflow: clip;
-}
-
-#files .preview .header .remove {
-    margin-right: 10px;
-}
-
-#files .preview .data {
-    padding: 0px;
-}
-
-#files .preview .data .youtube {
-    padding-right: 0px;
-}
-
-#files .preview .data .players {
-    padding-left: 0px;
-}
-
-/** youtubepreview.vue **/
-
-/* general */
-#youtube .preview {
-    justify-content: space-between;
-    flex-wrap: nowrap;
-}
-
-#youtube .preview .timestamp {
-    padding-left: 0px;
-}
-#youtube .preview .remove {
-    flex-grow: 0;
-    padding: 0px;
-    align-self: center;
-    max-height: min-content;
-    max-width: max-content;
-}
-
-#youtube .preview .players {
-    max-width: max-content;
-}
-
-/* desktop */
-.wide #youtube .preview {
-    padding: 20px 0px;
-}
-
-.wide #youtube .preview .vs {
-    min-width: 10%;
-}
-
-/* mobile */
-.small #youtube .preview {
-    flex-wrap: wrap;
-    padding: 20px 0px;
-}
-
-.small #youtube .preview .players {
-    padding-left: 10px;
-}
-
-.xsmall #youtube .preview .players {
-    padding-left: 0px;
-}
-
-.xsmall #youtube .preview .remove {
-    margin-top: -11px;
-}
-
-.xsmall #youtube .preview .timestamp {
-    order: 1;
-    padding-left: 10px;
-}
-
-.xsmall #youtube .preview .players {
-    order: 3;
-}
-
-.xsmall #youtube .preview .timestamp {
-    order: 2;
-}
-
-.xsmall #youtube .icon {
-    margin-right: 10px !important;
-    margin-left: 0px !important;
-}
 
 /** edit.vue **/
 
 #edit .buttons > .col {
     display: flex;
+    padding: 0px;
 }
 
 #edit .buttons > .reset {
@@ -850,4 +175,9 @@ a {
     max-width: 99%;
     overflow: clip;
     white-space: break-spaces;
+}
+
+#edit #step__edit .progress {
+    display: block;
+    margin: auto;
 }

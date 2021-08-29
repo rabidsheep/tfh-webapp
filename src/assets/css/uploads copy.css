@@ -1,0 +1,684 @@
+/****/
+#files .v-messages,
+#youtube .timestamp-file .v-messages,
+#youtube .tournament .v-messages {
+    max-width: max-content;
+}
+
+#files .v-text-field__details,
+#youtube .timestamp-file .v-text-field__details, 
+#youtube .tournament .v-text-field__details {
+    justify-content: end;
+}
+/****/
+
+
+/* general */
+.preview {
+    padding: 0px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.preview .col {
+    padding: 0px;
+    display: flex;
+}
+
+.preview .body {
+    width: 100%;
+}
+
+.options .v-input--radio-group__input {
+    justify-content: center !important;
+}
+
+.preview .player {
+    display: flex;
+    align-items: center;
+}
+
+.preview .players .p1 {
+    order: 1;
+}
+
+.preview .vs {
+    order: 2;
+    align-items: center;
+}
+
+.preview .players .p2 {
+    order: 3;
+}
+
+.preview .v-textarea.comment .v-text-field__slot {
+    height: 100%;
+}
+
+.wide .preview .v-textarea.comment {
+    height: 100%;
+    margin-top: 6px;
+}
+
+.preview .players {
+ display: flex;
+ flex-wrap: wrap;
+}
+
+.preview .youtubelink {
+    display: flex;
+}
+
+.preview .youtube {
+    flex-wrap: wrap;
+}
+
+.preview .header button {
+    display: flex;
+}
+
+.form .v-input--radio-group {
+    margin-top: 0px;
+}
+
+.form .switch {
+    padding: 0px !important;
+    margin: 0px !important;
+}
+
+.form .hint {
+    white-space: pre-wrap;
+    justify-content: center;
+    text-align: center;
+}
+
+.form .hint .v-icon {
+    margin-right: 2px;
+}
+
+.form .hint span {
+    display: contents;
+}
+
+.form .hint span b {
+    display: inherit;
+}
+
+.wide .preview .p1 {
+    flex-direction: row-reverse;
+}
+
+.wide .preview .youtube {
+    padding-left: 10px;
+}
+
+/** svg buttons **/
+.preview button svg {
+    box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);
+}
+
+.preview button svg {
+    height: 32px;
+    width: 32px;
+    border-radius: 100%;
+}
+
+.preview button svg {
+    border-radius: 100%;
+}
+
+.xsmall button svg {
+    height: 38px;
+    width: 38px;
+}
+
+.preview button.disabled .st0 {
+    fill: var(--v-buttonDisabled-base)
+}
+
+.preview button .st0 {
+    transition: 0.5s;
+}
+
+button.remove .st0 {
+    fill: var(--v-accent-base);
+}
+
+button.remove:hover .st0 {
+    fill: var(--v-accent-lighten1)
+}
+
+button.move .st0 {
+    fill: var(--v-button3-base);
+}
+
+button.move:hover .st0 {
+    fill: var(--v-button3-lighten2);
+}
+
+.preview button .st1 {
+    fill:#FFFFFF;
+}
+
+
+.small .preview .up {
+    margin-bottom: 15px;
+}
+
+.small .preview .down {
+    margin-top: 15px;
+}
+
+.xsmall .swap {
+    margin-right: 25px;
+}
+
+.xsmall .preview .up {
+    margin-bottom: 20px;
+}
+
+.xsmall .preview .down {
+    margin-top: 20px;
+}
+
+
+/** uploadform.vue **/
+
+/* general */
+#uploads {
+    width: 100%;
+    padding: 0px;
+}
+
+#uploads h1 {
+    text-align: center;
+}
+
+#uploads .v-stepper__content {
+    padding: 0px;
+}
+
+#uploads .v-file-input {
+    width: 80%;
+    margin: auto;
+}
+
+
+#uploads .match-list > hr {
+    border-bottom: 1px solid white;
+}
+
+#uploads .preview {
+    width: 100%;
+}
+
+#uploads .form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+#uploads .step {
+    padding: 24px;
+}
+
+#uploads .step .v-btn:not(.back):not(.remove) {
+    max-width: min-content;
+    flex-wrap: wrap;
+    height: 50px;
+}
+
+.step > * {
+    width: 100%;
+    text-align: center;
+}
+
+#uploads #step__sign-in .v-btn,
+#uploads #step__select .v-btn {
+    display: block;
+    margin: auto;
+    width: auto;
+}
+
+#uploads #step__upload .heading {
+    position: relative;
+    width: 100%;
+}
+
+#uploads #step__upload .buttons :not(:last-child) {
+    margin-right: 20px;
+}
+
+#uploads .form .message > div {
+    margin: auto;
+}
+
+#uploads .preview__match {
+    flex-wrap: nowrap;
+}
+
+#uploads #files .body .preview:not(:first-child) {
+    padding-top: 15px;
+}
+
+/** statusoverlay.vue **/
+
+#uploads .v-overlay .v-progress-linear {
+    margin: 20px 0px;
+    height: 50px;
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+}
+
+#uploads .v-overlay__content,
+#edit .v-overlay__content {
+    background-color: #171717
+}
+
+#uploads .v-overlay__content .status > div,
+#edit .v-overlay__content .status > div {
+    width: 80%;
+}
+
+#uploads .v-overlay .v-btn,
+#edit .v-overlay .v-btn {
+    margin-top: 10px;
+}
+
+/* desktop */
+.wide #uploads .v-overlay__content,
+.wide #edit .v-overlay__content {
+    width: 600px;
+}
+
+.wide #uploads .back {
+    position: absolute;
+    margin: auto;
+    left: 15px;
+    bottom: 0;
+    top: 0;
+}
+
+/* mobile */
+.small #uploads .v-overlay__content,
+.small #edit .v-overlay__content {
+    width: 80%;
+}
+
+.small #uploads .back {
+    margin-bottom: 10px;
+}
+
+.small #uploads .wrapper .body {
+    width: 100%;
+}
+
+/** youtubeuploads.vue **/
+#youtube .body {
+    width: 100%;
+}
+
+#youtube .preview {
+    width: 95%;
+    margin: auto !important;
+}
+
+#youtube .body > .data {
+    width: 95%;
+}
+
+#youtube .tournament .num {
+    max-width: 85px;
+    min-width: 85px;
+}
+
+#youtube .body .tournament {
+    width: 70%;
+}
+
+#youtube .body .data .date-title,
+#youtube .body .data  {
+    justify-content: space-between;
+}
+
+#youtube .body .data .date-title {
+    width: 100%;
+}
+
+#youtube .date-title > div {
+    max-width: 40%;
+}
+
+#youtube .desc > .v-textarea .v-messages {
+    max-width: max-content;
+}
+
+#youtube .desc > .v-textarea .v-text-field__details {
+    justify-content: end;
+}
+
+#youtube .desc-buttons {
+    padding: 0px;
+    display: flex;
+}
+
+#youtube .url-input {
+    display: flex;
+    justify-content: space-around;
+}
+
+/* desktop */
+.wide #youtube .desc {
+    min-height: 150px;
+    margin-right: 35px;
+}
+
+.wide #youtube .tournament .date {
+    max-width: 140px;
+    min-width: 140px;
+}
+.wide #youtube .desc-buttons {
+    min-height: inherit;
+    align-content: space-evenly;
+    flex-wrap: wrap;
+    max-width: min-content;
+}
+
+.wide #youtube .url-input {
+    width: 50%;
+}
+
+.wide #youtube .url-input .v-input {
+    max-width: 80%;
+}
+
+/* mobile */
+.small #youtube .url-input {
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+.small #youtube .url-input .v-input {
+    max-width: 70%;
+}
+
+.small #youtube .desc-buttons {
+    justify-content: space-evenly;
+}
+
+.small #youtube .desc-buttons .v-btn span {
+    white-space: normal !important;
+    flex: auto !important;
+}
+
+.small #youtube .body .tournament {
+    width: 90%;
+}
+
+.xsmall #youtube .body .tournament {
+    width: 100%;
+}
+
+/** youtubepreview.vue **/
+
+/* general */
+#youtube .preview .header {
+    display: flex;
+    justify-items: center;
+    align-items: center;
+    margin-top: 5px;
+}
+
+#youtube .preview .header .matchinfo {
+    font-size: 18px;
+}
+
+.preview .swap .up {
+    margin-bottom: 5px;
+}
+
+.preview .swap .down {
+    margin-top: 5px;
+}
+
+#youtube .preview .timestamp {
+    padding-left: 0px;
+}
+
+#youtube .header {
+    margin-bottom: 10px;
+}
+
+#youtube .header .leader,
+#youtube .header .remove {
+    margin-right: 15px;
+}
+ 
+#youtube .preview:last-child {
+    padding-bottom: 0px;
+}
+
+#youtube .preview .timestamp-file {
+    margin-left: 15px;
+}
+
+#youtube .preview .timestamp-file {
+    flex-wrap: wrap;
+}
+
+#youtube .tournament {
+    margin-top: 40px !important;
+    margin-bottom: 10px !important;
+}
+
+/* desktop */
+.wide #youtube .preview .data {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.wide #youtube .preview {
+    margin-top: 20px;
+}
+
+.wide #youtube .players {
+    margin-bottom: 10px;
+}
+
+/* mobile */
+.small #youtube .preview .data {
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+
+.small #youtube .preview .header {
+    margin-top: 10px;
+}
+
+.small:not(.xsmall) #youtube .preview .timestamp-file {
+    max-width: 150px;
+    min-width: 150px;
+}
+
+
+.xsmall #youtube .icon {
+    margin-right: 10px !important;
+    margin-left: 0px !important;
+}
+
+.xsmall #youtube .preview .timestamp-file {
+    margin-left: 0px;
+}
+
+.xsmall #youtube .preview .players {
+    margin-bottom: 5px;
+}
+
+.xsmall #youtube .preview .p2,
+.xsmall #youtube .preview .timestamp-file .file {
+    margin-top: 15px;
+}
+
+
+.xsmall #youtube .timestamp-file {
+    margin: 10px 0px;
+}
+
+
+/** filepreview.vue **/
+
+/* general */
+#files .preview .header  {
+    display: flex;
+    max-width: 100%;
+    align-items: center;
+}
+
+#files .hint .v-icon {
+    margin-top: -4px;
+    display: inline-block;
+}
+
+#files .hint {
+    align-items: center;
+    background-color: var(--v-background-base);
+    border-radius: 4px;
+}
+
+#files .hint > div {
+    align-items: center;
+    display: flex;
+}
+
+#files .hint > div > .col {
+    max-height: max-content;
+    max-width: max-content;
+    min-height: max-content;   
+}
+
+
+#files .header .leader {
+    order: 1;
+}
+
+#files .header hr {
+    order: 2;
+}
+
+#files .header .name {
+    order: 3;
+}
+
+#files .tournament-info {
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+#files .tournament.num {
+    max-width: 100px;
+    min-width: 100px;
+}
+
+#files .tournament-info {
+    width: 90%;
+}
+
+#files .first {
+    flex-wrap: wrap;
+}
+
+#files .filedate {
+    justify-content: end;
+    align-content: center;
+    align-items: center;
+}
+
+#files .header .matchinfo {
+    text-align: left;
+}
+
+#files .preview .header h4 {
+    max-width: 90%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    line-height: 21px;
+    word-break: break-all;
+}
+
+#files .preview .header > .col {
+    align-items: center;
+}
+
+#files .preview .header .remove {
+    margin-right: 10px;
+}
+
+#files .preview .data {
+    padding: 0px;
+}
+
+#files .preview .data .youtube {
+    padding-right: 0px;
+}
+
+#files .preview .data .players {
+    padding-left: 0px;
+}
+#files .preview {
+    width: 95%;
+    padding: 0px;
+    margin: auto !important;
+}
+
+
+.small #files .preview .header {
+    padding-bottom: 10px;
+}
+
+.small #files .preview .timestamp {
+    padding-top: 10px;
+}
+
+.small #files .preview .players {
+    padding: 10px 0px;
+}
+.preview  .swap {
+    max-width: min-content;
+    flex-wrap: wrap;
+    align-content: center;
+    margin-right: 15px;
+}
+
+
+.preview .header > div {
+    display: flex;
+    flex-wrap: nowrap;
+    align-content: center;
+    align-items: center;
+}
+.small #files .data {
+    flex-wrap: wrap;
+}
+
+.small #files .header {
+    flex-wrap: wrap;
+}
+
+.wide #files .tournament.num {
+    padding: 0px 10px;
+}
+
+.small #files .tournament.num {
+    padding-left: 0px !important;
+}
+
+.wide #files .preview .date {
+    padding-left: 10px;
+}
+
+.small #files .match-list > div:not(:last-child) {
+    padding-bottom: 10px;
+}

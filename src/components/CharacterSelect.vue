@@ -5,57 +5,63 @@
     offset-y>
         <!-- char select button -->
         <template v-slot:activator="{ on, attrs }">
-            <v-btn
-            :disabled="!selectionEnabled"
-            :ripple="false"
+            <picture
             class="icon"
             v-bind="attrs"
             v-on="on"
-            height="auto"
-            icon>
-                <v-avatar
-                height="100%"
-                tile>
-                    <img v-if="!currentCharacter"
-                    :src="require(`../assets/img/sel/0.png`)" />
-                    
-                    <img v-else-if="currentCharacter"
-                    :src="require(`../assets/img/sel/${currentCharacter.id}.png`)" />
-                </v-avatar>
-            </v-btn>
+            :title="currentCharacter">
+                <source
+                type="image/webp"
+                :srcset="require(`../assets/img/sel/${currentCharacter}.webp`)" />
+                <source
+                type="image/png"
+                :srcset="require(`../assets/img/sel/${currentCharacter}.png`)" />
+                <img
+                :alt="currentCharacter"
+                :src="require(`../assets/img/sel/${currentCharacter}.webp`)"
+                    />
+            </picture>
         </template>
         <!-- /char select button -->
         
         <!-- char select list -->
         <v-list
-        class="character-menu"
         v-if="selectionEnabled"
+        class="character-menu"
         width="210px">
-            <template v-for="character in $characters">
+            <template v-for="(character, i, j) in $characters">
                 <v-list-item
-                v-if="!anyEnabled && character.id > 0"
-                :key="character.id"
+                v-if="!anyEnabled && character.value"
+                :key="i"
                 @click="selectCharacter(character)">
-                        <v-avatar
-                        class="icon"
-                        height="100%"
-                        tile>
-                            <img :src="require(`../assets/img/sel/${character.id}.png`)">
-                        </v-avatar>
-                        {{ character.name }}
+                    <picture class="icon" :title="character.name" >
+                        <source
+                        type="image/webp"
+                        :srcset="require(`../assets/img/sel/${character.img}.webp`)" />
+                        <source
+                        type="image/png"
+                        :srcset="require(`../assets/img/sel/${character.img}.png`)" />
+                        <img
+                        :src="require(`../assets/img/sel/${character.img}.png`)" />
+                    </picture>
+                    {{ character.name }}
                 </v-list-item>
 
                 <v-list-item
-                v-if="anyEnabled"
-                :key="character.id"
+                v-else-if="anyEnabled"
+                :key="j"
                 @click="selectCharacter(character)">
-                        <v-avatar
-                        class="icon"
-                        height="100%"
-                        tile>
-                            <img :src="require(`../assets/img/sel/${character.id}.png`)">
-                        </v-avatar>
-                        {{ character.name }}
+                    <picture class="icon" :title="character.name" >
+                        <source
+                        type="image/webp"
+                        :srcset="require(`../assets/img/sel/${character.img}.webp`)" />
+                        <source
+                        type="image/png"
+                        :srcset="require(`../assets/img/sel/${character.img}.png`)" />
+                        <img
+                        :src="require(`../assets/img/sel/${character.img}.png`)" />
+                    </picture>
+                    {{ character.name }}
                 </v-list-item>
             </template>
         </v-list>
@@ -67,24 +73,20 @@
 export default {
   name: 'CharacterSelect',
   props: {
-    currentCharacter: [ Object, null ],
+    currentCharacter: [ String, null ],
     selectionEnabled: Boolean,
-    index: Number,
     anyEnabled: Boolean,
   },
   methods: {
         /* passes selected character up to parent */ 
         selectCharacter: function (selected) {
-            if (selected.id === 0) {
-                selected = null
-            }
             
-            if (this.currentCharacter && selected && selected.id === this.currentCharacter.id) {
+            if (selected.img === this.currentCharacter) {
                 return null
             } else {
-                this.$emit('character-select', selected)
+                this.$emit('character-select', selected.value)
             }
-        }
+        },
     }
 }
 </script>

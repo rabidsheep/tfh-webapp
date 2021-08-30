@@ -15,20 +15,24 @@
                 
                 <div class="matchinfo">
                     <b>{{ 'Match #' + (index+1) }}</b>
-                    <br />
-                    File Date: {{ fileDate }}
+                    
+                    <template v-if="file">
+                        <br />
+                        File Date: {{ fileDate }}
+                    </template>
                 </div>
             </div>
             
-            <v-divider :vertical="$vuetify.breakpoint.smAndDown" />
+            <v-divider :vertical="$vuetify.breakpoint.smAndDown && uploadForm === 'files'" />
 
             <v-col
+            v-if="uploadForm === 'files'"
             class="name ml-3"
             :cols="undefined">
                 <v-text-field
                 readonly
                 class="filename"
-                v-model="file.name"
+                v-model="fileName"
                 prepend-icon="mdi-file"
                 dense
                 label="File"
@@ -40,6 +44,7 @@
         </v-col>
 
         <v-col
+        v-show="type !== 'Casual' && $route.path !== '/edit'"
         class="swap">
             <button
             aria-label="Move Up"
@@ -67,10 +72,10 @@
                 :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
                 :class="`player p${i+1}`"
                 v-for="(player, i) in [p1, p2]"
-                :key="i"
+               :key="i"
                 :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
                     <CharacterSelect
-                    :currentCharacter ="player.character"
+                    :currentCharacter ="player.character ? player.character : `Any`"
                     :index="i"
                     :selectionEnabled="true"
                     :anyEnabled="false"
@@ -111,9 +116,11 @@
             class="add"
             :cols="$vuetify.breakpoint.smOnly ? 3 : undefined">
                 <v-col
+                v-if="uploadForm === 'files'"
                 cols="12"
                 class="link">
                     <v-text-field
+                    :readonly="uploadForm === 'youtube' ? true : false"
                     ref="url"
                     label="YouTube Link"
                     v-model="url"
@@ -122,10 +129,8 @@
                     persistent-hint
                     single-line
                     @blur="url = tempUrl"
-                    :clearable="!isTournament"
                     :dense="!$vuetify.breakpoint.smOnly"
-                    :rules="rules.url"
-                    :readonly="isTournament" />
+                    :rules="rules.url.noReq" />
                 </v-col>
 
                 
@@ -142,8 +147,24 @@
                     single-line
                     clearable
                     :dense="!$vuetify.breakpoint.smOnly"
-                    :rules="rules.timestamp"
-                    :disabled="!url || !$refs.url.validate()" />
+                    :required="timestampRequired"
+                    :rules="rules.timestamp" />
+                </v-col>
+
+                <v-col
+                v-if="uploadForm === 'youtube'"
+                class="file"
+                cols="12">
+                    <v-file-input
+                    label="File"
+                    accept=".tfhr"
+                    hint="Optional"
+                    persistent-hint
+                    single-line
+                    clearable
+                    :dense="!$vuetify.breakpoint.smOnly"
+                    @change="$emit('add-file', $event.target.files[0])"
+                    @click:clear="$emit('remove-file', file)" />
                 </v-col>
             </v-col>
         </v-col>
@@ -157,73 +178,79 @@ import DownButton from '.././assets/img/svg/down'
 import UpButton from '.././assets/img/svg/up'
 
 export default {
+    name: 'EditPreview',
     components: {
         CharacterSelect,
         RemoveButton,
         DownButton,
         UpButton,
     },
-    name: 'FilePreview',
     props: {
-        file: {
-            name: String,
-        },
-        video: [Object, null],
-        players: Array,
         p1: Object,
         p2: Object,
-        version: Number,
         index: Number,
-        progress: Number,
-        fileDate: String,
-        uploading: Boolean,
-        videoUrl: [String, null],
-        currentTimestamp: [String, null],
-        //matchDate: [String, Object, null],
-        isTournament: Boolean,
+        video: [Object, null],
+        file: [Object, null],
+        tournament: [Object, null],
+        type: String,
+        fileName: String,
         firstMatch: Boolean,
         lastMatch: Boolean,
+        uploadForm: String,
+        resetData: Boolean,
+        fileDate: String,
+        timestampRequired: Boolean,
     },
     data: () => {
         return {
-            hidden: true,
             valid: false,
-            url: null,
             tempUrl: null,
+            url: null,
             timestamp: null,
-            datepicker: false,
-            date: (new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000)).toISOString().substr(0, 10),
-            dateFormatted: null,
             rules: {
                 name: [
                     v => !!v || 'Required'
                 ],
-                url: [
-                    v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                    v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
-                ],
+                url: {
+                    req: [
+                        v => !!v || 'Required',
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ],
+                    noReq: [
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ]
+                },
                 timestamp: [
                     v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
                 ],
-            }
+                character: [
+                    v => !!v || 'Required'
+                ]
+            },
         }
     },
-    mounted() {
-        this.url = this.videoUrl
+    mounted: function () {
+        if (this.video) {
+            this.url = 'https://youtu.be/' + this.video.id
+            this.timestamp = this.video.timestamp
+        }
     },
-    // test url: https://www.youtube.com/watch?v=uciAaVk3xaE
     watch: {
-        'url': function(url) {
-            
-            if (this.$refs.url.validate()) {
-                this.tempUrl = url.match(this.$regex.ytUrl)[0]
+        'resetData': function() {
+            this.reset()
+        },
+        'url': function(v) {  
+            if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
+                this.tempUrl = v.match(this.$regex.ytUrl)[0]
 
                 if (this.tempUrl && !this.video || this.tempUrl !== this.video.url) {
-                    this.$emit('set-video-id', this.tempUrl.match(this.$regex.ytId)[1])
+                    this.$emit('set-url', this.tempUrl)
                 }
                 
-                if (!this.isTournament && this.checkUrlForTimestamp(url)) {
-                    this.timestamp = url.match(this.$regex.urlTimestamp)[1]
+                if (this.$regex.urlTimestamp.test(v) && v.match(this.$regex.urlTimestamp)[1] !== this.timestamp) {
+                    this.$emit('set-timestamp', v.match(this.$regex.urlTimestamp)[1])
                 }
             } else {
                 this.tempUrl = null
@@ -231,50 +258,33 @@ export default {
                 this.$emit('delete-video')
             }
         },
-
-        'videoUrl': function(url) {
-            if (url !== this.url) this.url = url
-        },
         
-        'timestamp': function(ts) {
-            if (this.$refs.timestamp.validate()) {
-                    if (ts !== this.currentTimestamp) {
-                        this.$emit('set-timestamp', ts.match(this.$regex.strTimestamp)[0])
+        'timestamp': function(v) {
+            if (v && v.match(this.$regex.strTimestamp)) {
+                    if (this.timestamp !== this.video.timestamp) {
+                        this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
                     }
             } else {
                 this.$emit('delete-timestamp')
             }
         },
-        /* currently not enabled
-        
-        'date': function(v) {
-            this.$emit('update-file-date', this.formatDate(new Date(v).toISOString().split('T')[0]))
-            this.dateFormatted = this.formatDate(v)
-        },
-        'matchDate': function(date) {
-            this.dateFormatted = date
-        }
-        */
     },
     methods: {
-        /* currently not in use
-        formatDate (date) {
-            if (!date) return null
-
-            const [year, month, day] = date.split('-')
-            return `${month}-${day}-${year}`
+       updateCharacter(character, i) {
+            this.$set(this.updated.players[i], 'character', character)
         },
-        */
-        checkUrlForTimestamp(url) {
-            return (this.$regex.urlTimestamp.test(url) && url.match(this.$regex.urlTimestamp)[1] !== this.timestamp)
+        reset() {
+            this.url = this.video?.url
+            this.timestamp = this.video?.timestamp
         }
     }
 }
 </script>
 
 <style scoped>
-.small .header {
-    justify-content: space-between;
+.wide .p1 >>> .v-input__append-inner {
+    padding-left: 0px;
+    padding-right: 4px;
 }
 
 .v-input--is-readonly >>> .v-input__slot::before {
@@ -289,10 +299,5 @@ export default {
 .v-input--is-readonly >>> .v-messages,
 .v-input--is-readonly >>> input {
     color: rgba(255, 255, 255, 0.7) !important;
-}
-
-.wide .p1 >>> .v-input__append-inner {
-    padding-left: 0px;
-    padding-right: 4px;
 }
 </style>

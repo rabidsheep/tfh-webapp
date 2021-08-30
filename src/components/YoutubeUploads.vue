@@ -187,11 +187,13 @@
                     class="match-list">
                         <template v-if="!loading && matches.length > 0">
                             <template v-for="(match, i, j) in matches">
-                                <YoutubePreview
+                                <Preview
                                 :key="i"
                                 :index="i"
                                 :uploadType="'youtube'"
-                                v-bind="match.video"
+                                :uploadForm="'youtube'"
+                                :video="match.video ? match.video : null"
+                                :hasVideo="match.video ? true : false"
                                 :p1="match.p1"
                                 :p2="match.p2"
                                 :currentTimestamp="match.video.timestamp"
@@ -250,12 +252,15 @@
 </template>
 
 <script>
-import YoutubePreview from './YoutubePreview.vue'
+import Preview from './Preview.vue'
 import StatusOverlay from './StatusOverlay.vue'
 // youtube test video url: https://www.youtube.com/watch?v=uciAaVk3xaE
 
 export default {
-    components: { YoutubePreview, StatusOverlay },
+    components: {
+        Preview,
+        StatusOverlay
+    },
     name: 'YoutubeUploads',
     props: {
         uid: String,
@@ -400,7 +405,8 @@ export default {
 
                         if (players.match(playersPattern)) {
                             let matched = players.match(playersPattern)
-                            this.matches.push({
+                            
+                            let match = {
                                 video: {
                                     id: this.video.id,
                                     timestamp: timestamp,
@@ -413,7 +419,9 @@ export default {
                                         name: matched[3],
                                         character: ((this.$characters).find(c => c.names.includes(matched[4]))?.name)
                                     }
-                            })
+                            }
+                            
+                            this.matches.push(match)
                         }
                     }
                 }

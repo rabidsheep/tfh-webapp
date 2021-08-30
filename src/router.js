@@ -24,11 +24,8 @@ export default new Router({
       name: 'edit',
       component: Edit,
       props: (route) => ({
-        tournamentId: route.query.tournamentId,
-        matchId: route.query.matchId,
-        videoId: route.query.videoId,
-        fromUser: route.query.fromUser,
-        tournament: route.params.tournament,
+        uploadId: route.params.uploadId,
+        uploadForm: route.params.uploadForm,
       })
     }
   ]

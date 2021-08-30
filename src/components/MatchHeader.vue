@@ -7,12 +7,7 @@
         title="Edit Data"
         :to="{
           path: 'edit',
-          query: group.tournament ?
-          { tournamentId: group.id,
-          videoId: group.videoId,
-          fromUser: group.uploadedBy }
-           :
-          { matchId: group.id }
+          query: { uploadId, uploadForm }
         }">
         <!-- edit?id=${_id} -->
           <v-icon
@@ -60,12 +55,14 @@ import moment from 'moment'
 export default {
   name: 'MatchHeader',
   props: {
-    group: Object,
+    group: [Object, null],
     matchId: [String, null],
     tournamentId: [String, null],
     uploaded: String,
     timezone: String,
+    uploadForm: String,
     matchDate: [Object, null],
+    uploadId: [String, null]
   },
   data: () => {
     return {

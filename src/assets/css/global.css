@@ -141,7 +141,11 @@ picture.icon source, picture.icon img {
     margin-right: 10px;
 }
 
-
+/** forms **/
+.v-form {
+    display: flex;
+    flex-direction: column;
+}
 
 /** edit.vue **/
 

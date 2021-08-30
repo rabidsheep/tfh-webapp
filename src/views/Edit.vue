@@ -1,5 +1,5 @@
 <template>
-    <v-container v-if="tournamentId || matchId" id="edit">
+    <v-container v-if="$route.query.uploadId && $route.query.uploadForm" id="edit">
         <v-overlay v-show="uploading || finished">
             <v-container fluid fill-height>
                 <v-layout class="status" column justify-center align-center>
@@ -116,25 +116,80 @@
                         v-show="loadingMatches"
                         indeterminate />
 
+                        <v-row
+                        class="tournament-info"
+                        v-if="tournament">
+                            <v-col
+                            class="tournament name pa-0"
+                            :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
+                                <v-text-field
+                                ref="tournament" 
+                                label="Tournament Name"
+                                v-model="tournament.name"
+                                readonly />
+                            </v-col>
+
+                            <v-col
+                            class="tournament num"
+                            :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
+                                <v-text-field
+                                label="No. #"
+                                v-model="tournament.num"
+                                readonly />
+                            </v-col>
+
+                            <v-col
+                            class="tournament date pa-0"
+                            :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
+                                <v-text-field
+                                ref="date"
+                                label="Date"
+                                v-model="tournament.date"
+                                prepend-icon="mdi-calendar"
+                                readonly />
+                            </v-col>
+                    </v-row>
+
                         <v-form
                         v-model="valid"
                         ref="form"
-                        id="edit"
+                        :id="`${$route.query.uploadForm}`"
                         v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
-                            <EditPreview
-                            v-for="(match, i) in updated"
-                            :key="i"
-                            :p1="match.p1"
-                            :p2="match.p2"
-                            :tournament="match.tournament ? match.tournament : null"
-                            :video="match.video ? match.video : null"
-                            :file="match.file ? match.file : null"
-                            :type="match.type"
-                            :resetData="resetData"
-                            @set-timestamp="setTimestamp($event, i)"
-                            @set-url="setUrl($event, i)"
-                            @delete-timestamp="deleteTimestamp(i)"
-                            @delete-video="deleteVideo(i)" />
+
+                            <v-text-field
+                            v-if="$route.query.uploadForm === 'youtube' || updated[0].type === 'Tournament'"
+                            v-model="url"
+                            class="upload-url"
+                            label="YouTube URL"
+                            prepend-icon="mdi-youtube"
+                            :readonly="$route.query.uploadForm === 'youtube'" />
+
+                            <div class="match-list">
+                                <template v-for="(match, i, j) in updated">
+                                    <Preview
+                                    :key="i"
+                                    :index="i"
+                                    :firstMatch="i === 0"
+                                    :lastMatch="i === updated.length - 1"
+                                    :uploadForm="$route.query.uploadForm"
+                                    :fileDate="match.file ? match.file.date : null"
+                                    :fileName="match.file ? match.file.name : null"
+                                    :p1="match.p1"
+                                    :p2="match.p2"
+                                    :timestampRequired="$route.query.uploadForm === 'youtube' || original[0].type === 'Tournament'"
+                                    :tournament="match.tournament ? match.tournament : null"
+                                    :video="match.video ? match.video : null"
+                                    :file="match.file ? match.file : null"
+                                    :type="match.type"
+                                    :resetData="resetData"
+                                    @set-timestamp="setTimestamp($event, i)"
+                                    @set-url="setUrl($event, i)"
+                                    @delete-timestamp="deleteTimestamp(i)"
+                                    @delete-video="deleteVideo(i)" />
+
+                                    <hr :key="j" v-if="i < updated.length - 1" />
+                                </template>
+                            </div>
                             
                             <br />
 
@@ -171,20 +226,16 @@
 </template>
 
 <script>
-import EditPreview from '.././components/EditPreview.vue'
+import Preview from '.././components/Preview.vue'
 import 'firebase/storage'
 
 
 export default {
     name: 'Edit',
     components: {
-        EditPreview
+        Preview
     },
     props: {
-        tournamentId: [String, null],
-        matchId: [String, null],
-        videoId: [String, null],
-        fromUser: [String, null]
     },
     data: () => {
         return {
@@ -206,83 +257,87 @@ export default {
             loadingMatches: false,
             failedMatchGet: false,
             allowLogin: false,
+            uploadId: null,
+            url: null,
+            tournament: null,
         }
     },
     mounted: function () {
-    // auth state watcher
-    this.$firebase.auth().onAuthStateChanged((user) => {
-       if (!user) {
-            this.uid = null
-            this.step = 1
-            
-            this.allowLogin = true
-            console.log('User not found')
-            return
-        } else {
-            this.loggingIn = true
-            this.uid = user.uid
-
-            let loginRef = null
-
-            if (process.env.NODE_ENV == "production") {
-                console.log("Production Environment")
-
-                loginRef = this.setAuthToken()
-                .then(() => {
-                    console.log('Checking user')
-                    return this.$users.get({ uid: user.uid })
-                })
-
-            } else {
-                console.log("Dev Environment")
-
-                loginRef = this.$users.get({ uid: user.uid })
-            }
-
-            loginRef.then((response) => {
-                let userData = response.body[0]
-
-                if (userData) {
-                    console.log("Retrieved user data")
-                    this.isAdmin = userData.admin
+        if (this.$route.query.uploadId && this.$route.query.uploadForm) {
+            // auth state watcher
+            this.$firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+                    this.uid = null
+                    this.step = 1
+                    
+                    this.allowLogin = true
+                    console.log('User not found')
+                    return
                 } else {
-                    console.log("Creating new user")
+                    this.loggingIn = true
+                    this.uid = user.uid
 
-                    this.isRegistered = false
+                    let loginRef = null
 
-                    let newUser = {
-                        uid: user.uid,
-                        email: user.email,
-                        admin: false
+                    if (process.env.NODE_ENV == "production") {
+                        console.log("Production Environment")
+
+                        loginRef = this.setAuthToken()
+                        .then(() => {
+                            console.log('Checking user')
+                            return this.$users.get({ uid: user.uid })
+                        })
+
+                    } else {
+                        console.log("Dev Environment")
+
+                        loginRef = this.$users.get({ uid: user.uid })
                     }
 
-                    return this.$users.save(newUser)
+                    loginRef.then((response) => {
+                        let userData = response.body[0]
+
+                        if (userData) {
+                            console.log("Retrieved user data")
+                            this.isAdmin = userData.admin
+                        } else {
+                            console.log("Creating new user")
+
+                            this.isRegistered = false
+
+                            let newUser = {
+                                uid: user.uid,
+                                email: user.email,
+                                admin: false
+                            }
+
+                            return this.$users.save(newUser)
+                            .then(() => {
+                                console.log('User created') 
+                            })
+                        }
+                    })
                     .then(() => {
-                        console.log('User created') 
+                        this.loading = false
+                        this.loadingMatches = true
+                        this.isRegistered = true
+                        this.loggingIn = false
+                        this.step = 2
+                        
+                        this.getMatches(this.$route.query.uploadId)
+                    })
+                    .catch((error) => {
+
+                        this.loading = false
+                        this.isRegistered = true
+                        this.loggingIn = false
+                        this.step = 1
+                        this.allowLogin = true
+                        console.log(error)
                     })
                 }
             })
-            .then(() => {
-                this.loading = false
-                this.loadingMatches = true
-                this.isRegistered = true
-                this.loggingIn = false
-                this.step = 2
-                
-                this.getMatches()
-            })
-            .catch((error) => {
-
-                this.loading = false
-                this.isRegistered = true
-                this.loggingIn = false
-                this.step = 1
-                this.allowLogin = true
-                console.log(error)
-            })
         }
-    })
-        
     },
     watch: {
         'updated': {
@@ -323,24 +378,27 @@ export default {
             })
             .catch((error) => console.log(error))
         },
-        getMatches() {
+        getMatches(uploadId) {
             this.loadingMatches = true
 
             let ref = null
 
-            if (this.tournamentId) {
+            /*if (this.tournamentId) {
                 ref = 
                 this.$matches.get({tournamentId: this.tournamentId, videoId: this.videoId, fromUser: this.fromUser})
             } else {
                 ref = this.$matches.get({matchId: this.matchId})
-            }
+            }*/
+
+            ref = this.$matches.get({uploadId: uploadId})
 
             ref
             .then((response) => {
                 if (response.ok) {
+                    this.tournament = response.body.groups[0]._id.tournament
                     this.original = response.body.groups[0].matches
                     this.updated= JSON.parse(JSON.stringify(this.original))
-
+                    this.url = (this.original[0].video ? 'https://youtu.be/' + this.original[0].video.id : null)
                     this.loadingMatches = false
                 }
             })
@@ -437,14 +495,24 @@ export default {
 </script>
 
 <style scoped>
-@import '../assets/css/edit.css';
+@import '../assets/css/uploads.css';
 
 .v-stepper >>> .v-stepper__wrapper {
     overflow: visible !important;
 }
 
-.wide .p1 >>> .v-input__append-inner {
-    padding-left: 0px;
-    padding-right: 4px;
+.v-input--is-readonly >>> .v-input__slot::before {
+    border-color: rgba(255, 255, 255, 0.7) !important;
 }
+
+.v-input--is-readonly >>> i {
+    color: #5e5e5e !important
+}
+
+.v-input--is-readonly >>> .v-label,
+.v-input--is-readonly >>> .v-messages,
+.v-input--is-readonly >>> input {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
 </style>

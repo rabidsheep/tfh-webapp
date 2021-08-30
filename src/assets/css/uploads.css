@@ -259,47 +259,48 @@
     min-height: max-content;   
 }
 
-#files .tournament-info {
+.tournament-info {
+    margin: auto !important;
     flex-wrap: wrap;
     justify-content: center;
 }
 
-#files .tournament.num {
+.tournament-info .tournament.num {
     max-width: 100px;
     min-width: 100px;
 }
 
-#files .tournament-info {
+.tournament-info {
     width: 90%;
 }
 
-#files .header .matchinfo {
-    text-align: left;
-}
 
-.wide #files .tournament.num {
+.wide .tournament-info .tournament.num {
     padding: 0px 10px;
 }
 
-.small #files .tournament.num {
+.small .tournament-info .tournament.num {
     padding-left: 0px !important;
 }
 
-.xsmall #files .matchinfo {
+.small .tournament-info .tournament.date,
+.small .tournament-info .tournament.num {
+    padding-top: 12px !important;
+}
+
+.xsmall .preview .matchinfo {
     max-width: 100px;
 }
 
 
 /****/
-#files .v-messages,
-#youtube .timestamp-file .v-messages,
-#youtube .tournament .v-messages {
+.preview .add .v-messages,
+.preview .tournament .v-messages {
     max-width: max-content;
 }
 
-#files .v-text-field__details,
-#youtube .timestamp-file .v-text-field__details, 
-#youtube .tournament .v-text-field__details {
+.preview .add .v-text-field__details, 
+.preview .tournament .v-text-field__details {
     justify-content: end;
 }
 /****/
@@ -343,7 +344,6 @@
 
 /* preview rows */
 .preview {
-    width: 95%;
     margin: auto !important;
     padding: 20px 0px;
 }
@@ -357,6 +357,7 @@
 
 .preview .header .matchinfo {
     font-size: 18px;
+    text-align: left;
 }
 
 .preview .timestamp {
@@ -485,13 +486,18 @@
 
 .xsmall .preview .p2,
 .xsmall .preview .add .file,
-.xsmall #files .preview .add .timestamp {
+.xsmall .preview .add .link,
+.xsmall .preview .add .timestamp {
     margin-top: 15px;
+}
+
+.xsmall .players {
+    margin-bottom: 0px !important;
 }
 
 
 .xsmall .preview .add {
-    margin: 10px 0px;
+    margin: 5px 0px;
 }
 
 .preview .header button {
@@ -502,7 +508,6 @@
 .preview button svg {
     box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);
 }
-
 .preview button svg {
     height: 32px;
     width: 32px;
@@ -530,7 +535,7 @@ button.remove .st0 {
     fill: var(--v-accent-base);
 }
 
-button.remove:hover .st0 {
+button.remove:not(.disabled):hover .st0 {
     fill: var(--v-accent-lighten1)
 }
 
@@ -538,7 +543,7 @@ button.move .st0 {
     fill: var(--v-button3-base);
 }
 
-button.move:hover .st0 {
+button.move:not(.disabled):hover .st0 {
     fill: var(--v-button3-lighten2);
 }
 
@@ -568,6 +573,14 @@ button.move:hover .st0 {
     margin-top: 25px;
 }
 
+.upload-url {
+    width: 240px;
+}
+.v-form {
+    align-items: center;
+}
 
-
-
+.match-list {
+    display: flex;
+    flex-direction: column;
+}

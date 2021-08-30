@@ -72,6 +72,8 @@
               :key="j">
                 <MatchHeader
                 :group="group._id"
+                :uploadId="group._id.uploadId"
+                :uploadForm="group._id.uploadForm"
                 :uploaded="group.uploaded"
                 :timezone="timezone"/>
 

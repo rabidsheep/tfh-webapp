@@ -56,14 +56,15 @@ api.get('/matches', (req, res) => {
 
         query = formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo)
     } else {
-        query = ( req.query.tournamentId ?
+        /*query = ( req.query.tournamentId ?
             {
                 'tournament.id': req.query.tournamentId,
                 'video.id': req.query.videoId,
                 'userId': req.query.fromUser
             } :
             { '_id': mongo.ObjectId(req.query.matchId) }
-        )
+        )*/
+        query = { 'uploadId': req.query.uploadId }
     }
     
     const pipeline = [
@@ -83,10 +84,11 @@ api.get('/matches', (req, res) => {
                         id: '$tournament.id',
                         type: '$type',
                         videoId: '$video.id',
-                        uploadedBy: '$userId',
+                        uploadForm: '$uploadForm',
                         uploadId: '$uploadId',
                     },
                     else: {
+                        uploadForm: '$uploadForm',
                         uploadId: '$uploadId',
                         type: '$type',
                     },
@@ -106,9 +108,11 @@ api.get('/matches', (req, res) => {
                     type: '$type',
                     p1: '$p1',
                     p2: '$p2',
+                    uploadId: '$uploadId',
                     uploadDate: '$uploadDate',
                     uploadTime: '$uploadTime',
-                    video: '$video'
+                    video: '$video',
+                    pos: '$pos'
                 }
             },
         }},

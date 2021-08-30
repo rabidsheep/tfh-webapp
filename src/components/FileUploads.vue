@@ -152,37 +152,40 @@
         class="wrapper">
             <div
             v-if="matches.length > 0"
-            class="match-list py-4"
+            class="match-list"
             column
             justify-center
             align-center>
                 <template v-for="(match, i, j) in matches">
-                <FilePreview
-                :key="i"
-                :index="i"
-                v-bind="match"
-                :isTournament="uploadType === 'Tournament' ? true : false"
-                :firstMatch="i === 0"
-                :lastMatch="i === matches.length - 1"
-                :fileDate="match.file.date"
-                :matchDate="match.file.date"
-                :uploading="uploading"
-                :video="match.video ? match.video : null"
-                :videoUrl="uploadType === 'Tournament' ?
-                            vod : (match.video ? match.video.url : null)"
-                :currentTimestamp="match.video && match.video.timestamp ?
-                                    match.video.timestamp : null "
-                @update-character="updateCharacter($event.character, $event.index, i)"
-                @remove="removeMatch(i)"
-                @set-video-id="setVideoId($event, i)"
-                @set-timestamp="setTimestamp($event, i)"
-                @delete-video="deleteVideo(i)"
-                @delete-timestamp="deleteTimestamp(i)"
-                @move-up="swapMatches(i, i-1)"
-                @move-down="swapMatches(i, i+1)"
-                @update-file-date="match.file.date = $event" />
+                    <Preview
+                    :key="i"
+                    :index="i"
+                    :uploadForm="'files'"
+                    v-bind="match"
+                    :isTournament="uploadType === 'Tournament' ? true : false"
+                    :firstMatch="i === 0"
+                    :lastMatch="i === matches.length - 1"
+                    :fileDate="match.file.date"
+                    :timestampRequired="false"
+                    :fileName="match.file.name"
+                    :type="uploadType"
+                    :uploading="uploading"
+                    :video="match.video ? match.video : null"
+                    :videoUrl="uploadType === 'Tournament' ?
+                                vod : (match.video ? match.video.url : null)"
+                    :currentTimestamp="match.video && match.video.timestamp ?
+                                        match.video.timestamp : null "
+                    @update-character="updateCharacter($event.character, $event.index, i)"
+                    @remove="removeMatch(i)"
+                    @set-video-id="setVideoId($event, i)"
+                    @set-timestamp="setTimestamp($event, i)"
+                    @delete-video="deleteVideo(i)"
+                    @delete-timestamp="deleteTimestamp(i)"
+                    @move-up="swapMatches(i, i-1)"
+                    @move-down="swapMatches(i, i+1)"
+                    @update-file-date="match.file.date = $event" />
 
-                <hr :key="j" v-if="i < matches.length - 1" />
+                    <hr :key="j" v-if="i < matches.length - 1" />
                 </template>
             </div>
             
@@ -190,7 +193,7 @@
             class="message"
             column
             justify-center>
-                <br v-show="matches.length > 0" />
+                <br v-show="matches.length === 0" />
                 <div
                 :style="matches.length >= uploadLimit ? 'color: red;' : ''">
                     {{ matches.length >= uploadLimit ?
@@ -239,13 +242,13 @@
 </template>
 
 <script>
-import FilePreview from './FilePreview.vue'
 import StatusOverlay from './StatusOverlay.vue'
+import Preview from './Preview.vue'
 
 export default {
     components: {
-        FilePreview,
-        StatusOverlay
+        StatusOverlay,
+        Preview,
     },
     name: 'FileUploads',
     props: {
@@ -271,7 +274,7 @@ export default {
             errors: [],
             url: null,
             vod: null,
-            uploadType: 'Tournament',
+            uploadType: 'Casual',
             tournament: {
                 name: null,
                 num: null,
@@ -510,7 +513,8 @@ export default {
                 } else {
                     let match = {
                         userId: this.uid,
-                        uploadForm: 'Files',
+                        uploadForm: 'files',
+                        pos: this.matches.length + 1,
                         file: {
                             url: null,
                             name: fileName,

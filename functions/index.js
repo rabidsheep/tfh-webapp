@@ -91,6 +91,7 @@ api.get('/matches', (req, res) => {
                         uploadForm: '$uploadForm',
                         uploadId: '$uploadId',
                         type: '$type',
+                        matchDate: '$matchDate'
                     },
                 }
             },

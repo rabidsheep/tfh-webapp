@@ -244,6 +244,7 @@
 <script>
 import StatusOverlay from './StatusOverlay.vue'
 import Preview from './Preview.vue'
+import 'firebase/storage'
 
 export default {
     components: {
@@ -318,8 +319,6 @@ export default {
 
       }
     },
-    mounted() {
-    },
     methods: {
         /* makes visible upload button act like html file upload button */
         selectFiles() {
@@ -369,68 +368,54 @@ export default {
 
             this.printObj(this.matches)
 
-            this.$matches.save({matches: matches, form: this.form}).then((response) => {
-                if (response.ok) {
-                    console.log('Uploaded matches:')
-                    for (const i in response.body.matchIds) {
-                        console.log('ID:', response.body.matchIds[i])
-                    }
-                } else {
-                    this.setErrors('upload', this.files[i].name)
-                    console.log('Failed to upload matches')
-                }
-
-                this.uploading = false
-                this.finished = true
-            })
-            .catch((error) => console.log(error))
-                    
-            /*disable until i can figure out how to use storage emulator
-            const storageRef = firebase.storage()
-            .ref(`${this.files[i].name}`)
-            .put(this.files[i])
-
-            // upload file to storage
-            storageRef.on(`state_changed`,
-            snapshot => {
-                // keep track of file upload progress
-                this.progress = (this.progress + (snapshot.bytesTransferred/snapshot.totalBytes)) * (100 * this.matches.length)
-            },
-            error => {
-                this.failed += 1
-                this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
-                this.setErrors(3, this.files[i].name)
-                console.log(error.message)
-            },
-            () => {
-                this.succeeded += 1
-                this.progress = (this.succeeded - this.failed) * (100 * this.matches.length)
-                storageRef.snapshot.ref
-                .getDownloadURL()
-                .then((url) => {
-                    this.matches[i].fileUrl = url;
-                    this.matches[i].timestamp = new Date();
-
-                    // upload match info to db
-                    this.$matches
-                    .save(this.matches[i])
-                    .then((response) => {
-                        if (response.ok) {
-                            console.log('Successfully uploaded document (ID: ' + response.body.docId + ')')
-                            if (i === this.matches.length - 1) {
-                                this.uploading = false
-                                this.finished = true
-                            }
-                        } else {
-                            this.setErrors(3, this.files[i].name)
-                            this.showErrors(this.errorList)
+            if (process.env.NODE_ENV === 'development') {
+                this.$matches.save({matches: matches, form: this.form}).then((response) => {
+                    if (response.ok) {
+                        console.log('Uploaded matches:')
+                        for (const i in response.body.matchIds) {
+                            console.log('ID:', response.body.matchIds[i])
                         }
-                    })
-                    .catch((error) => console.log(error))
+                    } else {
+                        this.setErrors('upload', this.files[i].name)
+                        console.log('Failed to upload matches')
+                    }
+
+                    this.uploading = false
+                    this.finished = true
                 })
                 .catch((error) => console.log(error))
-            })*/
-        //}
+            } else {
+                Promise.all(this.files.map(file => this.uploadAsPromise(file)))
+                .then(() => this.$matches.save({matches: matches, form: this.form}))
+                .then((response) => {
+                    if (response.ok) {
+                        console.log('Uploaded matches:')
+                        for (const i in response.body.matchIds) {
+                            console.log('ID:', response.body.matchIds[i])
+                        }
+                    } else {
+                        this.setErrors('upload', this.files[i].name)
+                        console.log('Failed to upload matches')
+                    }
+
+                    this.uploading = false
+                    this.finished = true
+                })
+                .catch((error) => console.log(error))
+            }
+        },
+        uploadAsPromise(file) {
+            let storageRef = this.$firebase.storage()
+            .ref(`${file.name}`)
+            .put(file)
+
+            return storageRef.then((snapshot) => {
+                return snapshot.ref.getDownloadURL()
+            })
+            .then((url) => {
+                let i = this.matches.findIndex((match) => match.file.name === file.name)
+                this.matches[i].file.url = url
+            })
         },
         /**
          * begins parsing files one by one
@@ -580,7 +565,13 @@ export default {
         },
         removeMatch(i) {
             this.matches.splice(i, 1)
-            this.files.splice(i, 1)
+            this.removeFile(this.matches[i].file.name)
+        },
+        removeFile(file) {
+            let index = this.files.findIndex((f) => f.name === file)
+            //console.log(this.files[index])
+            if (index >= 0) this.files.splice(index, 1)
+            //console.log(this.files[index])
         },
         updateCharacter(character, j, i) {
             this.$set(this.matches[i][`p${j+1}`], 'character', character)

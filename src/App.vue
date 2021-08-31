@@ -2,7 +2,7 @@
   <v-app dark>
     <v-toolbar id="menubar" height="58px" maxHeight="58px" dense color="accent">
         <!-- replace <a> with <router-link> eventually -->
-        <router-link to="/" @click.native="forceRerender($event)">
+        <router-link to="/" @click.native="forceRerenderMain($event)">
           <div class="logo">
             <img src="./assets/img/pixel/1.png" alt="fortnite gaming"/>
           
@@ -13,7 +13,7 @@
         </router-link>
 
 
-        <router-link to="/upload" @click.native="forceRerender($event)">
+        <router-link :to="{path: 'upload'}">
             <v-btn icon>
                 <v-icon>mdi-plus-box</v-icon>
             </v-btn>
@@ -36,7 +36,7 @@
       <v-layout column align-center justify-center>
         <div id="router-view"
         :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
-          <router-view :key="componentKey" />
+          <router-view :key="mainKey" />
         </div>
       </v-layout>
 
@@ -59,63 +59,11 @@
 export default {
   data: () => {
     return {
-      componentKey: true,
+      mainKey: true,
+      uploadKey: true,
     }
   },
   mounted: function () {
-      /*this.$firebase.auth()
-      .onAuthStateChanged((user) => {
-          
-        if (!user) {
-          console.log('User is signed out')
-          //this.user = this.$firebase.auth().currentUser
-          console.log(this.user)
-          return null
-        } else {
-          
-          
-          if (process.env.NODE_ENV == "production") {
-            // only run this in production environment
-            console.log("Production Environment")
-
-            this.setAuthToken()
-            .then(() => {
-                console.log('Checking user')
-                this.loggingIn = true
-                return this.$users.get({ uid: user.uid })
-            })
-            .then((response) => {
-                let userData = response.body[0]
-                if (userData) {
-                    console.log("Retrieved user data")
-
-                    this.isAdmin = userData.admin
-                    this.userId = user.uid
-                    //localStorage.setItem('user', user.uid)
-                } else {
-                    console.log("No account found")
-                }
-
-                
-            })
-            .catch((error) => {
-                console.log(error)
-            })
-          } else {
-            // only run this in dev environment
-            console.log("Development Environment")
-        
-            console.log('Signed in')
-            this.uid = user.uid
-            this.userId = user.uid
-            //this.user = this.$firebase.auth().currentUser
-            console.log(this.user)
-          }
-
-          console.log('User is signed in')
-        }
-      })*/
-    
   },
   watch: {
     onScroll: function (event) {
@@ -134,11 +82,11 @@ export default {
       })
       .catch((error) => console.log(error))
     },
-    forceRerender(e) {
-      if ((this.$route.path === '/' || this.$route.path === '/upload') && !e.ctrlKey) {
-        this.componentKey = !this.componentKey
+    forceRerenderMain(e) {
+      if (this.$route.path === '/' && !e.ctrlKey) {
+        this.mainKey = !this.mainKey
       }
-    }
+    },
   }
 }
 </script>

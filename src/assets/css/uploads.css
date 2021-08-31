@@ -584,3 +584,7 @@ button.move:not(.disabled):hover .st0 {
     display: flex;
     flex-direction: column;
 }
+
+.v-form .wrapper {
+    width: 100%;
+}

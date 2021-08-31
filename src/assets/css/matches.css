@@ -131,6 +131,16 @@
     margin-top: -1px;
 }
 
+.match .btn {
+    height: 36px;
+    width: 36px;
+}
+
+.match .btn a {
+    display: inline-block;
+    height: 36px;
+    width: 36px;
+}
 
 .match .download-off, .match .youtube-off {
     height: 36px;

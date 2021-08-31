@@ -442,8 +442,6 @@ export default {
         /** upload youtube-only object */
         youtubeUpload() {
             this.uploading = true
-            let succeed = 0
-            let fail = 0
 
             let matches = this.matches.map((match) => {
                 let time = (new Date()).toISOString().split('T')
@@ -466,23 +464,55 @@ export default {
                 return match
             })
 
-            
-            this.$matches.save({matches: matches, form: this.form})
-            .then((response) => {
-                if (response.ok) {
-                    console.log('Uploaded matches:')
-                    for (const i in response.body.matchIds) {
-                        console.log('ID:', response.body.matchIds[i])
+            if (process.env.NODE_ENV === 'development') {
+                this.$matches.save({matches: matches, form: this.form})
+                .then((response) => {
+                    if (response.ok) {
+                        console.log('Uploaded matches:')
+                        for (const i in response.body.matchIds) {
+                            console.log('ID:', response.body.matchIds[i])
+                        }
+                    } else {
+                        this.setErrors('upload', null)
+                        console.log('Failed to upload')
                     }
-                } else {
-                    this.setErrors('upload', null)
-                    console.log('Failed to upload')
-                }
 
-                this.uploading = false
-                this.finished = true
+                    this.uploading = false
+                    this.finished = true
+                })
+                .catch((error) => console.log(error))
+            } else if (this.files.length > 0) {
+                Promise.all(this.files.map(file => this.uploadAsPromise(file)))
+                .then(() => this.$matches.save({matches: matches, form: this.form}))
+                .then((response) => {
+                    if (response.ok) {
+                        console.log('Uploaded matches:')
+                        for (const i in response.body.matchIds) {
+                            console.log('ID:', response.body.matchIds[i])
+                        }
+                    } else {
+                        this.setErrors('upload', this.files[i].name)
+                        console.log('Failed to upload matches')
+                    }
+
+                    this.uploading = false
+                    this.finished = true
+                })
+                .catch((error) => console.log(error))
+            }
+        },
+        uploadAsPromise(file) {
+            let storageRef = this.$firebase.storage()
+            .ref(`${file.name}`)
+            .put(file)
+
+            return storageRef.then((snapshot) => {
+                return snapshot.ref.getDownloadURL()
             })
-            .catch((error) => console.log(error))
+            .then((url) => {
+                let i = this.matches.findIndex((match) => match.file.name === file.name)
+                this.matches[i].file.url = url
+            })
         },
         /**
          * clears errors array

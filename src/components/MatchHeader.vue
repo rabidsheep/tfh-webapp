@@ -71,7 +71,6 @@ export default {
     }
   },
   mounted() {
-    console.log(this.printObj(this.group))
     this.date = moment(this.uploaded).local(true).format('MM-DD-YYYY')
     this.time = moment(this.uploaded).local(true).format('HH:mm')
   },

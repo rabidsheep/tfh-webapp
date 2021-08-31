@@ -163,7 +163,7 @@
                     single-line
                     clearable
                     :dense="!$vuetify.breakpoint.smOnly"
-                    @change="$emit('add-file', $event.target.files[0])"
+                    @change="$emit('add-file', $event)"
                     @click:clear="$emit('remove-file', file)" />
                 </v-col>
             </v-col>

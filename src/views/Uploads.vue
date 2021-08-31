@@ -48,13 +48,12 @@
                                 <v-icon left>mdi-google</v-icon>
                                 Google
                             </v-btn>
-                            <!--
-                            <v-btn height="50"
+                            
+                            <!--<v-btn height="50"
                             v-show="!$firebase.auth().currentUser"
                             @click="signIn('twitter')">
                                 <v-icon left>mdi-twitter</v-icon> Twitter
-                            </v-btn>
-                            -->
+                            </v-btn>-->
                         </div>
 
                         <div
@@ -175,84 +174,94 @@ export default {
             isRegistered: true,
             loggingIn: false,
             allowLogin: false,
+            loggedIn: false,
         }
     },
     watch: {
     },
-    mounted: function () {
-        // auth state watcher
-        this.$firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
+    mounted() {
+            this.$firebase.auth().onAuthStateChanged((user) => {
+                if (!user) {
                     this.uid = null
                     this.step = 1
                     
                     this.allowLogin = true
                     console.log('User not found')
-                    return
-            } else {
-                let loginRef = null
-
-                if (process.env.NODE_ENV == "production") {
-                    console.log("Production Environment")
-
-                    loginRef = this.setAuthToken()
-                    .then(() => {
-                        console.log('Checking user')
-                        return this.$users.get({ uid: user.uid })
-                    })
-
+                    return null
                 } else {
-                    console.log("Dev Environment")
-
-                    loginRef = this.$users.get({ uid: user.uid })
-                }
-
-                loginRef.then((response) => {
-                    let userData = response.body[0]
+                    this.loggingIn = true
                     this.uid = user.uid
 
-                    if (userData) {
-                        console.log("Retrieved user data")
+                    let loginRef = null
 
-                        this.isAdmin = userData.admin
-                        
-                    } else {
-                        console.log("Creating new user")
+                    if (process.env.NODE_ENV == "production") {
+                        console.log("Production Environment")
 
-                        this.isRegistered = false
-
-                        let newUser = {
-                            uid: user.uid,
-                            email: user.email,
-                            admin: false
-                        }
-
-                        return this.$users.save(newUser)
+                        loginRef = this.setAuthToken()
                         .then(() => {
-                            console.log('User created') 
+                            console.log('Checking user')
+                            return this.$users.get({ uid: user.uid })
                         })
+
+                    } else {
+                        console.log("Dev Environment")
+
+                        loginRef = this.$users.get({ uid: user.uid })
                     }
-                })
-                .then(() => {
-                    this.loading = false
-                    this.isRegistered = true
-                    this.loggingIn = false
-                    this.uid = user.uid
-                    this.step = 2
-                })
-                .catch((error) => {
-                    console.log(error)
-                })
-            }
-        })
+
+                    loginRef.then((response) => {
+                        let userData = response.body[0]
+
+                        if (userData) {
+                            console.log("Retrieved user data")
+                            this.isAdmin = userData.admin
+                            return null
+                        } else {
+                            console.log("Creating new user")
+
+                            this.isRegistered = false
+
+                            let newUser = {
+                                uid: user.uid,
+                                email: user.email,
+                                admin: false
+                            }
+
+                            return this.$users.save(newUser)
+                            .then(() => {
+                                console.log('User created') 
+                            })
+                        }
+                    })
+                    .then(() => {
+                        this.loading = false
+                        this.loadingMatches = true
+                        this.isRegistered = true
+                        this.loggingIn = false
+                        this.step = 2
+                    })
+                    .catch((error) => {
+
+                        this.loading = false
+                        this.isRegistered = true
+                        this.loggingIn = false
+                        this.step = 1
+                        this.allowLogin = true
+                        console.log(error)
+                    })
+                }
+            })
     },
     methods: {
         signIn: function (providerName) {
-            this.allowLogin = false
             this.loading = true
-            this.loggingIn = true
+            this.allowLogin = false
+
             this.$firebase.auth()
             .signInWithPopup(this.$providers[providerName])
+            .then(() => {
+                this.loading = false
+            })
             .catch((error) => {
                 console.log(error)
                 this.allowLogin = true
@@ -278,7 +287,7 @@ export default {
         goBack() {
             this.step = 2
             this.uploadType = null
-        }
+        },
     }
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-    <v-overlay v-show="error || uploading || finished">
+    <v-overlay v-show="error || warning || uploading || finished">
         <v-container fluid fill-height>
             <v-layout class="status" column justify-center align-center>
                 <template v-if="uploading">
@@ -14,32 +14,14 @@
 
                 <template v-else-if="finished">
                     <v-icon
-                    :class="succeeded > 0 ? ( failed > 0 ? 'amber--text lighten-3' : 'green--text lighten-2') : 'red--text lighten-2'"
+                    class="green--text lighten-2"
                     large>
-                        <template v-if="succeeded > 0 && failed === 0">
-                            mdi-check-circle
-                        </template>
-
-                        <template v-else-if="succeeded > 0 && failed > 0">
-                            mdi-alert
-                        </template>
-
-                        <template v-else-if="succeeded === 0 && failed > 0">
-                            mdi-close-circle
-                        </template>
+                        mdi-check-circle
                     </v-icon>
 
                     <h1>
                         Upload Finished
                     </h1>
-
-                    <center v-show="succeeded > 0">
-                    Successfully uploaded {{ succeeded }} {{ succeeded === 1 ? 'match' : 'matches' }}.
-                    </center>
-
-                    <center v-show="failed > 0">
-                    Failed to upload {{ failed }} {{ failed === 1 ? 'match' : 'matches' }}.
-                    </center>
 
                     <v-btn
                     rounded
@@ -91,6 +73,90 @@
                         OK
                     </v-btn>
                 </template>
+
+                <template v-else-if="warning">
+                    <v-icon
+                    class="amber--text lighten-3"
+                    large>
+                        mdi-alert
+                    </v-icon>
+
+                    <h4>Warning</h4>
+
+                    <v-row>
+                        Player info pulled from the file does not seem to match what is currently set for this match.
+                        <br />
+                        
+                        <v-col
+                        class="file-data"
+                        cols="6">
+
+                        <b>File Data:</b>
+                        <br />
+                        <v-col
+                        v-for="(player, i) in [fileData.p1, fileData.p2]"
+                        :class="`player p${i+1}`"
+                        :cols="12"
+                        :key="i">
+                            <picture
+                            class="character-icon"
+                            :title="player.character"
+                            @click="$emit('update-character', {character: player.character, index: i})">
+                                <source
+                                type="image/webp"
+                                :srcset="require(`../assets/img/sel/${player.character}.webp`) + ' 136w'" />
+                                <source
+                                type="image/png"
+                                :srcset="require(`../assets/img/sel/${player.character}.png`) + ' 136w'" />
+                                <img
+                                :alt="player.character"
+                                :src="require(`../assets/img/sel/${player.character}.webp`)" />
+                            </picture>
+
+                            <p
+                            class="name"
+                            :title="player.name"
+                            @click="$emit('update-name', {name: player.name, index: i})">
+                                {{ player.name }}
+                            </p>
+                        </v-col>
+                        </v-col>
+
+                        <v-divider />
+                        <v-col
+                        class="your-data"
+                        cols="6">
+                        <b>Your Data:</b>
+                        <v-col
+                        v-for="(player, i) in [yourData.p1, yourData.p2]"
+                        :class="`player p${i+1}`"
+                        :cols="12"
+                        :key="i">
+                            <picture
+                            class="character-icon"
+                            :title="player.character"
+                            @click="$emit('update-character', {character: player.character, index: i})">
+                                <source
+                                type="image/webp"
+                                :srcset="require(`../assets/img/sel/${player.character}.webp`) + ' 136w'" />
+                                <source
+                                type="image/png"
+                                :srcset="require(`../assets/img/sel/${player.character}.png`) + ' 136w'" />
+                                <img
+                                :alt="player.character"
+                                :src="require(`../assets/img/sel/${player.character}.webp`)" />
+                            </picture>
+
+                            <p
+                            class="name"
+                            :title="player.name"
+                            @click="$emit('update-name', {name: player.name, index: i})">
+                                {{ player.name }}
+                            </p>
+                        </v-col>
+                        </v-col>
+                        </v-row>
+                </template>
             </v-layout>
         </v-container>
     </v-overlay>
@@ -103,9 +169,10 @@ export default {
         error: Boolean,
         uploading: Boolean,
         finished: Boolean,
-        succeeded: Number,
-        failed: Number,
+        warning: Boolean,
         errors: Array,
+        fileData: Object,
+        yourData: Object,
     },
     data: () => {
         return {

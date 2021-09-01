@@ -185,3 +185,26 @@ picture.icon source, picture.icon img {
     display: block;
     margin: auto;
 }
+
+.character-icon source,
+.character-icon img {
+    height: 52px;
+    width: 45px;
+}
+
+.status .player {
+    flex-wrap: nowrap;
+    display: flex;
+    align-items: center;
+}
+
+.status .player .name {
+    margin: 0px;
+    height: min-content;
+    flex-wrap: nowrap;
+}
+
+
+.status .col {
+    padding: 0px;
+}

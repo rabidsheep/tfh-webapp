@@ -7,11 +7,12 @@
         <StatusOverlay
         v-bind="{
             error,
-            errors,
             uploading,
             finished,
-            succeeded,
-            failed,
+            warning,
+            errors,
+            fileData,
+            yourData
             }"
         @clear-errors="clearErrors()"
         @close="resetForm()" />
@@ -283,10 +284,9 @@ export default {
             error: false,
             uploading: false,
             finished: false,
-            matchCount: 0,
-            succeeded: 0,
-            failed: 0,
-            progress: 0,
+            warning: false,
+            fileData: null,
+            yourData: null,
             errors: [],
             timestamp: null,
             vid: null,
@@ -465,7 +465,7 @@ export default {
                 return match
             })
 
-            if (process.env.NODE_ENV !== 'development') {
+            if (process.env.NODE_ENV === 'development') {
                 this.$matches.save({matches: matches, getYoutubeData: false})
                 .then((response) => {
                     if (response.ok) {
@@ -646,7 +646,7 @@ export default {
 
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
-                this.setErrors('parse', fileName)
+                this.setErrors('parse', file.name)
             } else {
 
                 let players = {
@@ -661,17 +661,9 @@ export default {
                 }
 
                 if (JSON.stringify(players) !== JSON.stringify({p1: this.matches[i].p1, p2: this.matches[i].p2})) {
-                    console.log("Warning! Data mismatch.")
-                    console.log(
-                        "FILE DATA:\n"
-                        + 'P1: ' + players.p1.name + ' (' + players.p1.character + ')\n'
-                        + 'P2: ' + players.p2.name + ' (' + players.p2.character + ')'
-                    )
-                    console.log(
-                        "YOUR DATA:\n"
-                        + 'P1: ' + this.matches[i].p1.name + ' (' + this.matches[i].p1.character + ')\n'
-                        + 'P2: ' + this.matches[i].p2.name + ' (' + this.matches[i].p2.character + ')'
-                    )
+                    this.fileData = players
+                    this.yourData = {p1: this.matches[i].p1, p2: this.matches[i].p2}
+                    this.warning = true
                 }
 
                 let fileInfo = {

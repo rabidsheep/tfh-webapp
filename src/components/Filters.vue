@@ -459,7 +459,10 @@ export default {
 
                 this.$emit('loaded-filter-content')
             })
-            .catch((error) => console.log(error))
+            .catch((error) => {
+                console.log(error)
+                this.$emit('loaded-filter-content')
+            })
         },
         // update player characters
         selectCharacter: function (character, i) {

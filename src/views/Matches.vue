@@ -218,7 +218,12 @@ export default {
         this.loadingMatches = false
         this.stop = false
       })
-      .catch((error) => console.log(error))
+      .catch((error) => {
+        console.log(error)
+
+        this.loadingMatches = false
+        this.stop = false
+      })
     },
     clearFilters() {
       this.stop = true

@@ -200,11 +200,53 @@ picture.icon source, picture.icon img {
 
 .status .player .name {
     margin: 0px;
-    height: min-content;
-    flex-wrap: nowrap;
+    margin-top: -5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+    word-wrap: nowrap;
+    line-height: 21px;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+
+.status .p1 {
+    margin-bottom: 5px;
 }
 
 
 .status .col {
     padding: 0px;
+}
+
+.status .character-icon {
+    margin-right: 10px;
+}
+
+.status .file-data {
+    margin-right: 30px;
+}
+
+.status .your-data {
+    margin-left: 30px;
+}
+
+.status .name {
+    text-align: left;
+}
+
+.status .data,
+.status .data__inner,
+.status .data > hr  {
+    
+    margin-top: 15px !important;
+}
+
+.status .data__inner > h4 {
+    margin-bottom: 10px;
+}
+
+.status .data {
+    justify-content: center;
 }

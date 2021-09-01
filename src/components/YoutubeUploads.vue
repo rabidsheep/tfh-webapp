@@ -14,6 +14,8 @@
             fileData,
             yourData
             }"
+        @add-file-anyways="addFile(tempData)"
+        @close-warning="closeWarning()"
         @clear-errors="clearErrors()"
         @close="resetForm()" />
 
@@ -289,6 +291,7 @@ export default {
             yourData: null,
             errors: [],
             timestamp: null,
+            tempData: null,
             vid: null,
             video: {},
             rules: {
@@ -563,13 +566,6 @@ export default {
             this.$set(this.matches, i, this.matches[j])
             this.$set(this.matches, j, temp)
         },
-        addFile(file, i) {
-            this.$set(this.matches[i], 'file', {name: file.name, url: null})
-            this.files.push(file)
-
-            //this.printObj(this.matches[i])
-            //console.log(this.files)
-        },
         /** generates reader for each file */
         readFile(file, i) {
             (function (that, file, i) {
@@ -660,21 +656,41 @@ export default {
                     }
                 }
 
+                this.tempData = {
+                    index: i,
+                    file: file,
+                    fileInfo: {
+                        url: null,
+                        name: file.name,
+                        version: fileText.charCodeAt(146),
+                        date: this.formatDate(timestamp),
+                    }
+                }
+
                 if (JSON.stringify(players) !== JSON.stringify({p1: this.matches[i].p1, p2: this.matches[i].p2})) {
                     this.fileData = players
                     this.yourData = {p1: this.matches[i].p1, p2: this.matches[i].p2}
                     this.warning = true
+                } else {
+                    this.addFile(data)
                 }
 
-                let fileInfo = {
-                    url: null,
-                    name: file.name,
-                    version: fileText.charCodeAt(146),
-                    date: this.formatDate(timestamp),
-                }
-                this.$set(this.matches[i], 'file', fileInfo)
-                this.files.push(file)
+                
+                
             }
+        },
+        addFile(data) {
+            this.$set(this.matches[data.index], 'file', data.fileInfo)
+            this.files.push(data.file)
+
+            if (this.warning = true) {
+                this.closeWarning()
+            }
+
+            console.log("File added to match #" + (data.index + 1) )
+
+            //this.printObj(this.matches[i])
+            //console.log(this.files)
         },
         removeFile(file, i, deleteFromMatch) {
             //this.printObj(this.matches[i])
@@ -684,6 +700,12 @@ export default {
             if (deleteFromMatch) delete this.matches[i].file
             //console.log(this.files[index])
             //this.printObj(this.matches[i])
+        },
+        closeWarning() {
+            this.yourData = null
+            this.fileData = null
+            this.tempData = null
+            this.warning = false
         },
         /** sets errors array for display once files finish being read */
         setErrors(type, file) {

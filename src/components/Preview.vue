@@ -155,7 +155,7 @@
                 v-if="youtubeUpload"
                 class="file"
                 cols="12">
-                    <v-file-input
+                    <!--<v-file-input
                     v-model="file"
                     label="File"
                     accept=".tfhr"
@@ -165,9 +165,9 @@
                     clearable
                     :dense="!$vuetify.breakpoint.smOnly"
                     @change="$emit('add-file', $event)"
-                    @click:clear="$emit('remove-file')" />
+                    @click:clear="$emit('remove-file')" />-->
 
-                    <!--<v-text-field
+                    <v-text-field
                     label="File"
                     v-model="file"
                     prepend-icon="mdi-paperclip"
@@ -184,7 +184,7 @@
                     ref="uploadFileBtn"
                     type="file"
                     accept=".tfhr"
-                    @change="$emit('add-file', $event.target.files[0])" />-->
+                    @change="$emit('add-file', $event.target.files[0])" />
                 </v-col>
             </v-col>
         </v-col>

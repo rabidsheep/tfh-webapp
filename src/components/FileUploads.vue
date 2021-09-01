@@ -10,8 +10,6 @@
             uploading,
             finished,
             progress,
-            succeeded,
-            failed,
             }"
         :errors="errors"
         @clear-errors="clearErrors()"

@@ -16,17 +16,17 @@
                 <div class="matchinfo">
                     <b>{{ 'Match #' + (index+1) }}</b>
                     
-                    <template v-if="file">
+                    <template v-if="fileDate">
                         <br />
                         File Date: {{ fileDate }}
                     </template>
                 </div>
             </div>
             
-            <v-divider :vertical="$vuetify.breakpoint.smAndDown && uploadForm === 'files'" />
+            <v-divider :vertical="$vuetify.breakpoint.smAndDown && fileUpload" />
 
             <v-col
-            v-if="uploadForm === 'files'"
+            v-if="fileUpload"
             class="name ml-3"
             :cols="undefined">
                 <v-text-field
@@ -44,7 +44,7 @@
         </v-col>
 
         <v-col
-        v-show="type !== 'Casual' && $route.path !== '/edit'"
+        v-show="tournamentMode && $route.path !== '/edit'"
         class="swap">
             <button
             aria-label="Move Up"
@@ -69,10 +69,10 @@
             class="players"
             :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : 8">
                 <v-col
+                v-for="(player, i) in [p1, p2]"
                 :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
                 :class="`player p${i+1}`"
-                v-for="(player, i) in [p1, p2]"
-               :key="i"
+                :key="i"
                 :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
                     <CharacterSelect
                     :currentCharacter ="player.character ? player.character : `Any`"
@@ -116,11 +116,11 @@
             class="add"
             :cols="$vuetify.breakpoint.smOnly ? 3 : undefined">
                 <v-col
-                v-if="uploadForm === 'files'"
+                v-if="fileUpload"
                 cols="12"
                 class="link">
                     <v-text-field
-                    :readonly="uploadForm === 'youtube' ? true : false"
+                    :readonly="tournamentMode"
                     ref="url"
                     label="YouTube Link"
                     v-model="url"
@@ -152,10 +152,10 @@
                 </v-col>
 
                 <v-col
-                v-if="uploadForm === 'youtube'"
+                v-if="youtubeUpload"
                 class="file"
                 cols="12">
-                    <v-file-input
+                    <!--<v-file-input
                     label="File"
                     accept=".tfhr"
                     hint="Optional"
@@ -164,7 +164,26 @@
                     clearable
                     :dense="!$vuetify.breakpoint.smOnly"
                     @change="$emit('add-file', $event)"
-                    @click:clear="$emit('remove-file', file)" />
+                    @click:clear="$emit('remove-file')" />-->
+
+                    <v-text-field
+                    label="File"
+                    v-model="fileName"
+                    prepend-icon="mdi-paperclip"
+                    hint="Optional"
+                    persistent-hint
+                    single-line
+                    clearable
+                    :dense="!$vuetify.breakpoint.smOnly"
+                    @click="selectFiles()"
+                    @click:clear="$emit('remove-file')"/>
+
+                    <input
+                    v-show="false"
+                    ref="uploadFileBtn"
+                    type="file"
+                    accept=".tfhr"
+                    @change="$emit('add-file', $event.target.files[0])" />
                 </v-col>
             </v-col>
         </v-col>
@@ -186,19 +205,18 @@ export default {
         UpButton,
     },
     props: {
+        index: Number,
+        youtubeUpload: [Boolean, null],
+        fileUpload: [Boolean, null],
+        tournamentMode: Boolean,
         p1: Object,
         p2: Object,
-        index: Number,
         video: [Object, null],
-        file: [Object, null],
-        tournament: [Object, null],
-        type: String,
-        fileName: String,
+        fileName: [String, null],
+        fileDate: [String, null],
         firstMatch: Boolean,
         lastMatch: Boolean,
-        uploadForm: String,
         resetData: Boolean,
-        fileDate: String,
         timestampRequired: Boolean,
     },
     data: () => {
@@ -270,6 +288,14 @@ export default {
         },
     },
     methods: {
+        /* makes visible upload button act like html file upload button */
+        selectFiles() {
+            this.isSelecting = true
+            window.addEventListener('focus', () => {
+                this.isSelecting = false
+            }, { once: true })
+            this.$refs.uploadFileBtn.click()
+        },
        updateCharacter(character, i) {
             this.$set(this.updated.players[i], 'character', character)
         },

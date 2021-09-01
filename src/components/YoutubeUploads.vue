@@ -190,13 +190,11 @@
                                 <Preview
                                 :key="i"
                                 :index="i"
-                                :uploadType="'youtube'"
-                                :uploadForm="'youtube'"
-                                :video="match.video ? match.video : null"
-                                :hasVideo="match.video ? true : false"
+                                :youtubeUpload="true"
+                                :tournamentMode="true"
                                 :p1="match.p1"
                                 :p2="match.p2"
-                                :currentTimestamp="match.video.timestamp"
+                                :video="match.video"
                                 :fileName="match.file ? match.file.name : null"
                                 :firstMatch="i === 0"
                                 :lastMatch="i === matches.length - 1"
@@ -205,8 +203,8 @@
                                 @update-character="updateCharacter($event.character, $event.index, i)"
                                 @move-up="swapMatches(i, i-1)"
                                 @move-down="swapMatches(i, i+1)"
-                                @add-file="addFile($event, i)"
-                                @remove-file="removeFile($event, i, true)"
+                                @add-file="readFile($event, i)"
+                                @remove-file="removeFile(match.file.name, i, true)"
                                 @set-timestamp="matches[i].video.timestamp = $event"
                                 @delete-timestamp="delete matches[i].video.timestamp" />
 
@@ -407,18 +405,19 @@ export default {
                             let matched = players.match(playersPattern)
                             
                             let match = {
+                                p1: {
+                                    name: matched[1],
+                                    character: (this.$characters.find(c => c.names.includes(matched[2]))?.name)
+                                },
+                                p2: {
+                                    name: matched[3],
+                                    character: (this.$characters.find(c => c.names.includes(matched[4]))?.name)
+                                },
                                 video: {
                                     id: this.video.id,
+                                    title: this.video.title,
                                     timestamp: timestamp,
-                                },
-                                p1: {
-                                        name: matched[1],
-                                        character: ((this.$characters).find(c => c.names.includes(matched[2]))?.name)
-                                    },
-                                p2: {
-                                        name: matched[3],
-                                        character: ((this.$characters).find(c => c.names.includes(matched[4]))?.name)
-                                    }
+                                }
                             }
                             
                             this.matches.push(match)
@@ -435,8 +434,9 @@ export default {
                 p2: {},
                 video: {
                     id: this.video.id,
+                    title: this.video.title,
                     timestamp: null,
-                },
+                }
             })
         },
         /** upload youtube-only object */
@@ -450,8 +450,9 @@ export default {
 
                 match = {
                     userId: this.uid,
-                    uploadForm: 'youtube',
+                    uploadForm: 'YouTube',
                     type: 'Tournament',
+                    matchDate: this.tournament.date,
                     uploadDate: time[0],
                     uploadTime: time[1],
                     tournament: this.tournament,
@@ -464,54 +465,65 @@ export default {
                 return match
             })
 
-            if (process.env.NODE_ENV === 'development') {
-                this.$matches.save({matches: matches, form: this.form})
+            if (process.env.NODE_ENV !== 'development') {
+                this.$matches.save({matches: matches, getYoutubeData: false})
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
                         for (const i in response.body.matchIds) {
                             console.log('ID:', response.body.matchIds[i])
                         }
-                    } else {
-                        this.setErrors('upload', null)
-                        console.log('Failed to upload')
                     }
 
                     this.uploading = false
                     this.finished = true
                 })
-                .catch((error) => console.log(error))
+                .catch((error) => {
+                    console.log(error)
+                    this.setErrors('upload')
+                    console.log('Failed to upload')
+                    this.uploading = false
+                    this.finished = true
+                })
             } else if (this.files.length > 0) {
-                Promise.all(this.files.map(file => this.uploadAsPromise(file)))
-                .then(() => this.$matches.save({matches: matches, form: this.form}))
+                Promise.all(this.files.map(file => this.uploadFilesAsPromise(file)))
+                .then(() => this.$matches.save({matches: matches, getYoutubeData: false}))
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
                         for (const i in response.body.matchIds) {
                             console.log('ID:', response.body.matchIds[i])
                         }
-                    } else {
-                        this.setErrors('upload', this.files[i].name)
-                        console.log('Failed to upload matches')
                     }
 
                     this.uploading = false
                     this.finished = true
                 })
-                .catch((error) => console.log(error))
+                .catch((error) => {
+                    console.log(error)
+                    this.setErrors('upload')
+                    console.log('Failed to upload')
+                    this.uploading = false
+                    this.finished = true
+                })
             }
         },
-        uploadAsPromise(file) {
+        uploadFilesAsPromise(file) {
             let storageRef = this.$firebase.storage()
             .ref(`${file.name}`)
             .put(file)
 
-            return storageRef.then((snapshot) => {
-                return snapshot.ref.getDownloadURL()
-            })
+            return storageRef
+            .then((snapshot) => snapshot.ref.getDownloadURL())
             .then((url) => {
                 let i = this.matches.findIndex((match) => match.file.name === file.name)
                 this.matches[i].file.url = url
+            })
+            .catch((error) => {
+                console.log(error)
+                let i = this.matches.findIndex((match) => match.file.name === file.name)
+                console.log("Removing file info from match #" + (i+1))
+                delete this.matches[i].file
             })
         },
         /**
@@ -539,7 +551,8 @@ export default {
             this.$refs.url.resetValidation()
         },
         removeMatch(i) {
-            if (this.matches[i].file) this.removeFile(this.matches[i].file.name, i, false)
+            if (this.matches[i].file)
+                this.removeFile(this.matches[i].file.name, i, false)
             this.matches.splice(i, 1)
         },
         updateCharacter(character, j, i) {
@@ -557,6 +570,120 @@ export default {
             //this.printObj(this.matches[i])
             //console.log(this.files)
         },
+        /** generates reader for each file */
+        readFile(file, i) {
+            (function (that, file, i) {
+                new Promise(function(resolve, reject) {
+
+                    // check file extension and duplicate issues first
+                    if (file.name.substring(file.name.length - 5, file.name.length) !== '.tfhr') {
+                        that.setErrors('extension', file.name)
+                        reject("File" + file.name + " does not end in a valid TFHR file extension.")
+                    } else if (that.matches.find(m => m.file?.name === file.name)) {
+                        that.setErrors('duplicate', file.name)
+                        reject("File " + file.name + " already exists.")
+                    } else {
+                        // read hex code of file to retrieve timestamp
+                        var hexReader = new FileReader()
+                        
+                        hexReader.onload = function(e) {
+                            
+                            let hex = that.buf2hex(e.target.result)
+                            let hexTime = hex?.match(/.{1,2}/g)?.reverse().join('')
+                            let timestamp = new Date(parseInt(hexTime, 16) * 1000)?.toISOString()?.split('T')
+
+                            if (!timestamp) {
+                                that.setErrors('parse', file.name)
+                                reject("Could not retrieve file timestamp from " + file.name)
+                            } else {
+                                resolve(timestamp[0])
+                            }
+                        }
+
+                        hexReader.readAsArrayBuffer(file)
+                    }
+                }).then((timestamp) => {
+                    // read file as text for rest of data
+                    var textReader = new FileReader()
+
+                    textReader.onload = function(e) {
+                        that.parseFileData(e.target.result, file, timestamp, i)
+                    }
+
+                    textReader.readAsText(file)
+                })
+                .then(() => {
+                    if (that.errors.length > 0) that.error = true
+                })
+                .catch((error) => {
+                    console.log(error)
+
+                    if (that.errors.length > 0) that.error = true
+                })
+            })(this, file, i)
+        },
+        /** converts array buffer to string */
+        buf2hex(buffer) {
+            let buf = [...new Uint8Array(buffer)]
+
+            if (buf.length < 154) return null
+
+            let timestamp = buf.slice(150, 154)
+            return timestamp.map(x => x.toString(16).padStart(2, '0')).join('')
+        },
+        /**
+         * parses file data
+         * p1 hex @ offset 8-72
+         * p2 hex @ offset 73-137
+         * file date @ offset 150-153
+         * character hexes @ 197-213 (max)
+         * version @ 
+         */
+        parseFileData(fileText, file, timestamp, i) {
+            // error if file uses non-.tfhr extension
+            let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2)
+            let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
+
+            // error if player or character names cannot be parsed
+            if (playerNames.length !== 2 || characterNames.length !== 2) {
+                this.setErrors('parse', fileName)
+            } else {
+
+                let players = {
+                    p1: {
+                        name: playerNames[0],
+                        character: (this.$characters.find(c => c.devName == characterNames[0])).name
+                    },
+                    p2: {
+                        name: playerNames[1],
+                        character: (this.$characters.find(c => c.devName == characterNames[1])).name
+                    }
+                }
+
+                if (JSON.stringify(players) !== JSON.stringify({p1: this.matches[i].p1, p2: this.matches[i].p2})) {
+                    console.log("Warning! Data mismatch.")
+                    console.log(
+                        "FILE DATA:\n"
+                        + 'P1: ' + players.p1.name + ' (' + players.p1.character + ')\n'
+                        + 'P2: ' + players.p2.name + ' (' + players.p2.character + ')'
+                    )
+                    console.log(
+                        "YOUR DATA:\n"
+                        + 'P1: ' + this.matches[i].p1.name + ' (' + this.matches[i].p1.character + ')\n'
+                        + 'P2: ' + this.matches[i].p2.name + ' (' + this.matches[i].p2.character + ')'
+                    )
+                }
+
+                let fileInfo = {
+                    url: null,
+                    name: file.name,
+                    version: fileText.charCodeAt(146),
+                    date: this.formatDate(timestamp),
+                }
+                this.$set(this.matches[i], 'file', fileInfo)
+                this.files.push(file)
+            }
+        },
         removeFile(file, i, deleteFromMatch) {
             //this.printObj(this.matches[i])
             let index = this.files.findIndex((f) => f.name === file)
@@ -565,7 +692,21 @@ export default {
             if (deleteFromMatch) delete this.matches[i].file
             //console.log(this.files[index])
             //this.printObj(this.matches[i])
-        }
+        },
+        /** sets errors array for display once files finish being read */
+        setErrors(type, file) {
+            let index = this.errors.findIndex(e => e.type == type)
+
+            if (index === -1) {
+                if (!file) {
+                    this.errors.push({type: type})
+                } else {
+                    this.errors.push({type: type, files: [file]})
+                }
+            } else if (file) {
+                this.errors[index].files.push(file)
+            }
+        },
     }
 }
 </script>

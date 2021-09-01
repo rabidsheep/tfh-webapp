@@ -24,15 +24,15 @@
         justify-center>
             <v-radio-group
             class="mb-5"
-            v-model="uploadType"
+            v-model="tournamentMode"
             row
             hide-details>
                 <v-radio
                 label="Casuals Mode"
-                value="Casual" />
+                :value="false" />
                 <v-radio
                 label="Tournament Mode"
-                value="Tournament" />
+                :value="true" />
             </v-radio-group>
 
             <v-row
@@ -160,21 +160,17 @@
                     <Preview
                     :key="i"
                     :index="i"
-                    :uploadForm="'files'"
-                    v-bind="match"
-                    :isTournament="uploadType === 'Tournament' ? true : false"
-                    :firstMatch="i === 0"
-                    :lastMatch="i === matches.length - 1"
-                    :fileDate="match.file.date"
-                    :timestampRequired="false"
-                    :fileName="match.file.name"
-                    :type="uploadType"
+                    :fileUpload="true"
+                    :tournamentMode="tournamentMode"
+                    :p1="match.p1"
+                    :p2="match.p2"
                     :uploading="uploading"
                     :video="match.video ? match.video : null"
-                    :videoUrl="uploadType === 'Tournament' ?
-                                vod : (match.video ? match.video.url : null)"
-                    :currentTimestamp="match.video && match.video.timestamp ?
-                                        match.video.timestamp : null "
+                    :fileName="match.file.name"
+                    :fileDate="match.file.date"
+                    :firstMatch="i === 0"
+                    :lastMatch="i === matches.length - 1"
+                    :timestampRequired="false"
                     @update-character="updateCharacter($event.character, $event.index, i)"
                     @remove="removeMatch(i)"
                     @set-video-id="setVideoId($event, i)"
@@ -276,6 +272,7 @@ export default {
             url: null,
             vod: null,
             uploadType: 'Casual',
+            tournamentMode: false,
             tournament: {
                 name: null,
                 num: null,
@@ -340,23 +337,20 @@ export default {
                 if (this.uploadType === 'Tournament') {
                     match = {
                         userId: this.uid,
+                        uploadForm: 'Files',
                         type: this.uploadType,
                         matchDate: this.tournament.date,
-                        uploadForm: 'files',
                         uploadDate: time[0],
                         uploadTime: time[1],
                         tournament: this.tournament,
                         ...match
                     }
-
-                    match.tournament = this.tournament
-                    match.matchDate = this.tournament.date
                 } else {
                     match = {
                         userId: this.uid,
                         type: this.uploadType,
                         matchDate: match.file.date,
-                        uploadForm: 'files',
+                        uploadForm: 'Files',
                         uploadDate: time[0],
                         uploadTime: time[1],
                         ...match
@@ -369,24 +363,7 @@ export default {
             this.printObj(this.matches)
 
             if (process.env.NODE_ENV === 'development') {
-                this.$matches.save({matches: matches, form: this.form}).then((response) => {
-                    if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
-                            console.log('ID:', response.body.matchIds[i])
-                        }
-                    } else {
-                        this.setErrors('upload', this.files[i].name)
-                        console.log('Failed to upload matches')
-                    }
-
-                    this.uploading = false
-                    this.finished = true
-                })
-                .catch((error) => console.log(error))
-            } else {
-                Promise.all(this.files.map(file => this.uploadAsPromise(file)))
-                .then(() => this.$matches.save({matches: matches, form: this.form}))
+                this.$matches.save({matches: matches, getYoutubeData: true})
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
@@ -394,27 +371,57 @@ export default {
                             console.log('ID:', response.body.matchIds[i])
                         }
                     } else {
-                        this.setErrors('upload', this.files[i].name)
+                        this.setErrors('upload')
                         console.log('Failed to upload matches')
                     }
 
                     this.uploading = false
                     this.finished = true
                 })
-                .catch((error) => console.log(error))
+                .catch((error) => {
+                    console.log(error)
+                    this.uploading = false
+                    this.finished = true
+                })
+            } else {
+                Promise.all(this.files.map(file => this.uploadFilesAsPromise(file)))
+                .then(() => this.$matches.save({matches: matches, getYoutubeData: true}))
+                .then((response) => {
+                    if (response.ok) {
+                        console.log('Uploaded matches:')
+                        for (const i in response.body.matchIds) {
+                            console.log('ID:', response.body.matchIds[i])
+                        }
+                    } else {
+                        this.setErrors('upload')
+                        console.log('Failed to upload matches')
+                    }
+
+                    this.uploading = false
+                    this.finished = true
+                })
+                .catch((error) => {
+                    console.log(error)
+                    this.uploading = false
+                    this.finished = true
+                })
             }
         },
-        uploadAsPromise(file) {
+        uploadFilesAsPromise(file) {
             let storageRef = this.$firebase.storage()
             .ref(`${file.name}`)
             .put(file)
 
-            return storageRef.then((snapshot) => {
-                return snapshot.ref.getDownloadURL()
-            })
-            .then((url) => {
+            return storageRef
+            .then((snapshot) => {
                 let i = this.matches.findIndex((match) => match.file.name === file.name)
-                this.matches[i].file.url = url
+                this.matches[i].file.url = snapshot.ref.getDownloadURL()
+            })
+            .catch((error) => {
+                console.log(error)
+                let i = this.matches.findIndex((match) => match.file.name === file.name)
+                console.log("Removing match #" + (i+1) + " from upload list.")
+                this.matches.splice(i, 1)
             })
         },
         /**
@@ -443,104 +450,119 @@ export default {
         readFiles(files, i) {
             (function (that, files, i) {
                 var file = files[i];
+                
 
-                var reader = new FileReader()
+                new Promise(function(resolve, reject) {
+                    // check file extension and duplicate issues first
+                    if (file.name.substring(file.name.length - 5, file.name.length) !== '.tfhr') {
+                        that.setErrors('extension', file.name)
+                        reject("File" + file.name + " does not end in a valid TFHR file extension.")
+                    } else if (that.matches.find(m => m.file.name === file.name)) {
+                        that.setErrors('duplicate', file.name)
+                        reject("File " + file.name + " already exists.")
+                    } else {
+                        // read hex code of file to retrieve timestamp
+                        var hexReader = new FileReader()
 
-                reader.onload = function(e) {
-                    if (that.matches.length < that.uploadLimit) {
-                        let hex = that.buf2hex(e.target.result)
-                        that.parseFileData(hex, file.name, files, i)
+                        hexReader.onload = function(e) {
+                            let hex = that.buf2hex(e.target.result)
+                            let hexTime = hex?.match(/.{1,2}/g)?.reverse().join('')
+                            let timestamp = new Date(parseInt(hexTime, 16) * 1000)?.toISOString()?.split('T')
+
+                            if (!timestamp) {
+                                that.setErrors('parse', file.name)
+                                reject("Could not retrieve file timestamp from " + file.name)
+                            } else {
+                                resolve(timestamp[0])
+                            }
+                        }
+
+                        hexReader.readAsArrayBuffer(file)
                     }
-                }
+                }).then((timestamp) => {
+                    // read file as text for rest of data
+                    var textReader = new FileReader()
 
-                reader.readAsArrayBuffer(file)
+                    textReader.onload = function(e) {
+                        that.parseFileData(e.target.result, file, timestamp)
+                    }
+
+                    textReader.readAsText(file)
+                })
+                .then(() => {
+                    if (i < files.length - 1 && that.matches.length < that.uploadLimit)
+                        that.readFiles(files, i + 1)
+                    else
+                        if (that.errors.length > 0) that.error = true
+                })
+                .catch((error) => {
+                    console.log(error)
+
+                    if (i < that.files.length - 1 && that.matches.length < that.uploadLimit)
+                        that.readFiles(files, i + 1)
+                    else
+                        if (that.errors.length > 0) that.error = true
+                })
             })(this, files, i)
         },
         /** converts array buffer to string */
         buf2hex(buffer) {
-            return [...new Uint8Array(buffer)]
-                .map(x => x.toString(16).padStart(2, '0'))
-                .join('')
-        },
-        /* converts hex values to human language */
-        hex2a(x) {
-            var hex = x.toString(); //force conversion
-            var str = '';
-            for (var i = 0; i < hex.length; i += 2)
-                str += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-            return str;
+            let buf = [...new Uint8Array(buffer)]
+
+            if (buf.length < 154) return null
+
+            let timestamp = buf.slice(150, 154)
+            return timestamp.map(x => x.toString(16).padStart(2, '0')).join('')
         },
         /**
          * parses file data
          * p1 hex @ offset 8-72
          * p2 hex @ offset 73-137
-         * file date @ offset 96-99
+         * file date @ offset 150-153
          * character hexes @ 197-213 (max)
          * version @ 
          */
-        parseFileData(hex, fileName, files, i) {
+        parseFileData(fileText, file, timestamp) {
             // error if file uses non-.tfhr extension
-            if (fileName.substring(fileName.length - 5, fileName.length) !== '.tfhr') {
-                this.setErrors('extension', fileName)
-            } else if (this.matches.find(m => m.file.name === fileName)) {
-                this.setErrors('duplicate', fileName)
-            } else {  
-                let fileText = this.hex2a(hex)
-                let hexTime = hex.substring(300,308)?.match(/.{1,2}/g)?.reverse().join('')
-                let timestamp = new Date(parseInt(hexTime, 16) * 1000).toISOString().split('T')
-                let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2)
-                let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
+            let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2)
+            let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
 
-                
-                // error if player or character names cannot be parsed
-                if ( playerNames.length !== 2 || characterNames.length !== 2) {
-                    this.setErrors('parse', fileName)
-                } else {
-                    let match = {
-                        userId: this.uid,
-                        uploadForm: 'files',
-                        pos: this.matches.length + 1,
-                        file: {
-                            url: null,
-                            name: fileName,
-                            version: fileText.charCodeAt(146),
-                            date: this.formatDate(timestamp[0]),
-                        },
-                        p1: {
-                            name: playerNames[0],
-                            character: ((this.$characters).find(c => c.devName == characterNames[0])).name
-                        },
-                        p2: {
-                            name: playerNames[1],
-                            character: ((this.$characters).find(c => c.devName == characterNames[1])).name
-                        }
-                    }
-
-                    this.matches.push(match)
-                    this.files.push(files[i])
-                }
-            }
-
-            if (i < files.length - 1 && this.matches.length < this.uploadLimit) {
-                this.readFiles(files, i + 1)
+            // error if player or character names cannot be parsed
+            if (playerNames.length !== 2 || characterNames.length !== 2) {
+                this.setErrors('parse', file.name)
             } else {
-                if (this.errors.length > 0) {
-                    this.error = true               
+                let match = {
+                    p1: {
+                        name: playerNames[0],
+                        character: (this.$characters.find(c => c.devName == characterNames[0])).name
+                    },
+                    p2: {
+                        name: playerNames[1],
+                        character: (this.$characters.find(c => c.devName == characterNames[1])).name
+                    },
+                    file: {
+                        url: null,
+                        name: file.name,
+                        version: fileText.charCodeAt(146),
+                        date: this.formatDate(timestamp),
+                    }
                 }
+
+                this.matches.push(match)
+                this.files.push(file)
             }
         },
         /** sets errors array for display once files finish being read */
         setErrors(type, file) {
-            
             let index = this.errors.findIndex(e => e.type == type)
 
             if (index === -1) {
-                if (type === 'limit') {
+                if (!file) {
                     this.errors.push({type: type})
                 } else {
                     this.errors.push({type: type, files: [file]})
                 }
-            } else if (type !== 'limit') {
+            } else if (file) {
                 this.errors[index].files.push(file)
             }
         },

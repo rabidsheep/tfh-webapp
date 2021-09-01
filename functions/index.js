@@ -31,7 +31,6 @@ api.get('/matches', (req, res) => {
     let skip = 0
 
     if (req.query.filters) {
-        console.log(req.query.filters.strict)
         let players = req.query.filters.players
         let strict = req.query.filters.strict === 'true' ? true : false
         let tournament = req.query.filters.tournament.name ? req.query.filters.tournament : null
@@ -56,14 +55,6 @@ api.get('/matches', (req, res) => {
 
         query = formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo)
     } else {
-        /*query = ( req.query.tournamentId ?
-            {
-                'tournament.id': req.query.tournamentId,
-                'video.id': req.query.videoId,
-                'userId': req.query.fromUser
-            } :
-            { '_id': mongo.ObjectId(req.query.matchId) }
-        )*/
         query = { 'uploadId': req.query.uploadId }
     }
     
@@ -83,8 +74,6 @@ api.get('/matches', (req, res) => {
                         },
                         id: '$tournament.id',
                         type: '$type',
-                        videoId: '$video.id',
-                        uploadForm: '$uploadForm',
                         uploadId: '$uploadId',
                     },
                     else: {
@@ -118,7 +107,6 @@ api.get('/matches', (req, res) => {
             },
         }},
     ]
-    
 
     MongoClient.connect(dbUrl, { useUnifiedTopology: true })
     .then((client) => {
@@ -149,6 +137,7 @@ api.get('/matches', (req, res) => {
         ])
     })
     .then((results) => {
+        console.log(results[1])
         return res.status(200).send({
             count: results[0].length,
             groups: results[1]
@@ -159,7 +148,7 @@ api.get('/matches', (req, res) => {
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
-    let form = parseInt(req.body.form)
+    let getYoutubeData = req.body.getYoutubeData === 'true' ? true : false
     let uploadId = mongo.ObjectId().toString()
     let tournament = req.body.matches[0].tournament ? req.body.matches[0].tournament : null
     
@@ -169,7 +158,7 @@ api.put('/matches', (req, res) => {
         else match.uploadId = uploadId
         
         // might not need?
-        if (match.video && match.video.id && form !== 1) {
+        if (match.video && getYoutubeData) {
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
 
             return fetchYoutubeData(match, url)
@@ -670,6 +659,7 @@ function fetchYoutubeData(match, url) {
             
         } else {
             console.log("Failed to retrieve Youtube data")
+            delete match.video
         }
 
         return match

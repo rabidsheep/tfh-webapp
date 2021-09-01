@@ -139,6 +139,19 @@ export default {
 
 ::v-deep .v-text-field__slot > input {
     text-overflow: ellipsis;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;  
 }
 
+::v-deep .small .v-form .match-list .v-text-field__slot {
+  
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+::v-deep .small .v-form .match-list .v-text-field__slot {
+  max-width: calc(100% - 30px);
+}
 </style>

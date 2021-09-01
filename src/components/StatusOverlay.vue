@@ -77,7 +77,7 @@
                 <template v-else-if="warning">
                     <v-icon
                     class="amber--text lighten-3"
-                    x-large>
+                    large>
                         mdi-alert
                     </v-icon>
 
@@ -85,13 +85,11 @@
 
                     <v-row class="data">
                         Player info pulled from the file does not seem to match what is currently set for this match.
-                        <br />
-                        
                         <v-col
                         class="data__inner file-data"
                         :cols="$vuetify.breakpoint.xsOnly? 4: 5">
-
                             <h4>File Data:</h4>
+
                             <v-col
                             v-for="(player, i) in [fileData.p1, fileData.p2]"
                             :class="`player p${i+1}`"

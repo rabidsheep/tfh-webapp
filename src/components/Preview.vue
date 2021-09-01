@@ -169,6 +169,7 @@
 
                     <v-text-field
                     label="File"
+                    readonly
                     v-model="file"
                     prepend-icon="mdi-paperclip"
                     hint="Optional"
@@ -319,17 +320,17 @@ export default {
     padding-right: 4px;
 }
 
-.v-input--is-readonly >>> .v-input__slot::before {
+div:not([class*="file"]) > .v-input--is-readonly >>> .v-input__slot::before {
     border-color: rgba(255, 255, 255, 0.7) !important;
 }
 
-.v-input--is-readonly >>> i {
+div:not([class*="file"]) > .v-input--is-readonly >>> i {
     color: #5e5e5e !important
 }
 
-.v-input--is-readonly >>> .v-label,
-.v-input--is-readonly >>> .v-messages,
-.v-input--is-readonly >>> input {
+div:not([class*="file"]) > .v-input--is-readonly >>> .v-label,
+div:not([class*="file"]) > .v-input--is-readonly >>> .v-messages,
+div:not([class*="file"]) > .v-input--is-readonly >>> input {
     color: rgba(255, 255, 255, 0.7) !important;
 }
 </style>

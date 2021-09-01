@@ -8,6 +8,14 @@
     width: 100%;
 }
 
+.v-toolbar .version {
+    height: max-content;
+}
+
+.v-toolbar__items {
+    align-items: center;
+}
+
 .row {
     margin: 0px !important;
 }
@@ -186,10 +194,16 @@ picture.icon source, picture.icon img {
     margin: auto;
 }
 
-.character-icon source,
-.character-icon img {
+.status .character-icon,
+.match .character-icon {
     height: 52px;
     width: 45px;
+}
+
+.status .character-icon > *,
+.match .character-icon > * {
+    height: 100%;
+    width: 100%;
 }
 
 .status .player {
@@ -199,8 +213,8 @@ picture.icon source, picture.icon img {
 }
 
 .status .player .name {
+    text-align: left;
     margin: 0px;
-    margin-top: -5px;
     overflow: hidden;
     text-overflow: ellipsis;
     word-break: break-all;
@@ -215,13 +229,12 @@ picture.icon source, picture.icon img {
     margin-bottom: 5px;
 }
 
-
 .status .col {
     padding: 0px;
 }
 
 .status .character-icon {
-    margin-right: 10px;
+    margin-right: 15px;
 }
 
 .status .file-data {
@@ -232,14 +245,9 @@ picture.icon source, picture.icon img {
     margin-left: 30px;
 }
 
-.status .name {
-    text-align: left;
-}
-
 .status .data,
 .status .data__inner,
 .status .data > hr  {
-    
     margin-top: 15px !important;
 }
 

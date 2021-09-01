@@ -34,14 +34,14 @@
         <v-col
         cols="12">
           <v-row>
-            <template v-if="group.tournament">
-              <p>{{ group.tournament.num ?
-                group.tournament.name + ' ' + group.tournament.num + ' | ' + group.tournament.date :
-                group.tournament.name + ' | ' + group.tournament.date }}</p>
+            <template v-if="tournament">
+              <p>{{ tournament.num ?
+                tournament.name + ' ' + tournament.num + ' | ' + tournament.date :
+                tournament.name + ' | ' + tournament.date }}</p>
             </template>
 
             <template v-else>
-              <p>{{ group.matchDate ? `Casual | ` + group.matchDate : `Casual` }}</p>
+              <p>{{ originalDate ? `Casual | ` + originalDate : `Casual` }}</p>
             </template>
           </v-row>
         </v-col>
@@ -55,14 +55,15 @@ import moment from 'moment'
 export default {
   name: 'MatchHeader',
   props: {
-    group: [Object, null],
-    matchId: [String, null],
-    tournamentId: [String, null],
-    uploaded: String,
-    timezone: String,
+    uploadId: String,
     uploadForm: String,
-    matchDate: [Object, null],
-    uploadId: [String, null]
+    uploadDate: String,
+    originalDate: String,
+    timezone: String,
+    tournament: [Object, null],
+    video: [Object, null],
+    channel: [Object, null],
+
   },
   data: () => {
     return {
@@ -71,8 +72,8 @@ export default {
     }
   },
   mounted() {
-    this.date = moment(this.uploaded).local(true).format('MM-DD-YYYY')
-    this.time = moment(this.uploaded).local(true).format('HH:mm')
+    this.date = moment(this.uploadDate).local(true).format('MM-DD-YYYY')
+    this.time = moment(this.uploadDate).local(true).format('HH:mm')
   },
 }
 </script>

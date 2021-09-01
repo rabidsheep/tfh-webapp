@@ -21,15 +21,15 @@
 
         <v-spacer />
 
-        <!--<v-divider vertical />
+        <v-divider vertical />
+
 
         <v-toolbar-items>
           <v-col
-          justify="center"
-          align="center">
-            {{ userId ? 'Signed In' : 'Logged Out' }}
+          class="version">
+            v0.1.0
           </v-col>
-        </v-toolbar-items>-->
+        </v-toolbar-items>
     </v-toolbar>
 
     <v-main>

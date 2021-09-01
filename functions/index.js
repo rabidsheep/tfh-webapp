@@ -58,7 +58,7 @@ api.get('/matches', (req, res) => {
         query = { 'uploadId': req.query.uploadId }
     }
     
-    const pipeline = [
+    /*const pipeline = [
         { '$match': query },
         { '$group': {
             _id: {
@@ -106,6 +106,42 @@ api.get('/matches', (req, res) => {
                 }
             },
         }},
+    ]*/
+
+    const pipeline = [
+        { '$match': query },
+        { '$group': {
+            _id: {
+                uploadId: '$uploadId',
+                tournament: '$tournament',
+                uploadForm: '$uploadForm',
+                video: '$video',
+                channel: '$channel',
+                uploadDate: {
+                        '$concat': ['$uploadDate', 'T', '$uploadTime']
+                },
+                originalDate: {
+                    '$cond': {
+                        if: {
+                            '$eq': ['$type', 'Tournament' ]
+                        },
+                        then: '$tournament.date',
+                        else: '$file.date',
+                    }
+                }
+            },
+            matches: {
+                '$push': {
+                    _id: '$_id',
+                    userId: '$userId',
+                    p1: '$p1',
+                    p2: '$p2',
+                    uploadId: '$uploadId',
+                    video: '$video',
+                    file: '$file',
+                }
+            },
+        }},
     ]
 
     MongoClient.connect(dbUrl, { useUnifiedTopology: true })
@@ -129,7 +165,7 @@ api.get('/matches', (req, res) => {
             .collection('matches')
             .aggregate([
                 ...pipeline,
-                { '$sort': { uploaded: -1 } },
+                { '$sort': { '_id.uploadDate': -1 } },
                 { '$skip': skip },
                 { '$limit': itemsPerPage }
             ])
@@ -157,7 +193,6 @@ api.put('/matches', (req, res) => {
         if (!tournament) match.uploadId = mongo.ObjectId().toString()
         else match.uploadId = uploadId
         
-        // might not need?
         if (match.video && getYoutubeData) {
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
 
@@ -324,8 +359,8 @@ api.get('/filter/content', (req, res) => {
         console.log('Returning tournament list.')
         return res.status(200).send({
             tournaments: results[0],
-            players: results[1][0].players,
-            channels: results[2][0].channels
+            players: results[1][0]?.players,
+            channels: results[2][0]?.channels
         })
     })
     .catch((error) => res.status(400).send(error.toString()))

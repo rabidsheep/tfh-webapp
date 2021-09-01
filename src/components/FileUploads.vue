@@ -64,7 +64,7 @@
             <v-expand-transition>
                 <v-row
                 class="tournament-info"
-                v-show="uploadType === `Tournament`">
+                v-show="tournamentMode">
                     <v-col
                     class="tournament name pa-0"
                     :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
@@ -74,8 +74,8 @@
                         v-model="tournament.name"
                         hint="Required"
                         persistent-hint
-                        :rules="uploadType === `Tournament` ? rules.tournament : undefined"
-                        :required="uploadType === `Tournament`" />
+                        :rules="tournamentMode ? rules.tournament : undefined"
+                        :required="tournamentMode" />
                     </v-col>
 
                     <v-col
@@ -108,8 +108,8 @@
                                 prepend-icon="mdi-calendar"
                                 hint="Required"
                                 persistent-hint
-                                :rules="uploadType === `Tournament` ? rules.date : undefined"
-                                :required="uploadType === `Tournament`" />
+                                :rules="tournamentMode ? rules.date : undefined"
+                                :required="tournamentMode" />
                             </template>
 
                             <v-date-picker
@@ -136,7 +136,7 @@
                             dense
                             clearable
                             :rules="rules.url"
-                            :disabled="uploadType === 'Casual'" />
+                            :disabled="!tournamentMode" />
                         </v-col>
                     </v-col>
                 </v-row>
@@ -304,7 +304,7 @@ export default {
         },
 
       'date': function(date) {
-          if (this.uploadType === 'Tournament') this.tournament.date = this.formatDate(date)
+          if (this.tournamentMode) this.tournament.date = this.formatDate(date)
       },
 
       'url': function(url) {
@@ -332,30 +332,23 @@ export default {
 
             this.uploading = true
             let matches = this.matches.map((match) => {
-                if (this.uploadType === 'Tournament') {
-                    match = {
-                        userId: this.uid,
-                        uploadForm: 'Files',
-                        type: this.uploadType,
-                        matchDate: this.tournament.date,
-                        uploadDate: time[0],
-                        uploadTime: time[1],
-                        tournament: this.tournament,
-                        ...match
-                    }
+
+                let newMatch = {
+                    userId: this.uid,
+                    uploadForm: 'Files',
+                    type: this.tournamentMode ? 'Tournament' : 'Casual',
+                    uploadDate: time[0],
+                    uploadTime: time[1],
+                    ...match
+                }
+                if (this.tournamentMode) {
+                    newMatch.tournament = this.tournament
+                    newMatch.matchDate = this.tournament.date
                 } else {
-                    match = {
-                        userId: this.uid,
-                        type: this.uploadType,
-                        matchDate: match.file.date,
-                        uploadForm: 'Files',
-                        uploadDate: time[0],
-                        uploadTime: time[1],
-                        ...match
-                    }
+                    newMatch.matchDate = this.match.file.date
                 }
 
-                return match
+                return newMatch
             })
 
             this.printObj(this.matches)

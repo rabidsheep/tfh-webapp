@@ -71,10 +71,7 @@
               class="match-group pl-0 pr-0"
               :key="j">
                 <MatchHeader
-                :group="group._id"
-                :uploadId="group._id.uploadId"
-                :uploadForm="group._id.uploadForm"
-                :uploaded="group.uploaded"
+                v-bind="group._id"
                 :timezone="timezone"/>
 
                 <MatchRow

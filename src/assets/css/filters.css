@@ -102,12 +102,18 @@
 }
 
 #filters .wrapper {
-    margin: 20px 32px !important;
+    margin: 32px !important;
+    margin-bottom: 20px !important;
 }
 
 #filters .players {
     display: flex;
     flex-wrap: wrap;
+}
+
+#filters .players .v-input {
+    margin-top: 0px;
+    padding-top: 8px;
 }
 
 #filters .btns {
@@ -121,6 +127,10 @@
 #filters .p1 .icon {
     margin-left: 10px;
     margin-right: 0px;
+}
+
+.wide #filters .btns {
+    margin-top: 4px;
 }
 
 .small #filters .p1 {

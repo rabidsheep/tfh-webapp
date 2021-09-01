@@ -31,7 +31,7 @@
 }
 
 #matches > hr {
-    margin: 15px 0px;
+    margin: 10px 0px;
     border-color: #a6a6a6
 }
 
@@ -88,11 +88,6 @@
     cursor: pointer;
 }
 
-.match .character-icon source,
-.match .character-icon img {
-    height: 52px;
-    width: 45px;
-}
 
 .match .players,
 .match .links {
@@ -211,10 +206,11 @@
     margin-right: 15px;
 }
 
+
 .wide .match .players .name {
     overflow: hidden;
     text-overflow: ellipsis;
-    word-break: break-all;
+    word-break: break-word;
     word-wrap: nowrap;
     line-height: 21px;
     display: -webkit-box;

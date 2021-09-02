@@ -74,6 +74,7 @@ Vue.prototype.$characters = [
   {name: 'Tianhuo', value: 'Tianhuo', devName: 'Tianhuo', img: 'Tianhuo', names: ['Tianhuo', 'Tian']},
   {name: 'Velvet', value: 'Velvet', devName: 'Velvet', img: 'Velvet', names: ['Velvet', 'Vel']}
 ]
+Vue.prototype.$title = 'kickandstomp.in'
 
 Vue.use({
   install: () => {

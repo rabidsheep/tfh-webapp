@@ -115,18 +115,14 @@ api.get('/matches', (req, res) => {
                 uploadId: '$uploadId',
                 tournament: '$tournament',
                 uploadForm: '$uploadForm',
-                video: '$video',
-                channel: '$channel',
-                uploadDate: {
-                        '$concat': ['$uploadDate', 'T', '$uploadTime']
-                },
+                video: '$video.id',
+                channel: '$channel.id',
+                uploadDate: { '$concat': ['$uploadDate', 'T', '$uploadTime'] },
                 originalDate: {
                     '$cond': {
-                        if: {
-                            '$eq': ['$type', 'Tournament' ]
-                        },
+                        if: { '$eq': ['$type', 'Tournament' ] },
                         then: '$tournament.date',
-                        else: '$file.date',
+                        else: '$fileInfo.date',
                     }
                 }
             },
@@ -138,7 +134,7 @@ api.get('/matches', (req, res) => {
                     p2: '$p2',
                     uploadId: '$uploadId',
                     video: '$video',
-                    file: '$file',
+                    fileInfo: '$fileInfo',
                 }
             },
         }},
@@ -187,13 +183,13 @@ api.put('/matches', (req, res) => {
     let getYoutubeData = req.body.getYoutubeData === 'true' ? true : false
     let uploadId = mongo.ObjectId().toString()
     let tournament = req.body.matches[0].tournament ? req.body.matches[0].tournament : null
-    
 
     let matches = req.body.matches.map((match) => {
         if (!tournament) match.uploadId = mongo.ObjectId().toString()
         else match.uploadId = uploadId
         
         if (match.video && getYoutubeData) {
+
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
 
             return fetchYoutubeData(match, url)
@@ -202,84 +198,18 @@ api.put('/matches', (req, res) => {
         }
     })
 
-    // universal database call
-    let connectToDb = Promise.all(matches).then((matches) => {
+    Promise.all(matches).then((matches) => {
         return Promise.all([
             matches,
             MongoClient.connect(dbUrl, { useUnifiedTopology: true  })
         ])
     })
+    .then((results) => {
 
-    let chain = null
+        let matches = results[0]
+        console.log('Connected.\nUploading matches...')
 
-    if (tournament) {
-        // chain for tournament uploads
-        chain = connectToDb
-        .then((results) => {
-            let matches = results[0]
-            console.log('Connected.\nUpdating tournaments collection...')
-    
-            let db = results[1].db('tfhr')
-            return Promise.all([
-                db,
-                matches,
-                db.collection('tournaments')
-                .findOneAndUpdate(
-                    {
-                        name: tournament.name,
-                        num: tournament.num,
-                        date: tournament.date
-                    },
-                    
-                    {
-                        $set: {
-                            name: tournament.name,
-                            num: tournament.num,
-                            date: tournament.date
-                            
-                        },
-                    },
-                    { upsert: true, new: true }
-                )
-            ])
-        })
-        .then((results) => {
-            let db = results[0]
-            let matches = results[1]
-
-            let tournamentId = (results[2].value ?
-            results[2].value._id :
-            results[2].lastErrorObject.upserted).toString()
-
-
-            return Promise.all([
-                db,
-                matches.map((match) => {
-                    match.tournament.id = tournamentId
-                    return match
-                })
-            ])
-        })
-    } else {
-        // chain for casual uploads
-        chain = connectToDb.then((results) => {
-            let matches = results[0]
-            console.log('Connected.\nUploading match...')
-    
-            let db = results[1].db('tfhr')
-
-            
-            return Promise.all([
-                db,
-                matches,
-            ])
-        })
-    }
-    
-    // end of all chains
-    chain.then((results) => {
-        let db = results[0]
-        let matches = results[1]
+        let db = results[1].db('tfhr')
         return Promise.all([
             db.collection('matches')
             .insertMany(matches),
@@ -289,7 +219,6 @@ api.put('/matches', (req, res) => {
         let matchIds = (Object.values(results[0].insertedIds)).map(id => id.toString())
 
         console.log('Matches uploaded:')
-
         for (id in matchIds) console.log(matchIds[id])
 
         return res.status(200).send({matchIds: matchIds})
@@ -317,7 +246,7 @@ api.put('/matches/update', (req, res) => {
     })
     .then((results) => {
         let matches = results[0]
-        console.log('Connected.\nUploading match...')
+        console.log('Connected.\nUpdating matches...')
 
         let db = results[1].db('tfhr')
         
@@ -359,8 +288,8 @@ api.get('/filter/content', (req, res) => {
         console.log('Returning tournament list.')
         return res.status(200).send({
             tournaments: results[0],
-            players: results[1][0]?.players,
-            channels: results[2][0]?.channels
+            players: results[1][0].players,
+            channels: results[2][0].channels
         })
     })
     .catch((error) => res.status(400).send(error.toString()))
@@ -616,12 +545,10 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
 /** get list of tournaments */
 function fetchTournaments(db) {
     const pipeline = [
-        {'$match': { 
-            'tournament': { '$ne': null }
-        }},
+        {'$match': { 'tournament': { '$ne': null } }},
         {'$group': {
             _id: '$tournament.name',
-            nums: {
+            sub: {
                 
                 '$addToSet': {
                     '$cond': {
@@ -642,8 +569,8 @@ function fetchTournaments(db) {
         }},
         { '$sort': {
             '_id': -1,
-            'nums.num': 1,
-            'nums.date': 1
+            'sub.num': 1,
+            'sub.date': 1
         }}
     ]
 

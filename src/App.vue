@@ -4,10 +4,10 @@
         <!-- replace <a> with <router-link> eventually -->
         <router-link to="/" @click.native="forceRerenderMain($event)">
           <div class="logo">
-            <img src="./assets/img/pixel/1.png" alt="fortnite gaming"/>
+            <img src="./assets/img/pixel/1.png" :alt="$title" />
           
           <v-toolbar-title class="name">
-              fortnite gaming
+              {{ $title }}
           </v-toolbar-title>
           </div>
         </router-link>

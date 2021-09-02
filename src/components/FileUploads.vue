@@ -164,13 +164,14 @@
                     :p2="match.p2"
                     :uploading="uploading"
                     :video="match.video ? match.video : null"
-                    :fileName="match.file.name"
-                    :fileDate="match.file.date"
+                    :fileName="match.fileInfo.name"
+                    :fileDate="match.fileInfo.date"
                     :firstMatch="i === 0"
                     :lastMatch="i === matches.length - 1"
                     :timestampRequired="false"
+                    :masterUrl="masterUrl"
                     @update-character="updateCharacter($event.character, $event.index, i)"
-                    @remove="removeMatch(i)"
+                    @remove="matches.splice(i, 1)"
                     @set-video-id="setVideoId($event, i)"
                     @set-timestamp="setTimestamp($event, i)"
                     @delete-video="deleteVideo(i)"
@@ -179,6 +180,7 @@
                     @move-down="swapMatches(i, i+1)"
                     @update-file-date="match.file.date = $event" />
 
+                    
                     <hr :key="j" v-if="i < matches.length - 1" />
                 </template>
             </div>
@@ -257,7 +259,6 @@ export default {
             date: null,
             valid: false,
             isSelecting: false,
-            files: [],
             matches: [],
             uploadLimit: 8,
             error: false,
@@ -268,7 +269,7 @@ export default {
             progress: 0,
             errors: [],
             url: null,
-            vod: null,
+            masterUrl: null,
             uploadType: 'Casual',
             tournamentMode: false,
             tournament: {
@@ -308,8 +309,8 @@ export default {
       },
 
       'url': function(url) {
-          if (this.$refs.url.validate() && this.uploadType === 'Tournament') {
-              this.vod = url
+          if (this.$refs.url.validate() && this.tournamentMode) {
+              this.masterUrl = url
           }
 
       }
@@ -327,11 +328,14 @@ export default {
         },
         /** tell parent component to begin uploading files */
         submitFiles() {
-            var uploadRef = Math.floor(new Date() / 1000)
             let time = (new Date()).toISOString().split('T')
+            let files = []
 
             this.uploading = true
             let matches = this.matches.map((match) => {
+                
+                files.push(match.file)
+                delete match.file
 
                 let newMatch = {
                     userId: this.uid,
@@ -347,6 +351,7 @@ export default {
                 } else {
                     newMatch.matchDate = this.match.file.date
                 }
+
 
                 return newMatch
             })
@@ -375,7 +380,7 @@ export default {
                     this.finished = true
                 })
             } else {
-                Promise.all(this.files.map(file => this.uploadFilesAsPromise(file)))
+                Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
                 .then(() => this.$matches.save({matches: matches, getYoutubeData: true}))
                 .then((response) => {
                     if (response.ok) {
@@ -405,12 +410,12 @@ export default {
 
             return storageRef
             .then((snapshot) => {
-                let i = this.matches.findIndex((match) => match.file.name === file.name)
-                this.matches[i].file.url = snapshot.ref.getDownloadURL()
+                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
+                this.matches[i].fileInfo.url = snapshot.ref.getDownloadURL()
             })
             .catch((error) => {
                 console.log(error)
-                let i = this.matches.findIndex((match) => match.file.name === file.name)
+                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
                 console.log("Removing match #" + (i+1) + " from upload list.")
                 this.matches.splice(i, 1)
             })
@@ -489,7 +494,7 @@ export default {
                 .catch((error) => {
                     console.log(error)
 
-                    if (i < that.files.length - 1 && that.matches.length < that.uploadLimit)
+                    if (i < files.length - 1 && that.matches.length < that.uploadLimit)
                         that.readFiles(files, i + 1)
                     else
                         if (that.errors.length > 0) that.error = true
@@ -531,16 +536,16 @@ export default {
                         name: playerNames[1],
                         character: (this.$characters.find(c => c.devName == characterNames[1])).name
                     },
-                    file: {
+                    file: file,
+                    fileInfo: {
                         url: null,
                         name: file.name,
                         version: fileText.charCodeAt(146),
                         date: this.formatDate(timestamp),
-                    }
+                    },
                 }
 
                 this.matches.push(match)
-                this.files.push(file)
             }
         },
         /** sets errors array for display once files finish being read */
@@ -566,25 +571,13 @@ export default {
         },
         resetForm() {
             this.matches = []
-            this.files = []
             this.tournament = {
                 name: null,
                 num: null,
                 date: null
             }
-            this.matchCount = 0
             this.finished = false
             this.$refs.form.resetValidation()
-        },
-        removeMatch(i) {
-            this.matches.splice(i, 1)
-            this.removeFile(this.matches[i].file.name)
-        },
-        removeFile(file) {
-            let index = this.files.findIndex((f) => f.name === file)
-            //console.log(this.files[index])
-            if (index >= 0) this.files.splice(index, 1)
-            //console.log(this.files[index])
         },
         updateCharacter(character, j, i) {
             this.$set(this.matches[i][`p${j+1}`], 'character', character)
@@ -599,14 +592,14 @@ export default {
                 this.$set(this.matches[i].video, 'id', id)
             }
 
-            console.log(JSON.parse(JSON.stringify(this.matches[i].video)))
+           this.printObj(this.matches[i].video)
         },
         setTimestamp(timestamp, i) {
             if (!this.matches[i].video?.timestamp || this.matches[i].video.timestamp !== timestamp) {
                 this.$set(this.matches[i].video, 'timestamp', timestamp)
             }
 
-            console.log(JSON.parse(JSON.stringify(this.matches[i].video)))
+           this.printObj(this.matches[i].video)
         },
         deleteVideo(i) {
             if (this.matches[i].video) {
@@ -621,38 +614,25 @@ export default {
             }
         },
         swapMatches(i, j) {
-            let tempMatch = this.matches[i]
-            let tempFile = this.files[i]
-
-            /*
-            console.log('ORIGINAL\n--------' +
+            
+            
+            /*console.log('ORIGINAL\n--------' +
             '\nMatch @ pos ' + i + ': ' +
             this.matches[i].p1.name + ' vs ' + this.matches[i].p2.name +
             '\nMatch @ pos' + j + ': ' +
-            this.matches[j].p1.name + ' vs ' + this.matches[j].p2.name +
-            '\nFile @ pos ' + i + ': ' +
-            this.files[i].name +
-            '\nFile @ pos ' + j + ': ' +
-            this.files[j].name)
-            */
-
-            this.$set(this.matches, i, this.matches[j])
-            this.$set(this.files, i, this.files[j])
+            this.matches[j].p1.name + ' vs ' + this.matches[j].p2.name)*/
             
+            let tempMatch = this.matches[i]
+            this.$set(this.matches, i, this.matches[j])
             this.$set(this.matches, j, tempMatch)
-            this.$set(this.files, j, tempFile)
 
-            /*
-            console.log('NEW\n--------' +
+            
+            /*console.log('NEW\n--------' +
             '\nMatch @ pos' + i + ': ' +
             this.matches[i].p1.name + ' vs ' + this.matches[i].p2.name +
             '\nMatch @ pos' + j + ': ' +
-            this.matches[j].p1.name + ' vs ' + this.matches[j].p2.name +
-            '\nFile @ pos ' + i + ': ' +
-            this.files[i].name +
-            '\nFile @ pos ' + j + ': ' +
-            this.files[j].name)
-            */
+            this.matches[j].p1.name + ' vs ' + this.matches[j].p2.name)*/
+            
         },
         
     }

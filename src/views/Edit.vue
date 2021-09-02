@@ -157,12 +157,12 @@
                         v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
 
                             <v-text-field
-                            v-if="$route.query.uploadForm === 'youtube' || updated[0].type === 'Tournament'"
+                            v-if="$route.query.uploadForm === 'YouTube' || updated[0].type === 'Tournament'"
                             v-model="url"
                             class="upload-url"
                             label="YouTube URL"
                             prepend-icon="mdi-youtube"
-                            :readonly="$route.query.uploadForm === 'youtube'" />
+                            :readonly="$route.query.uploadForm === 'YouTube'" />
 
                             <div class="match-list">
                                 <template v-for="(match, i, j) in updated">
@@ -172,14 +172,16 @@
                                     :firstMatch="i === 0"
                                     :lastMatch="i === updated.length - 1"
                                     :uploadForm="$route.query.uploadForm"
-                                    :fileDate="match.file ? match.file.date : null"
-                                    :fileName="match.file ? match.file.name : null"
+                                    :fileDate="match.fileInfo ? match.fileInfo.date : null"
+                                    :fileName="match.fileInfo ? match.fileInfo.name : null"
                                     :p1="match.p1"
                                     :p2="match.p2"
-                                    :timestampRequired="$route.query.uploadForm === 'youtube' || original[0].type === 'Tournament'"
+                                    :youtubeUpload="$route.query.uploadForm === 'YouTube' ? true : false"
+                                    :filesUpload="$route.query.uploadForm === 'Files' ? true : false"
+                                    :timestampRequired="$route.query.uploadForm === 'YouTube' || original[0].type === 'Tournament'"
                                     :tournament="match.tournament ? match.tournament : null"
                                     :video="match.video ? match.video : null"
-                                    :file="match.file ? match.file : null"
+                                    :fileInfo="match.fileInfo ? match.fileInfo : null"
                                     :type="match.type"
                                     :resetData="resetData"
                                     @set-timestamp="setTimestamp($event, i)"
@@ -201,7 +203,7 @@
                                 <v-col class="reset pr-5">
                                     <v-btn
                                     rounded
-                                    color="accent"
+                                    color="button2"
                                     @click="resetMatches()">
                                         Reset
                                     </v-btn>
@@ -246,6 +248,7 @@ export default {
             step: 1,
             original: {},
             updated: {},
+            originalStringified: {},
             valid: false,
             uploading: false,
             finished: false,
@@ -381,25 +384,16 @@ export default {
         getMatches(uploadId) {
             this.loadingMatches = true
 
-            let ref = null
-
-            /*if (this.tournamentId) {
-                ref = 
-                this.$matches.get({tournamentId: this.tournamentId, videoId: this.videoId, fromUser: this.fromUser})
-            } else {
-                ref = this.$matches.get({matchId: this.matchId})
-            }*/
-
-            ref = this.$matches.get({uploadId: uploadId})
-
-            ref
+            this.$matches.get({uploadId: uploadId})
             .then((response) => {
                 if (response.ok) {
                     this.tournament = response.body.groups[0]._id.tournament
                     this.original = response.body.groups[0].matches
-                    this.updated= JSON.parse(JSON.stringify(this.original))
+                    this.updated = JSON.parse(JSON.stringify(this.original))
                     this.url = (this.original[0].video ? 'https://youtu.be/' + this.original[0].video.id : null)
                     this.loadingMatches = false
+                    
+                    console.log(this.changesFound)
                 }
             })
             .catch((error) => {
@@ -409,7 +403,7 @@ export default {
             })
         },
         resetMatches() {
-            this.updated = JSON.parse(JSON.stringify(this.original))
+            this.updated = JSON.parse(this.originalStringified)
             this.resetData = !this.resetData
         },
         updateCharacter(character, i) {
@@ -418,23 +412,16 @@ export default {
         updateMatches() {
             this.uploading = true
             let updated = this.updated.filter((match) => {
-                let i = this.original.findIndex(original => 
-                    original._id === match._id
-                )
+                let i = this.original.findIndex(original => original._id === match._id)
 
-                if (JSON.stringify(match) !== JSON.stringify(this.original[i])) {
+                if (JSON.stringify(match) !== JSON.stringify(this.original[i]))
                     return true
-                } else {
+                else
                     return false
-                }
             })
-            .map((match) => {
-                return match
-            })
+            .map((match) => match)
 
-            console.log(JSON.parse(JSON.stringify(updated)))
-
-            
+            //this.printObj(updated)
 
             this.$update.save(updated)
             .then((response) => {

@@ -1,5 +1,6 @@
 <template>
-    <v-row class="preview">
+    <v-row
+    class="preview">
         <v-col
         cols="12"
         class="header">
@@ -123,6 +124,7 @@
                     :readonly="tournamentMode"
                     ref="url"
                     label="YouTube Link"
+                    placeholder="YouTube Link"
                     v-model="url"
                     prepend-icon="mdi-youtube"
                     hint="Optional"
@@ -170,7 +172,7 @@
                     <v-text-field
                     label="File"
                     readonly
-                    v-model="file"
+                    v-model="fileNameStr"
                     prepend-icon="mdi-paperclip"
                     hint="Optional"
                     persistent-hint
@@ -178,7 +180,7 @@
                     clearable
                     :dense="!$vuetify.breakpoint.smOnly"
                     @click="selectFiles()"
-                    @click:clear="$emit('remove-file')"/>
+                    @click:clear="$emit('remove-file')" />
 
                     <input
                     v-show="false"
@@ -189,6 +191,7 @@
                 </v-col>
             </v-col>
         </v-col>
+
     </v-row>
 </template>
 
@@ -220,6 +223,7 @@ export default {
         lastMatch: Boolean,
         resetData: Boolean,
         timestampRequired: Boolean,
+        masterUrl: [String, null]
     },
     data: () => {
         return {
@@ -227,7 +231,7 @@ export default {
             tempUrl: null,
             url: null,
             timestamp: null,
-            file: null,
+            fileNameStr: null,
             rules: {
                 name: [
                     v => !!v || 'Required'
@@ -256,6 +260,10 @@ export default {
         if (this.video) {
             this.url = 'https://youtu.be/' + this.video.id
             this.timestamp = this.video.timestamp
+        }
+
+        if (this.masterUrl) {
+            this.url = this.masterUrl
         }
     },
     watch: {
@@ -291,7 +299,11 @@ export default {
         },
 
         'fileName': function(name) {
-            this.file = name
+            this.fileNameStr = name
+        },
+
+        'masterUrl': function(url) {
+            this.url = url
         }
     },
     methods: {
@@ -309,7 +321,7 @@ export default {
         reset() {
             this.url = this.video?.url
             this.timestamp = this.video?.timestamp
-        }
+        },
     }
 }
 </script>
@@ -321,7 +333,7 @@ export default {
 }
 
 div:not([class*="file"]) > .v-input--is-readonly >>> .v-input__slot::before {
-    border-color: rgba(255, 255, 255, 0.7) !important;
+    border-color: rgba(255, 255, 255, 0.24) !important;
 }
 
 div:not([class*="file"]) > .v-input--is-readonly >>> i {
@@ -332,5 +344,9 @@ div:not([class*="file"]) > .v-input--is-readonly >>> .v-label,
 div:not([class*="file"]) > .v-input--is-readonly >>> .v-messages,
 div:not([class*="file"]) > .v-input--is-readonly >>> input {
     color: rgba(255, 255, 255, 0.7) !important;
+}
+
+div:not([class*="file"]) > .v-input--is-readonly {
+    pointer-events: none;
 }
 </style>

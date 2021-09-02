@@ -12,7 +12,7 @@
             warning,
             errors,
             fileData,
-            yourData
+            formData
             }"
         @add-file-anyways="addFile(tempData)"
         @close-warning="closeWarning()"
@@ -198,7 +198,7 @@
                                 :p1="match.p1"
                                 :p2="match.p2"
                                 :video="match.video"
-                                :fileName="match.file ? match.file.name : null"
+                                :fileName="match.fileInfo ? match.fileInfo.name : null"
                                 :firstMatch="i === 0"
                                 :lastMatch="i === matches.length - 1"
                                 :timestampRequired="matches.length > 1 ? true : false"
@@ -207,7 +207,7 @@
                                 @move-up="swapMatches(i, i-1)"
                                 @move-down="swapMatches(i, i+1)"
                                 @add-file="readFile($event, i)"
-                                @remove-file="removeFile(match.file.name, i, true)"
+                                @remove-file="removeFile(i)"
                                 @set-timestamp="matches[i].video.timestamp = $event"
                                 @delete-timestamp="delete matches[i].video.timestamp" />
 
@@ -282,13 +282,12 @@ export default {
             },
             dateFormatted: null,
             matches: [],
-            files: [],
             error: false,
             uploading: false,
             finished: false,
             warning: false,
             fileData: null,
-            yourData: null,
+            formData: null,
             errors: [],
             timestamp: null,
             tempData: null,
@@ -445,11 +444,18 @@ export default {
         /** upload youtube-only object */
         youtubeUpload() {
             this.uploading = true
+            let files = []
 
             let matches = this.matches.map((match) => {
                 let time = (new Date()).toISOString().split('T')
 
                 //this.printObj(match)
+
+                
+                if (match.file) {
+                    files.push(match.file)
+                    delete match.file
+                }
 
                 match = {
                     userId: this.uid,
@@ -462,7 +468,7 @@ export default {
                     channel: this.video.channel,
                     ...match
                 }
-                
+
                 //this.printObj(match)
 
                 return match
@@ -483,13 +489,13 @@ export default {
                 })
                 .catch((error) => {
                     console.log(error)
-                    this.setErrors('upload')
                     console.log('Failed to upload')
+                    this.setErrors('upload')
                     this.uploading = false
-                    this.finished = true
+                    this.error = true
                 })
-            } else if (this.files.length > 0) {
-                Promise.all(this.files.map(file => this.uploadFilesAsPromise(file)))
+            } else if (files.length > 0) {
+                Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
                 .then(() => this.$matches.save({matches: matches, getYoutubeData: false}))
                 .then((response) => {
                     if (response.ok) {
@@ -504,10 +510,10 @@ export default {
                 })
                 .catch((error) => {
                     console.log(error)
-                    this.setErrors('upload')
                     console.log('Failed to upload')
+                    this.setErrors('upload')
                     this.uploading = false
-                    this.finished = true
+                    this.error = true
                 })
             }
         },
@@ -519,22 +525,22 @@ export default {
             return storageRef
             .then((snapshot) => snapshot.ref.getDownloadURL())
             .then((url) => {
-                let i = this.matches.findIndex((match) => match.file.name === file.name)
-                this.matches[i].file.url = url
+                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
+                this.matches[i].fileInfo.url = url
             })
             .catch((error) => {
                 console.log(error)
-                let i = this.matches.findIndex((match) => match.file.name === file.name)
+                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
                 console.log("Removing file info from match #" + (i+1))
-                delete this.matches[i].file
+                delete this.matches[i].fileInfo
             })
         },
         /**
          * clears errors array
          */
         clearErrors() {
-           this.errors = []
            this.error = false
+           this.errors = []
         },
         resetForm() {
             this.matches = []
@@ -550,12 +556,10 @@ export default {
             this.invalidId = false
             this.parsed = false
             this.url = null
-            this.finished = false
             this.$refs.url.resetValidation()
+            this.finished = false
         },
         removeMatch(i) {
-            if (this.matches[i].file)
-                this.removeFile(this.matches[i].file.name, i, false)
             this.matches.splice(i, 1)
         },
         updateCharacter(character, j, i) {
@@ -570,7 +574,6 @@ export default {
         readFile(file, i) {
             (function (that, file, i) {
                 new Promise(function(resolve, reject) {
-
                     // check file extension and duplicate issues first
                     if (file.name.substring(file.name.length - 5, file.name.length) !== '.tfhr') {
                         that.setErrors('extension', file.name)
@@ -643,6 +646,7 @@ export default {
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
                 this.setErrors('parse', file.name)
+                this.error = true
             } else {
 
                 let players = {
@@ -667,42 +671,42 @@ export default {
                     }
                 }
 
-                if (JSON.stringify(players) !== JSON.stringify({p1: this.matches[i].p1, p2: this.matches[i].p2})) {
+                let p1Regex = new RegExp(['^' + players.p1.name], 'i')
+                let p2Regex = new RegExp(['^' + players.p2.name], 'i')
+                let p1 = this.matches[i].p1
+                let p2 = this.matches[i].p2
+
+                if (!p1.name.match(p1Regex) || !p2.name.match(p2Regex) ||
+                    p1.character !== players.p1.character || p2.character !== players.p2.character) {
                     this.fileData = players
-                    this.yourData = {p1: this.matches[i].p1, p2: this.matches[i].p2}
+                    this.formData = {p1: this.matches[i].p1, p2: this.matches[i].p2}
                     this.warning = true
                 } else {
-                    this.addFile(data)
+                    this.addFile(this.tempData)
                 }
-
-                
-                
             }
         },
         addFile(data) {
-            this.$set(this.matches[data.index], 'file', data.fileInfo)
-            this.files.push(data.file)
 
+            this.$set(this.matches[data.index], 'file', data.file)
+            this.$set(this.matches[data.index], 'fileInfo', data.fileInfo)
+            
             if (this.warning = true) {
                 this.closeWarning()
             }
 
-            console.log("File added to match #" + (data.index + 1) )
-
-            //this.printObj(this.matches[i])
-            //console.log(this.files)
+            console.log("File added to match #" + (data.index + 1))
         },
-        removeFile(file, i, deleteFromMatch) {
-            //this.printObj(this.matches[i])
-            let index = this.files.findIndex((f) => f.name === file)
-            //console.log(this.files[index])
-            if (index >= 0) this.files.splice(index, 1)
-            if (deleteFromMatch) delete this.matches[i].file
-            //console.log(this.files[index])
-            //this.printObj(this.matches[i])
+        removeFile(i) {
+            console.log("Deleting file from match #" + (i + 1))
+            
+            // file name string in input field won't update otherwise ?????
+            this.matches[i].fileInfo.name = null
+            delete this.matches[i].file
+            delete this.matches[i].fileInfo
         },
         closeWarning() {
-            this.yourData = null
+            this.formData = null
             this.fileData = null
             this.tempData = null
             this.warning = false

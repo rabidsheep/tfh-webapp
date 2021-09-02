@@ -79,7 +79,7 @@
                 :key="k"
                 :p1="match.p1"
                 :p2="match.p2"
-                :file="match.file ? match.file : null"
+                :fileInfo="match.fileInfo ? match.fileInfo : null"
                 :video="match.video ? match.video : null"
                 @update-character="updateCharacter($event.character, $event.index)"
                 @update-name="updateName($event.name, $event.index)" />
@@ -200,26 +200,20 @@ export default {
         page: page
       })
       .then((response) => {
-        if (response.ok) {
-          this.error = false
-          this.groups = response.body.groups
-          //console.log(JSON.parse(JSON.stringify(this.groups)))
-          this.resultsCount = response.body.count
-          //console.log(this.resultsCount)
-        } else {
-          this.error = true
-          this.errorMsg = `${response.status}: ${response.statusText}`
-          console.log("Error retrieving matches.\n", this.errorMsg)
-        }
+        this.groups = response.body?.groups
+        //console.log(JSON.parse(JSON.stringify(this.groups)))
+        this.resultsCount = response.body?.count
+        //console.log(this.resultsCount)
 
         this.loadingMatches = false
         this.stop = false
       })
       .catch((error) => {
-        console.log(error)
+          this.errorMsg = `${error.status}: ${error.statusText}`
+          console.log("Error retrieving matches.\n", this.errorMsg)
 
-        this.loadingMatches = false
-        this.stop = false
+          this.loadingMatches = false
+          this.stop = false
       })
     },
     clearFilters() {

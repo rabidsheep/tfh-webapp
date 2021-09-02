@@ -48,15 +48,15 @@
           <v-tooltip
           v-model="show"
           top
-          :disabled="!version || $version === version"
+          :disabled="!fileInfo || !fileInfo.version || $version === fileInfo.version"
           color="accent">
             <template v-slot:activator="{on, attrs}">
               <div
-              :class="file ? 'btn' : 'btn disabled'">
+              :class="fileInfo ? 'btn' : 'btn disabled'">
                 <a
-                v-if="file"
+                v-if="fileInfo"
                 title="Download TFHR File"
-                :href="file.url"
+                :href="fileInfo.url"
                 rel="noopener">
                   <v-icon
                   v-bind="attrs"
@@ -68,7 +68,7 @@
                 </a>
 
                 <v-icon
-                v-else-if="!file"
+                v-else-if="!fileInfo"
                 v-bind="attrs"
                 v-on="on"
                 size="36px"
@@ -128,12 +128,12 @@ export default {
     YoutubeOff,
   },
   props: {
-    version: Number,
     p1: Object,
     p2: Object,
-    file: {
+    fileInfo: {
       url: String,
       name: String,
+      version: Number,
     },
     video: {
       url: String,

@@ -68,6 +68,8 @@
                             class="swap"
                             cols="12">
                                 <v-btn
+                                fab
+                                small
                                 :disabled="!strict"
                                 color="accent"
                                 @click="$emit('swap')">
@@ -314,6 +316,7 @@
                     cols="12"
                     align="center">
                         <v-btn
+                        rounded
                         color="accent"
                         @click="clear()">
                             Clear All
@@ -460,7 +463,8 @@ export default {
                 this.$emit('loaded-filter-content')
             })
             .catch((error) => {
-                console.log(error)
+                this.errorMsg = `${error.status}: ${error.statusText}`
+                console.log("Error retrieving matches.\n", this.errorMsg)
                 this.$emit('loaded-filter-content')
             })
         },

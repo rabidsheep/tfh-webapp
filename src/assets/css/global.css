@@ -21,14 +21,13 @@
 }
 
 .logo {
-    height: 48px;
     display: flex;
     align-items: center;
 }
 
 .logo img {
-    height: 48px;
-    width: 61.2px;
+    height: 50px;
+    width: 63px;
     image-rendering: optimizeQuality;
     padding-right: 10px;
     display: inline-block;
@@ -156,6 +155,9 @@ picture.icon source, picture.icon img {
 }
 
 /** edit.vue **/
+#edit {
+    padding: 0px;
+}
 
 #edit .buttons > .col {
     display: flex;
@@ -226,7 +228,7 @@ picture.icon source, picture.icon img {
 }
 
 .status .p1 {
-    margin-bottom: 5px;
+    margin-bottom: 10px;
 }
 
 .status .col {
@@ -238,11 +240,11 @@ picture.icon source, picture.icon img {
 }
 
 .status .file-data {
-    margin-right: 30px;
+    margin-left: 30px;
 }
 
-.status .your-data {
-    margin-left: 30px;
+.status .form-data {
+    margin-right: 30px;
 }
 
 .status .data,
@@ -257,4 +259,8 @@ picture.icon source, picture.icon img {
 
 .status .data {
     justify-content: center;
+}
+
+.status .btns {
+    margin-top: 15px;
 }

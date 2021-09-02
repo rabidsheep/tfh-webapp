@@ -61,8 +61,8 @@ export default {
     originalDate: String,
     timezone: String,
     tournament: [Object, null],
-    video: [Object, null],
-    channel: [Object, null],
+    video: [String, null],
+    channel: [String, null],
 
   },
   data: () => {

@@ -84,7 +84,42 @@
                     <h1>Warning</h1>
 
                     <v-row class="data">
-                        Player info pulled from the file does not seem to match what is currently set for this match.
+                        There appears to be a mismatch between data pulled from the file and data pulled from the form for this set.
+                        <v-col
+                        class="data__inner form-data"
+                        :cols="$vuetify.breakpoint.xsOnly? 4 : 5">
+                            <h4>Form Data:</h4>
+                            <v-col
+                            v-for="(player, i) in [formData.p1, formData.p2]"
+                            :class="`player p${i+1}`"
+                            :cols="12"
+                            :key="i">
+                                <picture
+                                class="character-icon"
+                                :title="player.character"
+                                @click="$emit('update-character', {character: player.character, index: i})">
+                                    <source
+                                    type="image/webp"
+                                    :srcset="require(`../assets/img/sel/${player.character}.webp`) + ' 136w'" />
+                                    <source
+                                    type="image/png"
+                                    :srcset="require(`../assets/img/sel/${player.character}.png`) + ' 136w'" />
+                                    <img
+                                    :alt="player.character"
+                                    :src="require(`../assets/img/sel/${player.character}.webp`)" />
+                                </picture>
+
+                                <p
+                                class="name"
+                                :title="player.name"
+                                @click="$emit('update-name', {name: player.name, index: i})">
+                                    {{ player.name }}
+                                </p>
+                            </v-col>
+                        </v-col>
+
+                        <v-divider vertical />
+                        
                         <v-col
                         class="data__inner file-data"
                         :cols="$vuetify.breakpoint.xsOnly? 4: 5">
@@ -118,58 +153,31 @@
                                 </p>
                             </v-col>
                         </v-col>
-
-                        <v-divider vertical />
                         
                         
-                        <v-col
-                        class="data__inner your-data"
-                        :cols="$vuetify.breakpoint.xsOnly? 4 : 5">
-                            <h4>Your Data:</h4>
-                            <v-col
-                            v-for="(player, i) in [yourData.p1, yourData.p2]"
-                            :class="`player p${i+1}`"
-                            :cols="12"
-                            :key="i">
-                                <picture
-                                class="character-icon"
-                                :title="player.character"
-                                @click="$emit('update-character', {character: player.character, index: i})">
-                                    <source
-                                    type="image/webp"
-                                    :srcset="require(`../assets/img/sel/${player.character}.webp`) + ' 136w'" />
-                                    <source
-                                    type="image/png"
-                                    :srcset="require(`../assets/img/sel/${player.character}.png`) + ' 136w'" />
-                                    <img
-                                    :alt="player.character"
-                                    :src="require(`../assets/img/sel/${player.character}.webp`)" />
-                                </picture>
-
-                                <p
-                                class="name"
-                                :title="player.name"
-                                @click="$emit('update-name', {name: player.name, index: i})">
-                                    {{ player.name }}
-                                </p>
-                            </v-col>
-                        </v-col>
+                        
                     </v-row>
                     
 
-                    <v-btn
-                    rounded
-                    @click="$emit('close-warning')"
-                    color="button1">
-                        Oops! Don't Add That
-                    </v-btn>
+                    <v-row class="btns">
+                        <v-col class="ignore-file" cols="12">
+                            <v-btn
+                            rounded
+                            @click="$emit('close-warning')"
+                            color="button2">
+                                Oops! Don't Add That
+                            </v-btn>
+                        </v-col>
 
-                    <v-btn
-                    rounded
-                    @click="$emit('add-file-anyways')"
-                    color="accent">
-                        Add File Anyways
-                    </v-btn>
+                        <v-col class="add-file" cols="12">
+                            <v-btn
+                            rounded
+                            @click="$emit('add-file-anyways')"
+                            color="accent">
+                                Add File Anyways
+                            </v-btn>
+                        </v-col>
+                    </v-row>
                 </template>
             </v-layout>
         </v-container>
@@ -186,7 +194,7 @@ export default {
         warning: Boolean,
         errors: Array,
         fileData: Object,
-        yourData: Object,
+        formData: Object,
     },
     data: () => {
         return {

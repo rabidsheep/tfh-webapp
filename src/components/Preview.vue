@@ -5,7 +5,7 @@
         cols="12"
         class="header">
             <div
-            :class="$vuetify.breakpoint.smAndDown ? `leader mr-3` : `leader mr-3` ">
+            class="leader mr-3">
                 <button
                 aria-label="Remove Match"
                 :ripple="false"
@@ -28,8 +28,7 @@
 
             <v-col
             v-if="fileUpload"
-            class="name ml-3"
-            :cols="undefined">
+            class="name ml-3">
                 <v-text-field
                 readonly
                 class="filename"

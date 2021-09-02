@@ -168,6 +168,10 @@ picture.icon source, picture.icon img {
     justify-content: flex-end;
 }
 
+.v-icon.v-icon::after {
+    background-color: transparent !important;
+}
+
 /* desktop */
 .wide #edit .youtube {
     padding-left: 12px;
@@ -200,12 +204,14 @@ picture.icon source, picture.icon img {
 .match .character-icon {
     height: 52px;
     width: 45px;
+    min-width: 45px;
 }
 
 .status .character-icon > *,
 .match .character-icon > * {
     height: 100%;
     width: 100%;
+    min-width: 100%;
 }
 
 .status .player {

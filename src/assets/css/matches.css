@@ -76,6 +76,25 @@
     padding: 15px 0px;
 }
 
+#matches .header .p-divider {
+    margin: 0px 4px !important;
+    margin-top: -0.09px !important;
+}
+
+#matches .header .download-all {
+    max-width: max-content;
+    height: min-content;
+    padding-right: 10px;
+}
+
+#matches .header .data {
+    align-items: center;
+}
+
+#matches .group {
+    flex-wrap: wrap;
+}
+
 .match-group > div:not(:last-of-type):not(.header) {
     border-bottom: 1px dashed gray;
 }
@@ -271,4 +290,16 @@
 }
 .small .match .links > .link {
     justify-content: end;
+}
+
+.xsmall .match {
+    flex-wrap: nowrap;
+}
+
+.match-group .header .date {
+    font-size: 15px;
+}
+
+.match-group .header .group-info {
+    font-size: 15px;
 }

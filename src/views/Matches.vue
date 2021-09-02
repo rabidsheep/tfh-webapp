@@ -72,7 +72,9 @@
               :key="j">
                 <MatchHeader
                 v-bind="group._id"
-                :timezone="timezone"/>
+                :downloadAvailable="group.matches.some((match) => match.fileInfo)"
+                :timezone="timezone"
+                @generate-zip-file="generateZipFile(group.matches, group._id.uploadId)" />
 
                 <MatchRow
                 v-for="(match, k) in group.matches"
@@ -114,6 +116,8 @@
 import MatchRow from '../components/MatchRow.vue'
 import MatchHeader from '../components/MatchHeader.vue'
 import Filters from '../components/Filters.vue'
+import JSZip from 'jszip'
+import saveAs from 'file-saver'
 
 export default {
   name: 'Matches',
@@ -263,6 +267,44 @@ export default {
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     },
+    generateZipFile(matches, groupId) {
+      let jszip = new JSZip()
+
+      Promise.all([
+        matches.filter((match) => {
+          if (match.fileInfo) return true
+          else return false
+        })
+        .map((match) => {
+          return jszip.file(match.fileInfo.name,
+          this.downloadFileAsPromise(match.fileInfo.url))
+        })
+      ])
+      .then(() => {
+        jszip.generateAsync({type: 'blob'})
+        .then(function(content) {
+          saveAs(content, `${groupId}.zip`)
+        })
+      })
+
+    },
+    downloadFileAsPromise(url) {
+      return new Promise(function(resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url, true);
+        xhr.responseType = "arraybuffer";
+        xhr.onreadystatechange = function(evt) {
+          if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+              resolve(xhr.response);
+            } else {
+              reject(new Error("Error for " + url + ": " + xhr.status));
+            }
+          }
+        };
+        xhr.send();
+      });
+    }
   }
 }
 </script>

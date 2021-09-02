@@ -23,27 +23,41 @@
       <v-col
       class="data">
         <v-col
+        class="group">
+          <v-col
+          class="date"
+          cols="12">
+              <p>{{ date }} @ {{ time }} {{ timezone }}</p>
+          </v-col>
+
+        <v-col
+        class="group-info"
         cols="12">
-          <v-row>
-            <p>{{ date }}</p>
-            <div class="mr-1 ml-1">@</div>
-            <p>{{ time }} {{ timezone }}</p>
-          </v-row>
+          <template v-if="tournament">
+            <p>
+              {{ tournament.num ?
+                tournament.name + ' | ' + tournament.num + ' | ' + tournament.date :
+                tournament.name + ' | ' + tournament.date }}
+            </p>
+          </template>
+
+          <template v-else>
+            <p>{{ 'Casual | ' + originalDate }}</p>
+          </template>
+        </v-col>
+        
         </v-col>
 
         <v-col
-        cols="12">
-          <v-row>
-            <template v-if="tournament">
-              <p>{{ tournament.num ?
-                tournament.name + ' ' + tournament.num + ' | ' + tournament.date :
-                tournament.name + ' | ' + tournament.date }}</p>
-            </template>
-
-            <template v-else>
-              <p>{{ originalDate ? `Casual | ` + originalDate : `Casual` }}</p>
-            </template>
-          </v-row>
+        class="download-all">
+          <v-icon
+          size="36px"
+          color="accent"
+          title="Download All Files"
+          :disabled="!downloadAvailable"
+          @click="$emit('generate-zip-file')">
+            {{ downloadAvailable ? 'mdi-folder-download' : 'mdi-folder-download' }}
+          </v-icon>
         </v-col>
       </v-col>
     </v-row>
@@ -63,6 +77,7 @@ export default {
     tournament: [Object, null],
     video: [String, null],
     channel: [String, null],
+    downloadAvailable: Boolean
 
   },
   data: () => {

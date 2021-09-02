@@ -31,6 +31,7 @@ export default new Vuetify({
     },
     breakpoint: {
       thresholds: {
+        xxs: 450,
         xs: 650,
         sm: 800,
         md: 900,

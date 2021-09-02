@@ -296,7 +296,6 @@ api.get('/filter/content', (req, res) => {
 })
 
 
-
 /** authorize & verify user
  * verifyIdToken not currently working in dev environment???
 */
@@ -443,22 +442,22 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
         // need help trimming this down
         if (p1.name) {
             query.$or[0] = {
-                'p1.name': p1.name,
+                'p1.name': new RegExp(['^' + p1.name], 'i'),
                 ...query.$or[0]
             }
             query.$or[1] = {
-                'p2.name': p1.name,
+                'p2.name': new RegExp(['^' + p1.name], 'i'),
                 ...query.$or[1]
             }
         }
 
         if (p2.name) {
             query.$or[0] = {
-                'p2.name': p2.name,
+                'p2.name': new RegExp(['^' + p2.name], 'i'),
                 ...query.$or[0]
             }
             query.$or[1] = {
-                'p1.name': p2.name,
+                'p1.name': new RegExp(['^' + p2.name], 'i'),
                 ...query.$or[1]
             }
         }
@@ -499,7 +498,7 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
     if (tournament) {
         query = {
             // allow partial matches for tournament names?
-            'tournament.name': new RegExp(['^' + tournament.name], 'i'),
+            'tournament.name': tournament.name,
             ...query
         }
 

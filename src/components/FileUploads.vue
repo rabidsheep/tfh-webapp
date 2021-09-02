@@ -47,9 +47,7 @@
 
                     <v-divider class="mx-2" vertical />
 
-                    <v-col
-                    class="message pa-0"
-                    cols="10">
+                    <div class="message">
                         <template v-if="uploadType === 'Casual'">
                             Matches uploaded using <b>Casuals</b> <b>Mode</b> will display individually on the main page.
                         </template>
@@ -57,7 +55,7 @@
                         <template v-else>
                             Matches uploaded using <b>Tournament</b> <b>Mode</b> will be grouped together on the main page.
                         </template>
-                    </v-col>
+                    </div>
                 </div>
             </v-row>
 
@@ -74,6 +72,7 @@
                         v-model="tournament.name"
                         hint="Required"
                         persistent-hint
+                        clearable
                         :rules="tournamentMode ? rules.tournament : undefined"
                         :required="tournamentMode" />
                     </v-col>
@@ -85,6 +84,7 @@
                         label="No. #"
                         v-model="tournament.num"
                         hint="Optional"
+                        clearable
                         persistent-hint />
                     </v-col>
 
@@ -108,6 +108,7 @@
                                 prepend-icon="mdi-calendar"
                                 hint="Required"
                                 persistent-hint
+                                clearable
                                 :rules="tournamentMode ? rules.date : undefined"
                                 :required="tournamentMode" />
                             </template>
@@ -128,6 +129,7 @@
                         class="pa-0 pt-5">
                             <v-text-field
                             ref="url"
+                            class="link"
                             label="YouTube Link"
                             v-model="url"
                             prepend-icon="mdi-youtube"
@@ -334,8 +336,6 @@ export default {
             this.uploading = true
             let matches = this.matches.map((match) => {
                 
-                files.push(match.file)
-                delete match.file
 
                 let newMatch = {
                     userId: this.uid,
@@ -349,8 +349,12 @@ export default {
                     newMatch.tournament = this.tournament
                     newMatch.matchDate = this.tournament.date
                 } else {
-                    newMatch.matchDate = this.match.file.date
+                    newMatch.matchDate = match.file.date
                 }
+
+                
+                files.push(match.file)
+                delete match.file
 
 
                 return newMatch
@@ -410,8 +414,12 @@ export default {
 
             return storageRef
             .then((snapshot) => {
+                return snapshot.ref.getDownloadURL()
+            })
+            .then((url) => {
+                console.log(url)
                 let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
-                this.matches[i].fileInfo.url = snapshot.ref.getDownloadURL()
+                return this.matches[i].fileInfo.url = url
             })
             .catch((error) => {
                 console.log(error)
@@ -592,14 +600,12 @@ export default {
                 this.$set(this.matches[i].video, 'id', id)
             }
 
-           this.printObj(this.matches[i].video)
+           //this.printObj(this.matches[i].video)
         },
         setTimestamp(timestamp, i) {
             if (!this.matches[i].video?.timestamp || this.matches[i].video.timestamp !== timestamp) {
                 this.$set(this.matches[i].video, 'timestamp', timestamp)
             }
-
-           this.printObj(this.matches[i].video)
         },
         deleteVideo(i) {
             if (this.matches[i].video) {

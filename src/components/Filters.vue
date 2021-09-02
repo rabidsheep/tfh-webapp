@@ -464,7 +464,7 @@ export default {
             })
             .catch((error) => {
                 this.errorMsg = `${error.status}: ${error.statusText}`
-                console.log("Error retrieving matches.\n", this.errorMsg)
+                console.log("Error retrieving filter content.\n", this.errorMsg)
                 this.$emit('loaded-filter-content')
             })
         },
@@ -486,7 +486,7 @@ export default {
                     t._id === this.tournamentFilter.name
                 )
 
-                this.numList = this.tournamentList[this.tournamentIndex].nums.filter((n) => {
+                this.numList = this.tournamentList[this.tournamentIndex].sub.filter((n) => {
                     if (n.num) {
                         return true
                     } else {
@@ -509,7 +509,7 @@ export default {
         updateDate() {
             if (!this.tournamentFilter.num && this.tournamentFilter.name) {
                 // if no num is selected...
-                this.dateList = this.tournamentList[this.tournamentIndex].nums.map((n) => n.date)
+                this.dateList = this.tournamentList[this.tournamentIndex].sub.map((n) => n.date)
             } else if (this.tournamentFilter.num && this.tournamentFilter.name) {
                 // else if num is selected...
                 let index = this.numList.findIndex((n) => n.num === this.tournamentFilter.num)

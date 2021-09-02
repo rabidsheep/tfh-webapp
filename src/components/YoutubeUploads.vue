@@ -98,20 +98,8 @@
                                 persistent-hint
                                 no-resize />
                                 
-                                <div v-show="$vuetify.breakpoint.smAndDown" style="width: 100%;"><br /></div>
-
                                 <v-row
                                 class="desc-buttons">
-                                    <v-btn
-                                    class="parse"
-                                    color="accent"
-                                    rounded
-                                    :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
-                                    :ripple="false"
-                                    @click="parseVideoDescription(currentDescription)">
-                                        Parse Timestamps
-                                    </v-btn>
-                                
                                     <v-btn
                                     class="reset"
                                     color="button2"
@@ -120,6 +108,16 @@
                                     :ripple="false"
                                     @click="currentDescription = video.description">
                                         Reset Timestamps
+                                    </v-btn>
+
+                                    <v-btn
+                                    class="parse"
+                                    color="accent"
+                                    rounded
+                                    :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
+                                    :ripple="false"
+                                    @click="parseVideoDescription(currentDescription)">
+                                        Parse Timestamps
                                     </v-btn>
                                 </v-row>
                             </v-row>
@@ -176,6 +174,7 @@
                                     persistent-hint
                                     dense
                                     required
+                                    clearable
                                     :rules="rules.date" />
                                 </template>
 

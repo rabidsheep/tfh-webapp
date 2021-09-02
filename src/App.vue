@@ -146,7 +146,6 @@ export default {
 }
 
 ::v-deep .small .v-form .match-list .v-text-field__slot {
-  
     white-space: nowrap;
     overflow: hidden;
 }

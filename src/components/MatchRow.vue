@@ -42,6 +42,34 @@
       <v-col
       class="links">
 
+      
+
+        <v-col
+        class="video link"
+        :cols="$vuetify.breakpoint.smAndDown? 12 : undefined">
+          <div
+          :class="video ? 'btn' : 'btn disabled'">
+            <a
+            v-if="video"
+            title="Watch on YouTube"
+            :href="video.timestamp ?
+            `https://youtu.be/${video.id}&t=${video.timestamp}` :
+            `https://youtu.be/${video.id}`"
+            target="_blank"
+            rel="noopener">
+              <v-icon
+              color="accent"
+              class="base"
+              size="36px">
+                mdi-youtube
+              </v-icon>
+            </a>
+
+            <YoutubeOff
+            v-else-if="!video" />
+          </div>
+        </v-col>
+
         <v-col
         class="file link"
         :cols="$vuetify.breakpoint.smAndDown? 12 : undefined">
@@ -88,32 +116,6 @@
               </center>
             </div>
           </v-tooltip>
-        </v-col>
-
-        <v-col
-        class="video link"
-        :cols="$vuetify.breakpoint.smAndDown? 12 : undefined">
-          <div
-          :class="video ? 'btn' : 'btn disabled'">
-            <a
-            v-if="video"
-            title="Watch on YouTube"
-            :href="video.timestamp ?
-            `https://youtu.be/${video.id}&t=${video.timestamp}` :
-            `https://youtu.be/${video.id}`"
-            target="_blank"
-            rel="noopener">
-              <v-icon
-              color="accent"
-              class="base"
-              size="36px">
-                mdi-youtube
-              </v-icon>
-            </a>
-
-            <YoutubeOff
-            v-else-if="!video" />
-          </div>
         </v-col>
       </v-col>
     </v-row>

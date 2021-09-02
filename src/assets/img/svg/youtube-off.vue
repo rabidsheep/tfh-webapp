@@ -1,5 +1,5 @@
 <template>
-<svg class="download-off" version="1.1" id="Layer_3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+<svg class="download-off" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 	 viewBox="-467 269 24 24" style="enable-background:new -467 269 24 24;" xml:space="preserve">
 <path d="M-464.2,270.5l-1.3,1.3l2.7,2.7c-0.9,0.3-1.5,0.8-1.7,1.7c-0.3,1-0.4,2.6-0.4,4.8l0.1,0.8c0,0.6,0,1.3,0.1,2.1
 	c0.1,0.8,0.2,1.4,0.3,1.9c0.3,0.9,0.8,1.5,1.7,1.7c1,0.3,3.6,0.4,7.8,0.4l1.6-0.1c1.1,0,2.3,0,3.6-0.1c0.1,0,0.3,0,0.4,0l3.7,3.7

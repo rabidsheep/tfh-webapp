@@ -518,7 +518,7 @@ export default {
         },
         uploadFilesAsPromise(file) {
             let storageRef = this.$firebase.storage()
-            .ref(`${file.name}`)
+            .ref(`replays/${file.name}`)
             .put(file)
 
             return storageRef

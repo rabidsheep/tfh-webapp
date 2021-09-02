@@ -55,9 +55,14 @@
           color="accent"
           title="Download All Files"
           :disabled="!downloadAvailable"
-          @click="$emit('generate-zip-file')">
-            {{ downloadAvailable ? 'mdi-folder-download' : 'mdi-folder-download' }}
+          @click="$emit('generate-zip-file')"
+          v-if="downloadAvailable">
+              mdi-folder-download
           </v-icon>
+
+          <div class="v-icon" v-else>
+            <FolderDownloadOff />
+          </div>
         </v-col>
       </v-col>
     </v-row>
@@ -65,9 +70,13 @@
 
 <script>
 import moment from 'moment'
+import FolderDownloadOff from '../assets/img/svg/folder-download-off.vue'
 
 export default {
   name: 'MatchHeader',
+  components: {
+    FolderDownloadOff,
+  },
   props: {
     uploadId: String,
     uploadForm: String,

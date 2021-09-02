@@ -87,6 +87,11 @@
     padding-right: 10px;
 }
 
+#matches .header .download-all svg {
+    height: 36px;
+    fill: var(--v-buttonDisabled-base)
+}
+
 #matches .header .data {
     align-items: center;
 }

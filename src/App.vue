@@ -153,4 +153,8 @@ export default {
 ::v-deep .small .v-form .match-list .v-text-field__slot {
   max-width: calc(100% - 30px);
 }
+
+::v-deep .v-text-field--single-line.error--text .v-label {
+  color: var(--v-error-base) !important;
+}
 </style>

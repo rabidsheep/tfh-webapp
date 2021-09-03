@@ -1,9 +1,6 @@
 <template>
-    <v-form
-    id="youtube"
-    class="form"
-    ref="form"
-    v-model="valid">
+    <div
+    id="youtube">
         <StatusOverlay
         v-bind="{
             error,
@@ -30,7 +27,7 @@
             align-center
             justify-center>
                 <v-row
-                class="url-input py-5">
+                class="url-input pb-5">
                     <v-text-field
                     class="url"
                     ref="url"
@@ -123,7 +120,10 @@
                             </v-row>
                         </template>
                     </div>
-
+                    <v-form
+                    v-model="valid"
+                    class="form"
+                    ref="form">
                     <v-row
                     v-show="currentDescription"
                     class="tournament pa-0"
@@ -224,7 +224,7 @@
                         class="mt-5 mb-6"
                         height="auto"
                         :ripple="false"
-                        :disabled="matches.length > 16"
+                        :disabled="matches.length > 15"
                         @click="addBlankMatch()"
                         plain>
                             <v-icon left>mdi-plus-thick</v-icon> Add Match
@@ -240,15 +240,16 @@
                         color="accent"
                         rounded
                         :ripple="false"
-                        :disabled="!valid"
+                        :disabled="!valid || matches.length > 16"
                         @click="youtubeUpload()">
                             Upload
                         </v-btn>
                     </div>
+                    </v-form>
                 </template>
             </v-layout>
         </v-layout>
-    </v-form>
+    </div>
 </template>
 
 <script>
@@ -496,6 +497,26 @@ export default {
             } else if (files.length > 0) {
                 Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
                 .then(() => this.$matches.save({matches: matches, getYoutubeData: false}))
+                .then((response) => {
+                    if (response.ok) {
+                        console.log('Uploaded matches:')
+                        for (const i in response.body.matchIds) {
+                            console.log('ID:', response.body.matchIds[i])
+                        }
+                    }
+
+                    this.uploading = false
+                    this.finished = true
+                })
+                .catch((error) => {
+                    console.log(error)
+                    console.log('Failed to upload')
+                    this.setErrors('upload')
+                    this.uploading = false
+                    this.error = true
+                })
+            } else {
+                this.$matches.save({matches: matches, getYoutubeData: false})
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')

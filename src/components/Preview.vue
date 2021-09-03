@@ -149,7 +149,7 @@
                     clearable
                     :dense="!$vuetify.breakpoint.smOnly"
                     :required="timestampRequired"
-                    :rules="rules.timestamp" />
+                    :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
                 </v-col>
 
                 <v-col
@@ -246,9 +246,15 @@ export default {
                         v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
                     ]
                 },
-                timestamp: [
-                    v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
-                ],
+                timestamp: {
+                    req: [
+                        v => !!v || 'Required',
+                        v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
+                    ],
+                    noReq: [
+                        v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',
+                    ]
+                },
                 character: [
                     v => !!v || 'Required'
                 ]
@@ -303,6 +309,12 @@ export default {
 
         'masterUrl': function(url) {
             this.url = url
+        },
+
+        'video.timestamp': function(time) {
+            if (time !== this.timestamp) {
+                this.timestamp = time
+            }
         }
     },
     methods: {
@@ -337,6 +349,10 @@ div:not([class*="file"]) > .v-input--is-readonly >>> .v-input__slot::before {
 
 div:not([class*="file"]) > .v-input--is-readonly >>> i {
     color: #5e5e5e !important
+}
+
+.v-input >>> .v-messages__message.message-transition-move {
+    transition: none !important;
 }
 
 div:not([class*="file"]) > .v-input--is-readonly >>> .v-label,

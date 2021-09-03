@@ -131,8 +131,6 @@
 
                             <h1>Upload Matches</h1>
                         </v-layout>
-
-                        <br />
                         
                         <FileUploads
                         v-if="uploadType == 'files'"

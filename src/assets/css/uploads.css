@@ -1,48 +1,70 @@
 /** uploadform.vue **/
 
 /* general */
-#uploads {
+#forms {
     width: 100%;
     padding: 0px;
 }
 
-#uploads h1 {
+#forms .url-input {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    flex-wrap: nowrap;
+}
+
+#forms .url-input > .v-btn {
+    margin-left: 20px;
+}
+
+#forms .group-info {
+    margin: auto !important;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 90%;
+}
+
+#forms .group-info .group.part {
+    max-width: 100px;
+    min-width: 100px;
+}
+#forms h1 {
     text-align: center;
 }
 
-#uploads .v-stepper__content {
+#forms .v-stepper__content {
     padding: 0px;
 }
 
-#uploads .v-file-input {
+#forms .v-file-input {
     width: 80%;
     margin: auto;
 }
 
-#uploads .match-list > hr {
+#forms .match-list > hr {
     border-bottom: 1px solid white;
     width: 100%;
 }
 
-#uploads .preview {
+#forms .preview {
     width: 100%;
 }
 
-#uploads .form {
+#forms .form {
     display: flex;
     flex-direction: column;
     width: 100%;
 }
 
-#uploads .step {
+#forms .step {
     padding: 24px;
 }
 
-#uploads #step__upload.step{
+#forms #step__upload.step{
     padding-bottom: 14px !important;
 }
 
-#uploads .step .v-btn:not(.back):not(.remove) {
+#forms .step .v-btn:not(.back):not(.remove) {
     max-width: min-content;
     flex-wrap: wrap;
     height: 50px;
@@ -53,76 +75,97 @@
     text-align: center;
 }
 
-#uploads #step__sign-in .v-btn,
-#uploads #step__select .v-btn {
+#forms #step__sign-in .v-btn,
+#forms #step__select .v-btn {
     display: block;
     margin: auto;
     width: auto;
 }
 
-#uploads #step__upload .heading {
+#forms #step__upload .heading {
     position: relative;
     width: 100%;
     justify-content: center;
     align-items: center;
 }
 
-#uploads #files .filename .v-text-field__slot {
+#forms #files .filename .v-text-field__slot {
     overflow: visible;
 }
 
-#uploads #step__upload .buttons {
+#forms #step__upload .buttons {
     width: 100%;
     flex-wrap: wrap;
 }
 
-#uploads #step__upload .buttons > button {
+#forms #step__upload .buttons > button {
     margin: 10px 20px;
 }
 
-#uploads .form .message > div {
+#forms .form .message > div {
     margin: auto;
 }
 
-#uploads .preview__match {
+#forms .preview__match {
     flex-wrap: nowrap;
 }
 
-#uploads #files .body .preview:not(:first-child) {
+#forms #files .preview:not(:first-child) {
     padding-top: 15px;
 }
 
+
+.wide #forms .group-info .group.part {
+    padding: 0px 10px;
+}
+
+.wide #forms .url-input .v-input {
+    max-width: 50%;
+}
+
+/* mobile */
+
+.small #forms .url-input .v-input {
+    max-width: 70%;
+}
+
+.small #forms .group-info .group.part {
+    padding-left: 0px !important;
+}
+
+.small #forms .group-info .group.date,
+.small #forms .group-info .group.part {
+    padding-top: 12px !important;
+}
+
+
 /** statusoverlay.vue **/
 
-#uploads .v-overlay .v-progress-linear {
+#forms .v-overlay .v-progress-linear {
     margin: 20px 0px;
     height: 50px;
     border-radius: 10px;
     -webkit-border-radius: 10px;
 }
 
-#uploads .v-overlay__content,
-#edit .v-overlay__content {
+#forms .v-overlay__content {
     background-color: #171717
 }
 
-#uploads .v-overlay__content .status > div,
-#edit .v-overlay__content .status > div {
+#forms .v-overlay__content .status > div {
     width: 80%;
 }
 
-#uploads .v-overlay .v-btn,
-#edit .v-overlay .v-btn {
+#forms .v-overlay .v-btn {
     margin-top: 10px;
 }
 
 /* desktop */
-.wide #uploads .v-overlay__content,
-.wide #edit .v-overlay__content {
+.wide #forms .v-overlay__content {
     width: 600px;
 }
 
-.wide #uploads .back {
+.wide #forms .back {
     position: absolute;
     margin: auto;
     left: 15px;
@@ -131,201 +174,121 @@
 }
 
 /* mobile */
-.small #uploads .v-overlay__content,
-.small #edit .v-overlay__content {
+.small #forms .v-overlay__content {
     width: 80%;
 }
 
-.small #uploads .back {
+.small #forms .back {
     margin-bottom: 10px;
 }
 
-.small #uploads .wrapper .body {
-    width: 100%;
-}
-
 /** youtubeuploads.vue **/
-#youtube .body {
-    width: 100%;
-}
-#youtube .body > .data {
+#forms #youtube .wrapper > .data {
     width: 95%;
 }
 
-#youtube .tournament {
+#forms #youtube .group-info {
     margin-top: 40px !important;
     margin-bottom: 10px !important;
 }
 
-#youtube .desc-buttons {
+#forms #youtube .desc-buttons {
     align-items: baseline;
 }
 
-.small #youtube .desc-buttons > .reset {
+.small #forms #youtube .desc-buttons > .reset {
     margin-top: 24px;
     margin-bottom: 20px;
 }
 
-#youtube .tournament .num {
-    max-width: 85px;
-    min-width: 85px;
-}
-
-#youtube .body .tournament {
-    width: 70%;
-}
-
-#youtube .body .data .date-title,
-#youtube .body .data  {
+#forms #youtube .wrapper .data .date-title,
+#forms #youtube .wrapper .data  {
     justify-content: space-between;
 }
 
-#youtube .body .data .date-title {
+#forms #youtube .wrapper .data .date-title {
     width: 100%;
 }
 
-#youtube .date-title > div {
+#forms #youtube .date-title > div {
     max-width: 40%;
 }
 
-#youtube .desc > .v-textarea .v-messages {
+#forms #youtube .desc > .v-textarea .v-messages {
     max-width: max-content;
 }
 
-#youtube .desc > .v-textarea .v-text-field__details {
+#forms #youtube .desc > .v-textarea .v-text-field__details {
     justify-content: end;
 }
 
-#youtube .desc-buttons {
+#forms #youtube .desc-buttons {
     padding: 0px;
     display: flex;
 }
 
-#youtube .url-input {
-    display: flex;
-    justify-content: space-around;
-}
-
 /* desktop */
-.wide #youtube .desc {
+.wide #forms #youtube .desc {
     min-height: 150px;
     margin-right: 35px;
 }
 
-.wide #youtube .tournament .date {
-    max-width: 140px;
-    min-width: 140px;
-}
-.wide #youtube .desc-buttons {
+.wide #forms #youtube .desc-buttons {
     min-height: inherit;
     align-content: space-evenly;
     flex-wrap: wrap;
     max-width: min-content;
 }
 
-.wide #youtube .url-input {
-    width: 50%;
-}
-
-.wide #youtube .url-input .v-input {
-    max-width: 80%;
-}
-
 /* mobile */
-.small #youtube .url-input {
-    width: 100%;
-    flex-wrap: nowrap;
-}
-
-.small #youtube .url-input .v-input {
-    max-width: 70%;
-}
-
-.small #youtube .desc-buttons {
+.small #forms #youtube .desc-buttons {
     justify-content: space-evenly;
 }
 
-.small #youtube .desc-buttons .v-btn span {
+.small #forms #youtube .desc-buttons .v-btn span {
     white-space: normal !important;
     flex: auto !important;
-}
-
-.small #youtube .body .tournament {
-    width: 90%;
-}
-
-.xsmall #youtube .body .tournament {
-    width: 100%;
 }
 
 /** filepreview.vue **/
 
 /* general */
 
-#files .hint .v-icon {
+#forms #files .hint .v-icon {
     margin-top: -4px;
     display: inline-block;
 }
 
-#files .hint {
+#forms #files .hint {
     align-items: center;
     background-color: var(--v-background-base);
     border-radius: 4px;
 }
 
-#files .hint > div {
+#forms #files .hint > div {
     align-items: center;
     display: flex;
 }
 
-#files .hint > div > .col {
+#forms #files .hint > div > .col {
     max-height: max-content;
     max-width: max-content;
     min-height: max-content;   
 }
 
 
-#files .tournament-info .v-input__append-inner {
+#forms #files .group-info .v-input__append-inner {
     position: absolute;
     right: 0px;
 }
 
-#files .tournament-info .link input {
+#forms #files .group-info .link input {
     max-width: 90%;
 }
 
 
-#files .tournament-info .name input {
+#forms #files .group-info .name input {
     max-width: 85%;
-}
-
-.tournament-info {
-    margin: auto !important;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-.tournament-info .tournament.num {
-    max-width: 100px;
-    min-width: 100px;
-}
-
-.tournament-info {
-    width: 90%;
-}
-
-
-.wide .tournament-info .tournament.num {
-    padding: 0px 10px;
-}
-
-.small .tournament-info .tournament.num {
-    padding-left: 0px !important;
-}
-
-.small .tournament-info .tournament.date,
-.small .tournament-info .tournament.num {
-    padding-top: 12px !important;
 }
 
 .xsmall .preview .matchinfo {
@@ -335,51 +298,42 @@
 
 /****/
 .preview .add .v-messages,
-.preview .tournament .v-messages {
+.group-info .v-messages {
     max-width: max-content;
 }
 
-.preview .add .v-text-field__details, 
-.preview .tournament .v-text-field__details {
+.preview .add .v-text-field__details,
+.group-info .v-text-field__details {
     justify-content: end;
 }
 /****/
 
 
 /* general */
-.form .v-input--radio-group {
+.files .v-input--radio-group {
     margin-top: 0px;
 }
 
-.form .switch {
-    padding: 0px !important;
-    margin: 0px !important;
-}
-
-.form .hint {
+.files .hint {
     white-space: pre-wrap;
     justify-content: center;
     text-align: center;
 }
 
-.form .hint .v-icon {
+.files .hint .v-icon {
     margin-right: 2px;
 }
 
-.form .hint span {
+.files .hint span {
     display: contents;
 }
 
-.form .hint span b {
+.files .hint span b {
     display: inherit;
 }
 
 .wide .preview .p1 {
     flex-direction: row-reverse;
-}
-
-.wide .preview .youtube {
-    padding-left: 10px;
 }
 
 /* preview rows */
@@ -426,7 +380,7 @@
     display: flex;
 }
 
-.preview .body {
+.preview .wrapper {
     width: 100%;
 }
 
@@ -625,6 +579,6 @@ button.move:not(.disabled):hover .st0 {
     flex-direction: column;
 }
 
-.v-form .wrapper {
+#forms .wrapper {
     width: 100%;
 }

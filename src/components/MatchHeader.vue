@@ -33,16 +33,16 @@
         <v-col
         class="group-info"
         cols="12">
-          <template v-if="tournament">
+          <template v-if="group">
             <p>
-              {{ tournament.num ?
-                tournament.name + ' | ' + tournament.num + ' | ' + tournament.date :
-                tournament.name + ' | ' + tournament.date }}
+              {{ group.part ?
+                group.name + ' | ' + group.part + ' | ' + group.date :
+                group.name + ' | ' + group.date }}
             </p>
           </template>
 
           <template v-else>
-            <p>{{ 'Casual | ' + originalDate }}</p>
+            <p>{{ 'Individual | ' + originalDate }}</p>
           </template>
         </v-col>
         
@@ -83,7 +83,7 @@ export default {
     uploadDate: String,
     originalDate: String,
     timezone: String,
-    tournament: [Object, null],
+    group: [Object, null],
     video: [String, null],
     channel: [String, null],
     downloadAvailable: Boolean

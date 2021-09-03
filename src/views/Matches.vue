@@ -24,7 +24,7 @@
       <!-- filters box -->
       <Filters
       :players="filters.deep.players"
-      :tournament="filters.deep.tournament"
+      :group="filters.deep.group"
       :channel="filters.deep.channel"
       :video="filters.deep.video"
       :type="filters.deep.type"
@@ -35,7 +35,7 @@
       @update-character="filters.deep.players[$event.i].character = $event.character"
       @update-strictness="filters.strict = $event"
       @update-type="filters.deep.type = $event"
-      @update-tournament="filters.deep.tournament = $event"
+      @update-group="filters.deep.group = $event"
       @update-hasfile="filters.deep.hasFile = $event"
       @update-hasvideo="filters.deep.hasVideo = $event"
       @update-channel="filters.deep.channel = $event"
@@ -138,9 +138,9 @@ export default {
             {name: null, character: null},
             {name: null, character: null}
           ],
-          tournament: {
+          group: {
             name: null,
-            num: null,
+            part: null,
             date: null,
           },
           channel: {
@@ -229,9 +229,9 @@ export default {
             {name: null, character: null},
             {name: null, character: null}
           ],
-          tournament: {
+          group: {
             name: null,
-            num: null,
+            part: null,
             date: null,
           },
           channel: {

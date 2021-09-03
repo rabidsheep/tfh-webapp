@@ -7,6 +7,10 @@
     width: 100%;
 }
 
+#filters .wrapper > .row {
+    width: 100%;
+}
+
 #filters__toggle {
     width: 100%;
     border: 1px solid black !important;
@@ -80,7 +84,7 @@
     margin: 0px 10px;
 }
 
-#filters .tournament__num {
+#filters .group__part {
     min-width: 90px;
     max-width: 90px;
 }

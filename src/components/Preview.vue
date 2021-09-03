@@ -9,7 +9,8 @@
                 <button
                 aria-label="Remove Match"
                 :ripple="false"
-                class="remove"
+                :class="$route.path === '/edit' ? `remove disabled` : `remove`"
+                :disabled="$route.path === '/edit'"
                 @click.prevent="$emit('remove')">
                     <RemoveButton />
                 </button>
@@ -44,7 +45,7 @@
         </v-col>
 
         <v-col
-        v-show="tournamentMode && $route.path !== '/edit'"
+        v-show="groupMode && $route.path !== '/edit'"
         class="swap">
             <button
             aria-label="Move Up"
@@ -120,7 +121,7 @@
                 cols="12"
                 class="link">
                     <v-text-field
-                    :readonly="tournamentMode"
+                    :readonly="groupMode"
                     ref="url"
                     label="YouTube Link"
                     placeholder="YouTube Link"
@@ -212,7 +213,7 @@ export default {
         index: Number,
         youtubeUpload: [Boolean, null],
         fileUpload: [Boolean, null],
-        tournamentMode: Boolean,
+        groupMode: Boolean,
         p1: Object,
         p2: Object,
         video: [Object, null],

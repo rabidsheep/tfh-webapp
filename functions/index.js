@@ -33,7 +33,7 @@ api.get('/matches', (req, res) => {
     if (req.query.filters) {
         let players = req.query.filters.players
         let strict = req.query.filters.strict === 'true' ? true : false
-        let tournament = req.query.filters.tournament.name ? req.query.filters.tournament : null
+        let group = req.query.filters.group.name ? req.query.filters.group : null
         let type = req.query.filters.type
         let hasFile = req.query.filters.hasFile === 'true' ? true : false
         let hasVideo = req.query.filters.hasVideo === 'true' ? true : false
@@ -53,75 +53,25 @@ api.get('/matches', (req, res) => {
             }
         }
 
-        query = formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo)
+        query = formatQuery(players, strict, unfiltered, group, type, hasFile, hasVideo)
     } else {
         query = { 'uploadId': req.query.uploadId }
     }
-    
-    /*const pipeline = [
-        { '$match': query },
-        { '$group': {
-            _id: {
-                '$cond': {
-                    if: {
-                        '$eq': ['$type', 'Tournament' ]
-                    },
-                    then: {
-                        tournament: {
-                            name: '$tournament.name',
-                            num: '$tournament.num',
-                            date: '$tournament.date',
-                        },
-                        id: '$tournament.id',
-                        type: '$type',
-                        uploadId: '$uploadId',
-                    },
-                    else: {
-                        uploadForm: '$uploadForm',
-                        uploadId: '$uploadId',
-                        type: '$type',
-                        matchDate: '$matchDate'
-                    },
-                }
-            },
-            // initial upload date
-            uploaded: {
-                '$first': {
-                    '$concat': ['$uploadDate', 'T', '$uploadTime']
-                }
-            },
-            matches: {
-                '$push': {
-                    _id: '$_id',
-                    userId: '$userId',
-                    file: '$file',
-                    type: '$type',
-                    p1: '$p1',
-                    p2: '$p2',
-                    uploadId: '$uploadId',
-                    uploadDate: '$uploadDate',
-                    uploadTime: '$uploadTime',
-                    video: '$video',
-                    pos: '$pos'
-                }
-            },
-        }},
-    ]*/
 
     const pipeline = [
         { '$match': query },
         { '$group': {
             _id: {
                 uploadId: '$uploadId',
-                tournament: '$tournament',
+                group: '$group',
                 uploadForm: '$uploadForm',
                 video: '$video.id',
                 channel: '$channel.id',
                 uploadDate: { '$concat': ['$uploadDate', 'T', '$uploadTime'] },
                 originalDate: {
                     '$cond': {
-                        if: { '$eq': ['$type', 'Tournament' ] },
-                        then: '$tournament.date',
+                        if: { '$eq': ['$type', 'Group' ] },
+                        then: '$group.date',
                         else: '$fileInfo.date',
                     }
                 }
@@ -182,10 +132,10 @@ api.get('/matches', (req, res) => {
 api.put('/matches', (req, res) => {
     let getYoutubeData = req.body.getYoutubeData === 'true' ? true : false
     let uploadId = mongo.ObjectId().toString()
-    let tournament = req.body.matches[0].tournament ? req.body.matches[0].tournament : null
+    let group = req.body.matches[0].group ? req.body.matches[0].group : null
 
     let matches = req.body.matches.map((match) => {
-        if (!tournament) match.uploadId = mongo.ObjectId().toString()
+        if (!group) match.uploadId = mongo.ObjectId().toString()
         else match.uploadId = uploadId
         
         if (match.video && getYoutubeData) {
@@ -271,7 +221,7 @@ api.put('/matches/update', (req, res) => {
     .catch((error) => res.status(400).send(error.toString()))
 })
 
-/** get list of tournaments */
+/** get list of groups */
 api.get('/filter/content', (req, res) => {
 
     MongoClient.connect(dbUrl, { useUnifiedTopology: true })
@@ -279,15 +229,15 @@ api.get('/filter/content', (req, res) => {
         let db = client.db('tfhr').collection('matches')
 
         return Promise.all([
-            fetchTournaments(db),
+            fetchGroups(db),
             fetchPlayers(db),
             fetchChannels(db)
         ])
      })
      .then((results) => {
-        console.log('Returning tournament list.')
+        console.log('Returning group list.')
         return res.status(200).send({
-            tournaments: results[0],
+            groups: results[0],
             players: results[1][0].players,
             channels: results[2][0].channels
         })
@@ -431,7 +381,7 @@ function formatDate(date) {
 }
 
 // format query object for filtering matches
-function formatQuery(players, strict, unfiltered, tournament, type, hasFile, hasVideo) {
+function formatQuery(players, strict, unfiltered, group, type, hasFile, hasVideo) {
     let query = {}
     let p1 = players[0]
     let p2 = players[1]
@@ -495,23 +445,23 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
         }
     }
 
-    if (tournament) {
+    if (group) {
         query = {
-            // allow partial matches for tournament names?
-            'tournament.name': tournament.name,
+            // allow partial matches for group names?
+            'group.name': group.name,
             ...query
         }
 
-        if (tournament.num) {
+        if (group.num) {
             query = {
-                'tournament.num': tournament.num,
+                'group.num': group.num,
                 ...query
             }
         }
     
-        if (tournament.date) {
+        if (group.date) {
             query = {
-                'tournament.date': tournament.date,
+                'group.date': group.date,
                 ...query
             }
         }
@@ -541,25 +491,25 @@ function formatQuery(players, strict, unfiltered, tournament, type, hasFile, has
     return query
 }
 
-/** get list of tournaments */
-function fetchTournaments(db) {
+/** get list of groups */
+function fetchGroups(db) {
     const pipeline = [
-        {'$match': { 'tournament': { '$ne': null } }},
+        {'$match': { 'group': { '$ne': null } }},
         {'$group': {
-            _id: '$tournament.name',
+            _id: '$group.name',
             sub: {
                 
                 '$addToSet': {
                     '$cond': {
                         if: {
-                            '$ne': ['$tournament.num', null]
+                            '$ne': ['$group.part', null]
                         },
                         then: {
-                            num: '$tournament.num',
-                            date: '$tournament.date'
+                            part: '$group.part',
+                            date: '$group.date'
                         },
                         else: {
-                            date: '$tournament.date'
+                            date: '$group.date'
                         }
                     }
                 }
@@ -568,8 +518,8 @@ function fetchTournaments(db) {
         }},
         { '$sort': {
             '_id': -1,
-            'sub.num': 1,
-            'sub.date': 1
+            'sub.part': -1,
+            'sub.date': -1
         }}
     ]
 

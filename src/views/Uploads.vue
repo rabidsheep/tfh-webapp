@@ -1,5 +1,7 @@
 <template>
-    <v-container id="uploads">
+    <v-container
+    id="forms"
+    class="uploads">
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>

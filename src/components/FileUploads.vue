@@ -1,9 +1,6 @@
 <template>
-    <v-form
-    ref="form"
-    id="files"
-    class="form"
-    v-model="valid">
+    <div
+    id="files">
         <StatusOverlay
         v-bind="{
             error,
@@ -14,229 +11,236 @@
         :errors="errors"
         @clear-errors="clearErrors()"
         @close="resetForm()" />
-        
-        <v-layout
-        class="options"
-        column
-        align-center
-        justify-center>
-            <v-radio-group
-            class="mb-5"
-            v-model="tournamentMode"
-            row
-            hide-details>
-                <v-radio
-                label="Casuals Mode"
-                :value="false" />
-                <v-radio
-                label="Tournament Mode"
-                :value="true" />
-            </v-radio-group>
 
-            <v-row
-            class="hint mb-3 pa-5">
-                <div>
-                    <v-col
-                    class="symbol pa-0">
-                        <v-icon
-                        size="36px"
-                        color="accent">
-                            mdi-alert-circle-outline
-                        </v-icon>
-                    </v-col>
+        <v-form
+        v-model="valid"
+        ref="form">
+            <v-layout
+            class="options"
+            column
+            align-center
+            justify-center>
+                <v-radio-group
+                class="mb-5 mt-0"
+                v-model="groupMode"
+                row
+                hide-details>
+                    <!--<v-radio
+                    label="Individual Mode"
+                    disabled
+                    :value="false" />-->
+                    <v-radio
+                    label="Group Mode"
+                    :value="true" />
+                </v-radio-group>
 
-                    <v-divider class="mx-2" vertical />
-
-                    <div class="message">
-                        <template v-if="uploadType === 'Casual'">
-                            Matches uploaded using <b>Casuals</b> <b>Mode</b> will display individually on the main page.
-                        </template>
-
-                        <template v-else>
-                            Matches uploaded using <b>Tournament</b> <b>Mode</b> will be grouped together on the main page.
-                        </template>
-                    </div>
-                </div>
-            </v-row>
-
-            <v-expand-transition>
                 <v-row
-                class="tournament-info"
-                v-show="tournamentMode">
-                    <v-col
-                    class="tournament name pa-0"
-                    :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
-                        <v-text-field
-                        ref="tournament" 
-                        label="Tournament Name"
-                        v-model="tournament.name"
-                        hint="Required"
-                        persistent-hint
-                        clearable
-                        :rules="tournamentMode ? rules.tournament : undefined"
-                        :required="tournamentMode" />
-                    </v-col>
+                class="hint mb-3 pa-5">
+                    <div>
+                        <v-col
+                        class="symbol pa-0">
+                            <v-icon
+                            size="36px"
+                            color="accent">
+                                mdi-alert-circle-outline
+                            </v-icon>
+                        </v-col>
 
-                    <v-col
-                    class="tournament num"
-                    :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
-                        <v-text-field
-                        label="No. #"
-                        v-model="tournament.num"
-                        hint="Optional"
-                        clearable
-                        persistent-hint />
-                    </v-col>
+                        <v-divider class="mx-2" vertical />
 
-                    <v-col
-                    class="tournament date pa-0"
-                    :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
-                        <v-menu
-                        transition="scale-transition"
-                        min-width="auto"
-                        v-model="datepicker"
-                        offset-y
-                        :close-on-content-click="false"
-                        :nudge-right="40">
-                            <template v-slot:activator="{ on, attrs }">
-                                <v-text-field
-                                ref="date"
-                                label="Date"
-                                v-model="tournament.date"
-                                v-bind="attrs"
-                                v-on="on"
-                                prepend-icon="mdi-calendar"
-                                hint="Required"
-                                persistent-hint
-                                clearable
-                                :rules="tournamentMode ? rules.date : undefined"
-                                :required="tournamentMode" />
+                        <div class="message">
+                            <template v-if="!groupMode">
+                                Matches uploaded using <b>Individuals</b> <b>Mode</b> will display individually on the main page.
                             </template>
 
-                            <v-date-picker
-                            v-model="date"
-                            @input="datepicker = false" />
-                        </v-menu>
-                    </v-col>
-
-                    <v-col
-                    cols="12"
-                    class="pa-0"
-                    justify="center"
-                    align="center">
-                        <v-col
-                        :cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
-                        class="pa-0 pt-5">
-                            <v-text-field
-                            ref="url"
-                            class="link"
-                            label="YouTube Link"
-                            v-model="url"
-                            prepend-icon="mdi-youtube"
-                            hint="Optional"
-                            persistent-hint
-                            dense
-                            clearable
-                            :rules="rules.url"
-                            :disabled="!tournamentMode" />
-                        </v-col>
-                    </v-col>
+                            <template v-else>
+                                Matches uploaded using <b>Group</b> <b>Mode</b> will be grouped together on the main page.
+                            </template>
+                        </div>
+                    </div>
                 </v-row>
-            </v-expand-transition>
-        </v-layout>
+                
+                
+            
+                <v-expand-transition>
+                    <v-row
+                    class="group-info"
+                    v-show="groupMode">
+                        <v-col
+                        class="group name pa-0"
+                        :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
+                            <v-text-field
+                            ref="group" 
+                            label="Group Name"
+                            v-model="group.name"
+                            hint="Required"
+                            persistent-hint
+                            clearable
+                            :rules="groupMode ? rules.group : undefined"
+                            :required="groupMode" />
+                        </v-col>
 
-        <v-layout
-        column
-        justify-center
-        align-center
-        class="wrapper">
-            <div
-            v-if="matches.length > 0"
-            class="match-list"
+                        <v-col
+                        class="group part"
+                        :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
+                            <v-text-field
+                            label="Part"
+                            v-model="group.part"
+                            hint="Optional"
+                            clearable
+                            persistent-hint />
+                        </v-col>
+
+                        <v-col
+                        class="group date pa-0"
+                        :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
+                            <v-menu
+                            transition="scale-transition"
+                            min-width="auto"
+                            v-model="datepicker"
+                            offset-y
+                            :close-on-content-click="false"
+                            :nudge-right="40">
+                                <template v-slot:activator="{ on, attrs }">
+                                    <v-text-field
+                                    ref="date"
+                                    label="Date"
+                                    v-model="group.date"
+                                    v-bind="attrs"
+                                    v-on="on"
+                                    prepend-icon="mdi-calendar"
+                                    hint="Required"
+                                    persistent-hint
+                                    clearable
+                                    :rules="groupMode ? rules.date : undefined"
+                                    :required="groupMode" />
+                                </template>
+
+                                <v-date-picker
+                                v-model="date"
+                                @input="datepicker = false" />
+                            </v-menu>
+                        </v-col>
+
+                        <v-col
+                        cols="12"
+                        class="pa-0"
+                        justify="center"
+                        align="center">
+                            <v-col
+                            :cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
+                            class="pa-0 pt-5">
+                                <v-text-field
+                                ref="url"
+                                class="link"
+                                label="YouTube Link"
+                                v-model="url"
+                                prepend-icon="mdi-youtube"
+                                hint="Optional"
+                                persistent-hint
+                                dense
+                                clearable
+                                :rules="rules.url"
+                                :disabled="!groupMode" />
+                            </v-col>
+                        </v-col>
+                    </v-row>
+                </v-expand-transition>
+            </v-layout>
+
+            <v-layout
             column
             justify-center
-            align-center>
-                <template v-for="(match, i, j) in matches">
-                    <Preview
-                    :key="i"
-                    :index="i"
-                    :fileUpload="true"
-                    :tournamentMode="tournamentMode"
-                    :p1="match.p1"
-                    :p2="match.p2"
-                    :uploading="uploading"
-                    :video="match.video ? match.video : null"
-                    :fileName="match.fileInfo.name"
-                    :fileDate="match.fileInfo.date"
-                    :firstMatch="i === 0"
-                    :lastMatch="i === matches.length - 1"
-                    :timestampRequired="false"
-                    :masterUrl="masterUrl"
-                    @update-character="updateCharacter($event.character, $event.index, i)"
-                    @remove="matches.splice(i, 1)"
-                    @set-video-id="setVideoId($event, i)"
-                    @set-timestamp="setTimestamp($event, i)"
-                    @delete-video="deleteVideo(i)"
-                    @delete-timestamp="deleteTimestamp(i)"
-                    @move-up="swapMatches(i, i-1)"
-                    @move-down="swapMatches(i, i+1)"
-                    @update-file-date="match.file.date = $event" />
-
-                    
-                    <hr :key="j" v-if="i < matches.length - 1" />
-                </template>
-            </div>
-            
-            <div
-            class="message"
-            column
-            justify-center>
-                <br v-show="matches.length === 0" />
+            align-center
+            class="wrapper">
                 <div
-                :style="matches.length >= uploadLimit ? 'color: red;' : ''">
-                    {{ matches.length >= uploadLimit ?
-                    'Maximum file limit reached' :
-                    (uploadLimit - matches.length) + ' slots remaining' }}
+                v-if="matches.length > 0"
+                class="match-list"
+                column
+                justify-center
+                align-center>
+                    <template v-for="(match, i, j) in matches">
+                        <Preview
+                        :key="i"
+                        :index="i"
+                        :fileUpload="true"
+                        :groupMode="groupMode"
+                        :p1="match.p1"
+                        :p2="match.p2"
+                        :uploading="uploading"
+                        :video="match.video ? match.video : null"
+                        :fileName="match.fileInfo.name"
+                        :fileDate="match.fileInfo.date"
+                        :firstMatch="i === 0"
+                        :lastMatch="i === matches.length - 1"
+                        :timestampRequired="false"
+                        :masterUrl="masterUrl"
+                        @update-character="updateCharacter($event.character, $event.index, i)"
+                        @remove="matches.splice(i, 1)"
+                        @set-video-id="setVideoId($event, i)"
+                        @set-timestamp="setTimestamp($event, i)"
+                        @delete-video="deleteVideo(i)"
+                        @delete-timestamp="deleteTimestamp(i)"
+                        @move-up="swapMatches(i, i-1)"
+                        @move-down="swapMatches(i, i+1)"
+                        @update-file-date="match.file.date = $event" />
+
+                        
+                        <hr :key="j" v-if="i < matches.length - 1" />
+                    </template>
                 </div>
+                
+                <!--<div
+                class="message"
+                column
+                justify-center>
+                    <br v-show="matches.length === 0" />
+                    <div
+                    :style="matches.length >= uploadLimit ? 'color: red;' : ''">
+                        {{ matches.length >= uploadLimit ?
+                        'Maximum file limit reached' :
+                        (uploadLimit - matches.length) + ' slots remaining' }}
+                    </div>
 
-                <br />
-            </div>
-        </v-layout>
+                    <br />
+                </div>-->
+            </v-layout>
 
-        <v-layout
-        class="buttons"
-        justify-center
-        align-center>
-            <v-btn
-            color="button2"
-            rounded
-            :ripple="false"
-            :disabled="matches.length >= uploadLimit"
-            @click="selectFiles">
-                Add Files
-            </v-btn>
+            <v-layout
+            class="buttons"
+            justify-center
+            align-center>
+                <v-btn
+                color="button2"
+                rounded
+                :ripple="false"
+                @click="selectFiles">
+                    Add Files
+                </v-btn>
+                <!-- :disabled="matches.length >= uploadLimit" -->
 
-            <!-- just here to make upload files
-            button open file viewer -->
-            <input
-            v-show="false"
-            ref="uploadFilesBtn"
-            type="file"
-            accept=".tfhr"
-            multiple
-            @change="openFiles"
-            required />
+                <!-- just here to make upload files
+                button open file viewer -->
+                <input
+                v-show="false"
+                ref="uploadFilesBtn"
+                type="file"
+                accept=".tfhr"
+                multiple
+                @change="openFiles"
+                required />
 
-            <v-btn
-            color = "accent"
-            rounded
-            :ripple="false"
-            :disabled="!valid || matches.length <= 0 || uploading"
-            @click="submitFiles()">
-                Upload Files
-            </v-btn>
-        </v-layout>
-    </v-form>
+                <v-btn
+                color = "accent"
+                rounded
+                :ripple="false"
+                :disabled="!valid || matches.length <= 0 || uploading"
+                @click="submitFiles()">
+                    Upload Files
+                </v-btn>
+            </v-layout>
+        </v-form>
+    </div>
 </template>
 
 <script>
@@ -262,7 +266,7 @@ export default {
             valid: false,
             isSelecting: false,
             matches: [],
-            uploadLimit: 8,
+            //uploadLimit: 8,
             error: false,
             uploading: false,
             finished: false,
@@ -272,15 +276,15 @@ export default {
             errors: [],
             url: null,
             masterUrl: null,
-            uploadType: 'Casual',
-            tournamentMode: false,
-            tournament: {
+            uploadType: 'Group',
+            groupMode: true,
+            group: {
                 name: null,
-                num: null,
+                part: null,
                 date: null,
             },
             rules: {
-                tournament: [
+                group: [
                     v => !!v || 'Required',
                 ],
                 date: [
@@ -297,9 +301,9 @@ export default {
         'uploadType': function(type) {
 
                this.date = null
-               this.tournament = {
+               this.group = {
                    name: null,
-                   num: null,
+                   part: null,
                    date: null,
                }
                this.url = null
@@ -307,11 +311,11 @@ export default {
         },
 
       'date': function(date) {
-          if (this.tournamentMode) this.tournament.date = this.formatDate(date)
+          if (this.groupMode) this.group.date = this.formatDate(date)
       },
 
       'url': function(url) {
-          if (this.$refs.url.validate() && this.tournamentMode) {
+          if (this.$refs.url.validate() && this.groupMode) {
               this.masterUrl = url
           }
 
@@ -340,14 +344,14 @@ export default {
                 let newMatch = {
                     userId: this.uid,
                     uploadForm: 'Files',
-                    type: this.tournamentMode ? 'Tournament' : 'Casual',
+                    type: this.groupMode ? 'Group' : 'Individual',
                     uploadDate: time[0],
                     uploadTime: time[1],
                     ...match
                 }
-                if (this.tournamentMode) {
-                    newMatch.tournament = this.tournament
-                    newMatch.matchDate = this.tournament.date
+                if (this.groupMode) {
+                    newMatch.group = this.group
+                    newMatch.matchDate = this.group.date
                 } else {
                     newMatch.matchDate = match.file.date
                 }
@@ -436,19 +440,21 @@ export default {
         */
         openFiles(event) {
             var currentFiles = Array.from(event.target.files)
-            var slotsLeft = this.uploadLimit - this.matches.length
+            //var slotsLeft = this.uploadLimit - this.matches.length
 
             // stop user from adding more matches if file count exceeds limit
-            if (this.matches.length >= this.uploadLimit) {
+            /*if (this.matches.length >= this.uploadLimit) {
                 this.setErrors('limit', '')
-            } else {
+            } else {*
                 // alert user of file limit
                 if (currentFiles.length > slotsLeft) {
                    this.setErrors('limit', '')
                 }
 
                 this.readFiles(currentFiles, 0)
-            }
+            }*/
+
+            this.readFiles(currentFiles, 0)
         },
         /** generates reader for each file */
         readFiles(files, i) {
@@ -494,7 +500,8 @@ export default {
                     textReader.readAsText(file)
                 })
                 .then(() => {
-                    if (i < files.length - 1 && that.matches.length < that.uploadLimit)
+                    //if (i < files.length - 1 && that.matches.length < that.uploadLimit)
+                    if (i < files.length - 1)
                         that.readFiles(files, i + 1)
                     else
                         if (that.errors.length > 0) that.error = true
@@ -502,7 +509,8 @@ export default {
                 .catch((error) => {
                     console.log(error)
 
-                    if (i < files.length - 1 && that.matches.length < that.uploadLimit)
+                    //if (i < files.length - 1 && that.matches.length < that.uploadLimit)
+                    if (i < files.length - 1)
                         that.readFiles(files, i + 1)
                     else
                         if (that.errors.length > 0) that.error = true
@@ -579,9 +587,9 @@ export default {
         },
         resetForm() {
             this.matches = []
-            this.tournament = {
+            this.group = {
                 name: null,
-                num: null,
+                part: null,
                 date: null
             }
             this.finished = false

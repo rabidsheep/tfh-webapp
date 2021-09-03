@@ -155,10 +155,6 @@ picture.icon source, picture.icon img {
 }
 
 /** edit.vue **/
-#edit {
-    padding: 0px;
-}
-
 #edit .buttons > .col {
     display: flex;
     padding: 0px;

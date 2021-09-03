@@ -97,11 +97,11 @@
                     </div>
                     <!-- /player filters -->
 
-                    <!-- tournament filters -->
+                    <!-- group filters -->
                     <v-row
                     justify="center"
-                    class="tournaments">
-                        <v-col
+                    class="groups">
+                        <!--<v-col
                         class="type"
                         :cols="$vuetify.breakpoint.mdAndUp ? 3 : 12">
                             <v-select
@@ -110,37 +110,37 @@
                             :items="typeSelect"
                             label="Category"
                             @change="$emit('update-type', $event)"
+                            @click:clear="clearGroupFilters()"
                             dense />
-                        </v-col>
+                        </v-col>-->
 
                         <v-col
-                        class="tournament__name"
+                        class="group__name"
                         :cols="$vuetify.breakpoint.mdAndUp ? 4 : undefined">
                             <v-combobox
                             clearable
-                            :disabled="type !== 'Tournament'"
-                            v-model="tournamentFilter.name"
+                            v-model="groupFilter.name"
                             append-icon=""
                             :menu-props="{
-                                contentClass: 'tournament-select-menu',
+                                contentClass: 'group-select-menu',
                                 bottom: true,
                                 offsetY: true,
                                 maxHeight: '200'
                                 }"
                             dense
-                            label="Tournament"
-                            :hide-no-data="!tournamentSearch"
-                            :items="tournamentList"
+                            label="Group Name"
+                            :hide-no-data="!groupSearch"
+                            :items="groupList"
                             item-text="_id"
                             item-value="_id"
                             :return-object="false"
-                            :search-input.sync="tournamentSearch"
-                            @change="updateNum()">
+                            :search-input.sync="groupSearch"
+                            @change="updateParts()">
                                 <template v-slot:no-data>
                                     <v-list-item>
                                         <v-list-item-content>
                                             <v-list-item-title>
-                                                No results matching "<strong>{{ tournamentSearch }}</strong>".
+                                                No results matching "<strong>{{ groupSearch }}</strong>".
                                             </v-list-item-title>
                                         </v-list-item-content>
                                     </v-list-item>
@@ -149,33 +149,33 @@
                         </v-col>
 
                         <v-col
-                        class="tournament__num"
+                        class="group__part"
                         :cols="$vuetify.breakpoint.mdAndUp ? 2 : 3">
                             <v-combobox
                             clearable
-                            v-model="tournamentFilter.num"
+                            v-model="groupFilter.part"
                             append-icon=""
                             :menu-props="{
-                                contentClass: 'tournament-num-select-menu',
+                                contentClass: 'group-part-select-menu',
                                 bottom: true,
                                 offsetY: true,
                                 maxHeight: '200'
                                 }"
                             dense
-                            label="No. #"
-                            :hide-no-data="!numSearch"
-                            :items="numList"
-                            item-text="num"
-                            item-value="num"
+                            label="Part"
+                            :hide-no-data="!partSearch"
+                            :items="partList"
+                            item-text="part"
+                            item-value="part"
                             :return-object="false"
-                            :disabled="type !== 'Tournament' || !tournamentFilter.name || numList.length === 1 && numList[0].num === null"
-                            :search-input.sync="numSearch"
-                            @change="updateDate()">
+                            :disabled="!groupFilter.name || partList.length === 1 && partList[0].part === null"
+                            :search-input.sync="partSearch"
+                            @change="updateDates()">
                                 <template v-slot:no-data>
                                     <v-list-item>
                                         <v-list-item-content>
                                             <v-list-item-title>
-                                                No results matching "<strong>{{ numSearch }}</strong>".
+                                                No results matching "<strong>{{ partSearch }}</strong>".
                                             </v-list-item-title>
                                         </v-list-item-content>
                                     </v-list-item>
@@ -184,15 +184,15 @@
                         </v-col>
 
                         <v-col
-                        class="tournament__date"
+                        class="group__date"
                         :cols="$vuetify.breakpoint.mdAndUp ? 3 : 12">
                             <v-combobox
                             clearable
-                            v-model="tournamentFilter.date"
+                            v-model="groupFilter.date"
                             prepend-icon="mdi-calendar"
                             append-icon=""
                             :menu-props="{
-                                contentClass: 'tournament-date-select-menu',
+                                contentClass: 'group-date-select-menu',
                                 bottom: true,
                                 offsetY: true,
                                 maxHeight: '200'
@@ -206,8 +206,8 @@
                             item-text="date"
                             item-value="date"
                             :return-object="false"
-                            @change="$emit('update-tournament', tournamentFilter)"
-                            :disabled="type !== 'Tournament' || !tournamentFilter.name"
+                            @change="$emit('update-group', groupFilter)"
+                            :disabled="!groupFilter.name"
                             :search-input.sync="dateSearch">
                                 <template v-slot:no-data>
                                     <v-list-item>
@@ -221,7 +221,7 @@
                             </v-combobox>
                         </v-col>
                     </v-row>
-                    <!-- /tournament filters -->
+                    <!-- /group filters -->
 
                     <!--<v-col
                     class="videos"
@@ -338,9 +338,9 @@ function initializeData() {
             {name: null, character: null},
             {name: null, character: null}
         ],
-        tournamentFilter: {
+        groupFilter: {
             name: null,
-            num: null,
+            part: null,
             date: null,
         },
         channelFilter: {
@@ -355,17 +355,17 @@ function initializeData() {
         typeFilter: null,
         hasFileFilter: false,
         hasVideoFilter: false,
-        numList: [],
+        partList: [],
         dateList: [],
         videoList: [],
         playerSearch: [],
-        tournamentSearch: null,
-        numSearch: null,
+        groupSearch: null,
+        partSearch: null,
         dateSearch: null,
         channelSearch: null,
         videoSearch: null,
-        typeSelect: ['Casual', 'Tournament'],
-        tournamentIndex: null,
+        typeSelect: ['Individual', 'Group'],
+        groupIndex: null,
     }
 }
 
@@ -376,7 +376,7 @@ export default {
     },
     props: {
         players: Array,
-        tournament: Object,
+        group: Object,
         channel: Object,
         video: Object,
         type: [String, null],
@@ -388,7 +388,7 @@ export default {
         return {
             ...initializeData(),
             playerList: [],
-            tournamentList: [],
+            groupList: [],
             channelList: []
         }
     },
@@ -403,9 +403,9 @@ export default {
             deep: true,
         },
 
-        'tournament': {
-            handler: function(tournament) {
-                this.tournamentFilters = tournament
+        'group': {
+            handler: function(group) {
+                this.groupFilters = group
             },
             deep: true,
         },
@@ -447,17 +447,17 @@ export default {
                 if (response.ok) {
                     this.error = false
 
-                    this.tournamentList = response.body.tournaments
+                    this.groupList = response.body.groups
                     this.playerList = response.body.players
                     this.channelList = response.body.channels
 
                     //console.log(JSON.parse(JSON.stringify(this.channelList)))
                     //console.log(this.playerList)
-                    //console.log(JSON.parse(JSON.stringify(this.tournamentList)))
+                    //console.log(JSON.parse(JSON.stringify(this.groupList)))
                 } else {
                     this.error = true
                     this.errorMsg = `${response.status}: ${response.statusText}`
-                    console.log("Error retrieving tournament list.\n", this.errorMsg)
+                    console.log("Error retrieving group list.\n", this.errorMsg)
                 }
 
                 this.$emit('loaded-filter-content')
@@ -478,16 +478,16 @@ export default {
         selectPlayer: function (name, i) {
             this.$emit('update-name', {name: name, i: i})
         },
-        // update num list
-        updateNum() {
-            if (this.tournamentFilter.name) {
-                // if tournament is selected...
-                this.tournamentIndex = this.tournamentList.findIndex((t) => 
-                    t._id === this.tournamentFilter.name
+        // update part list
+        updateParts() {
+            if (this.groupFilter.name) {
+                // if group is selected...
+                this.groupIndex = this.groupList.findIndex((t) => 
+                    t._id === this.groupFilter.name
                 )
 
-                this.numList = this.tournamentList[this.tournamentIndex].sub.filter((n) => {
-                    if (n.num) {
+                this.partList = this.groupList[this.groupIndex].sub.filter((n) => {
+                    if (n.part) {
                         return true
                     } else {
                         return false
@@ -496,33 +496,33 @@ export default {
                     return n
                 })
             } else {
-                // else clear num and date
-                this.numList = []
+                // else clear part and date
+                this.partList = []
                 this.dateList = []
-                this.tournamentFilter.num = null
-                this.tournamentFilter.date = null
+                this.groupFilter.part = null
+                this.groupFilter.date = null
             }
 
-            this.updateDate()
+            this.updateDates()
         },
         // update date list
-        updateDate() {
-            if (!this.tournamentFilter.num && this.tournamentFilter.name) {
-                // if no num is selected...
-                this.dateList = this.tournamentList[this.tournamentIndex].sub.map((n) => n.date)
-            } else if (this.tournamentFilter.num && this.tournamentFilter.name) {
-                // else if num is selected...
-                let index = this.numList.findIndex((n) => n.num === this.tournamentFilter.num)
+        updateDates() {
+            if (!this.groupFilter.part && this.groupFilter.name) {
+                // if no part is selected...
+                this.dateList = this.groupList[this.groupIndex].sub.map((n) => n.date)
+            } else if (this.groupFilter.part && this.groupFilter.name) {
+                // else if part is selected...
+                let index = this.partList.findIndex((n) => n.part === this.groupFilter.part)
                 
-                this.dateList = [this.numList[index].date]
+                this.dateList = [this.partList[index].date]
                 
             } else {
-                // clear if tournament is not selected
+                // clear if group is not selected
                 this.dateList = []
-                this.tournamentFilter.date = null
+                this.groupFilter.date = null
             }
 
-            this.$emit('update-tournament', this.tournamentFilter)
+            this.$emit('update-group', this.groupFilter)
 
             //console.log(JSON.parse(JSON.stringify(this.dateList)))
         },
@@ -534,19 +534,19 @@ export default {
         },
         // clear filters
         clear() {
-            // check if objects for each player & tournament contain only null values or not
+            // check if objects for each player & group contain only null values or not
             let p1 = Object.values(this.playersFilter[0]).every( e => e === null )
             let p2 = Object.values(this.playersFilter[1]).every( e => e === null )
-            let tournament = Object.values(this.tournamentFilter).every ( e => e === null )
+            let group = Object.values(this.groupFilter).every ( e => e === null )
 
             // if anything has been changed, clear the filter (this prevents unnecessary calls to the server)
-            if (!p1 || !p2 || !tournament || this.type || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter) {
+            if (!p1 || !p2 || !group || this.type || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter) {
                 Object.assign(this.$data, { 
                     ...initializeData(),
                     loadingPlayers: this.loadingPlayers,
-                    loadingTournaments: this.loadingTournaments,
+                    loadingGroups: this.loadingGroups,
                     playerList: this.playerList,
-                    tournamentList: this.tournamentList,
+                    groupList: this.groupList,
                 })
             
 
@@ -555,6 +555,13 @@ export default {
                 this.$emit('reset-strictness')
             }
         },
+        clearGroupFilters() {
+            this.groupFilter = {
+                name: null,
+                part: null,
+                date: null,
+            }
+        }
     },
 }
 </script>

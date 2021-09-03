@@ -1,5 +1,8 @@
 <template>
-    <v-container v-if="$route.query.uploadId && $route.query.uploadForm" id="edit">
+    <v-container
+    v-if="$route.query.uploadId && $route.query.uploadForm"
+    id="forms"
+    class="edit">
         <v-overlay v-show="uploading || finished">
             <v-container fluid fill-height>
                 <v-layout class="status" column justify-center align-center>
@@ -117,34 +120,34 @@
                         indeterminate />
 
                         <v-row
-                        class="tournament-info"
-                        v-if="tournament">
+                        class="group-info"
+                        v-if="group">
                             <v-col
-                            class="tournament name pa-0"
+                            class="group name pa-0"
                             :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
                                 <v-text-field
-                                ref="tournament" 
-                                label="Tournament Name"
-                                v-model="tournament.name"
+                                ref="group" 
+                                label="Group Name"
+                                v-model="group.name"
                                 readonly />
                             </v-col>
 
                             <v-col
-                            class="tournament num"
+                            class="group part"
                             :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
                                 <v-text-field
-                                label="No. #"
-                                v-model="tournament.num"
+                                label="Part"
+                                v-model="group.part"
                                 readonly />
                             </v-col>
 
                             <v-col
-                            class="tournament date pa-0"
+                            class="group date pa-0"
                             :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
                                 <v-text-field
                                 ref="date"
                                 label="Date"
-                                v-model="tournament.date"
+                                v-model="group.date"
                                 prepend-icon="mdi-calendar"
                                 readonly />
                             </v-col>
@@ -155,14 +158,14 @@
                         ref="form"
                         :id="`${$route.query.uploadForm}`"
                         v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
-
-                            <v-text-field
-                            v-if="$route.query.uploadForm === 'YouTube' || updated[0].type === 'Tournament'"
-                            v-model="url"
-                            class="upload-url"
-                            label="YouTube URL"
-                            prepend-icon="mdi-youtube"
-                            :readonly="$route.query.uploadForm === 'YouTube'" />
+                            <v-row class="url-input">
+                                <v-text-field
+                                v-if="$route.query.uploadForm === 'YouTube' || updated[0].type === 'Group'"
+                                v-model="url"
+                                label="YouTube URL"
+                                prepend-icon="mdi-youtube"
+                                :readonly="$route.query.uploadForm === 'YouTube'" />
+                            </v-row>
 
                             <div class="match-list">
                                 <template v-for="(match, i, j) in updated">
@@ -178,8 +181,8 @@
                                     :p2="match.p2"
                                     :youtubeUpload="$route.query.uploadForm === 'YouTube' ? true : false"
                                     :filesUpload="$route.query.uploadForm === 'Files' ? true : false"
-                                    :timestampRequired="$route.query.uploadForm === 'YouTube' || original[0].type === 'Tournament'"
-                                    :tournament="match.tournament ? match.tournament : null"
+                                    :timestampRequired="$route.query.uploadForm === 'YouTube' || original[0].type === 'Group'"
+                                    :group="match.group ? match.group : null"
                                     :video="match.video ? match.video : null"
                                     :fileInfo="match.fileInfo ? match.fileInfo : null"
                                     :type="match.type"
@@ -262,7 +265,7 @@ export default {
             allowLogin: false,
             uploadId: null,
             url: null,
-            tournament: null,
+            group: null,
         }
     },
     mounted: function () {
@@ -387,7 +390,7 @@ export default {
             this.$matches.get({uploadId: uploadId})
             .then((response) => {
                 if (response.ok) {
-                    this.tournament = response.body.groups[0]._id.tournament
+                    this.group = response.body.groups[0]._id.group
                     this.original = response.body.groups[0].matches
                     this.updated = JSON.parse(JSON.stringify(this.original))
                     this.url = (this.original[0].video ? 'https://youtu.be/' + this.original[0].video.id : null)

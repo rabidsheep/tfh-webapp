@@ -5,136 +5,241 @@
     margin: auto;
     flex-wrap: wrap;
     width: 100%;
+    justify-content: center;
 }
 
-#filters .wrapper > .row {
+#filters .header {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center;
+    background-color: #272727;
+    padding: 5px;
+    font-size: .95rem;
+    font-weight: 500;
+    letter-spacing: .0892857143em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow:
+        0 3px 1px -2px rgba(0,0,0,.2),
+        0 2px 2px 0 rgba(0,0,0,.14),
+        0 1px 5px 0 rgba(0,0,0,.12);
+}
+
+#filters .advanced__outer {
     width: 100%;
 }
 
-#filters__toggle {
-    width: 100%;
-    border: 1px solid black !important;
-    border-radius: 0px;
+#filters .advanced__inner {
+    background-color: #272727;
+    border-radius: 10px;
+    padding: 20px;
+    width: 80%;
+    margin: auto;
+}
+    #filters .advanced__inner .v-messages {
+        max-width: max-content;
+    }
+
+    #filters .advanced__inner .v-text-field__details {
+        justify-content: end;
+    }
+
+    .small #filters .advanced__inner {
+        width: 100%;
+    }
+
+#filters .v-btn {
+    max-width: min-content !important;
 }
 
-#filters__main {
-    border: 1px solid black;
-    border-top: none;
+#filters .toggle {
+    border-radius: 28px;
+    border: 1px solid rgb(17, 17, 17) !important;
+    margin-bottom: -1px;
+}
+
+#filters .toggle--active {
+    border-radius: 28px 28px 0px 0px;
+    border: 1px solid rgb(17, 17, 17) !important;
+    border-bottom: none !important;
+    margin-bottom: -1px;
+}
+
+/*******/
+
+#filters .main {
+    background: var(--v-subBackground-base);
+    border-top: none !important;
+    border-radius: 0px 0px 10px 10px;
     transition: all 0.5s;
     position: relative;
-    max-width: 95%;
-    padding: 0px;
+    width: 95%;
+    padding: 15px 20px;
+    align-items: center;
+    display: grid;
+    grid-template:
+        "players"
+        "advanced"
+        "clear" auto / auto;
+    row-gap: 10px;
 }
 
-.small #filters .wrapper {
-    max-width: 90%;
-}
+    #filters .main > .players { grid-area: players; }
+    #filters .main > .toggle {
+        grid-area: toggle; 
+        height: auto;
+    }
+    #filters .main > .advanced { grid-area: advanced; }
+    #filters .main > .clear { grid-area: clear; }
 
-#filters .player {
-    display: flex;
-    width: 100%;
-}
+    #filters .main > * { justify-self: center; }
 
-#filters .p1 {
-    order: 1;
-}
-
-#filters .btns {
-    order: 2;
-    min-width: max-content;
-    text-align: center;
-    align-self: center;
-    padding: 0px;
-}
-
-#filters .col {
-    padding-top: 0px;
-}
-
-#filters .btns > .col {
-    display: flex;
-    justify-content: center;
-    padding: 0px;
-}
-
-#filters .checkbox {
-    max-width: max-content;
-    margin: 0px;
-    padding: 0px;
-}
-
-#filters .links > .col {
-    display: flex;
-    justify-content: center;
-}
-
-#filters .links > label {
-    color: #bcbcbc;
-}
-
-.xsmall #filters .links > label {
-    width: 100%;
-    text-align: center;
-    margin-bottom: 5px;
-    
-}
-
-#filters .links .file {
-    padding: 0px;
-    margin: 0px 10px;
-}
-
-#filters .group__part {
-    min-width: 90px;
-    max-width: 90px;
-}
-
-.xsmall #filters .links .checkbox {
-    margin: 0px 10px;
-}
-
-/* desktop  */
-#filters .p1 {
-    flex-direction: row-reverse;
-    margin-right: 20px;
-}
-
-#filters > .col,
-#filters .players,
-#filters .player {
-    padding: 0px;
-}
-
-#filters .wrapper {
-    margin: 32px !important;
-    margin-bottom: 20px !important;
-}
+    .small #filters .main { width: 92%; }
+/******/
 
 #filters .players {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    justify-content: center;
+    justify-items: center;
+    width: 100%;
+    column-gap: 20px;
 }
+
+    #filters .p1 {
+        grid-area: p1;
+        flex-direction: row-reverse;
+    }
+
+    #filters .mid {
+        grid-area: vs;
+        align-self: center;
+    }
+    #filters .p2 {
+        grid-area: p2;
+    }
+
+    #filters .player {
+        display: flex;
+        width: 100%;
+    }
+
+    .wide #filters .players {
+        grid-template:
+            "p1 vs p2" auto / 1fr 40px 1fr;
+    }
+
+    .small #filters .players  {
+        grid-template:
+            "p1"
+            "vs"
+            "p2" auto / 100%;
+        row-gap: 5px;
+    }
+
+/*******/
+#filters .advanced {
+    display: grid;
+    justify-items: center;
+    margin-top: 1px;
+}
+
+/******/
+
+#filters .advanced__inner {
+    display: grid;
+    grid-template:
+        "group"
+        "links"
+        "sides" auto;
+    row-gap: 20px;
+}
+
+#filters .group { grid-area: group; }
+#filters .links { grid-area: links; }
+#filters .sides { grid-area: sides; }
+
+/******/
+
+#filters .group {
+    display: grid;
+    justify-content: center;
+    column-gap: 20px;
+}
+
+    #filters .title { grid-area: title; }
+    #filters .part { grid-area: part; }
+    #filters .date { grid-area: date; }
+
+    .wide #filters .group {
+        grid-template:
+            "title part date" auto / 2fr 1fr 1fr;
+    }
+
+    .small #filters .group {
+        grid-template:
+            "title title" auto
+            "part date" auto / 45% 45%;
+        row-gap: 10px;
+    }
+
+/******/
+
+#filters .links {
+    display: grid;
+    justify-content: center;
+    justify-items: center;
+}
+
+    #filters .links label {
+        grid-area: label;
+        color: #bcbcbc;
+    }
+    #filters .file { grid-area: file; }
+    #filters .video { grid-area: video; }
+
+    #filters .links .checkbox { 
+        margin: 0px;
+        padding: 0px;
+        max-height: min-content;
+    }
+
+    #filters .links label,
+    #filters .links .checkbox,
+    #filters .sides .v-label {  
+        font-size: 15px;
+    }
+    .wide #filters .links {
+        grid-template: "label file video" auto;
+        column-gap: 10px;
+    }
+
+    .small #filters .links {
+        grid-template:
+            "label label" auto
+            "file video" auto / auto;
+        row-gap: 10px;
+        column-gap: 50px;
+    }
+
+/******/
+
+#filters .sides {
+    margin: 0px;
+    padding: 0px;
+    justify-self: center;
+}
+
+
+/* misc */
 
 #filters .players .v-input {
     margin-top: 0px;
-    padding-top: 8px;
-}
-
-#filters .btns {
-    margin-bottom: 10px;
-}
-
-#filters .p2 {
-    margin-left: 20px;
+    padding-top: 7px;
 }
 
 #filters .p1 .icon {
     margin-left: 10px;
     margin-right: 0px;
-}
-
-.wide #filters .btns {
-    margin-top: 4px;
 }
 
 .small #filters .p1 {
@@ -148,8 +253,4 @@
 
 .small #filters .p2 {
     margin-left: 0px;
-}
-
-.small #filters .btns {
-    margin-top: 10px;
 }

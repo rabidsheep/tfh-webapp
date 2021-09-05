@@ -67,12 +67,12 @@
                     class="group-info"
                     v-show="groupMode">
                         <v-col
-                        class="group name pa-0"
+                        class="group title pa-0"
                         :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
                             <v-text-field
                             ref="group" 
-                            label="Group Name"
-                            v-model="group.name"
+                            label="Group Title"
+                            v-model="group.Title"
                             hint="Required"
                             persistent-hint
                             clearable
@@ -302,9 +302,9 @@ export default {
 
                this.date = null
                this.group = {
-                   name: null,
-                   part: null,
-                   date: null,
+                    title: null,
+                    part: null,
+                    date: null,
                }
                this.url = null
                this.vod = null

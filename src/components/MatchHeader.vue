@@ -36,8 +36,8 @@
           <template v-if="group">
             <p>
               {{ group.part ?
-                group.name + ' | ' + group.part + ' | ' + group.date :
-                group.name + ' | ' + group.date }}
+                group.title + ' | ' + group.part + ' | ' + group.date :
+                group.title + ' | ' + group.date }}
             </p>
           </template>
 

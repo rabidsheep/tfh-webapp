@@ -107,10 +107,6 @@ export default {
   padding-right: 0px !important;
 }
 
-::v-deep #filters__main {
-  background: var(--v-subBackground-base);
-}
-
 ::v-deep .theme--dark.v-stepper {
   background: var(--v-subBackground-base);
 }

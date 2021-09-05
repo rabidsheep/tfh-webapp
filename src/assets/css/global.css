@@ -28,7 +28,8 @@
 .logo img {
     height: 50px;
     width: 63px;
-    image-rendering: optimizeQuality;
+    image-rendering: auto;
+    image-rendering: -webkit-optimize-contrast;
     padding-right: 10px;
     display: inline-block;
 }
@@ -43,6 +44,11 @@
     height: 100%;
 }
 
+#app img {
+    image-rendering: auto;
+    image-rendering: -webkit-optimize-contrast;
+}
+
 a {
     text-decoration: none;
 }
@@ -53,6 +59,13 @@ a {
 
 .p2 {
     order: 3;
+}
+
+/*#router-view .v-btn:not(.v-btn--plain),*/
+#filters .advanced__inner,
+#filters .header,
+#filters .main {
+    border: 1px solid rgb(17, 17, 17) !important;
 }
 
 .vs {
@@ -76,7 +89,6 @@ a {
 
 #index {
     height: 100%;
-    display: grid;
 }
 
 #index .loading {
@@ -84,13 +96,18 @@ a {
     text-align: center;
     width: 100%;
     min-height: 100vh;
-    display: grid;
 }
 
 
 #index .loading .progress {
     align-self: end;
 }
+
+#index .index__body {
+    display: grid;
+    row-gap: 20px;
+}
+
 
 picture.icon {
     height: 56px;

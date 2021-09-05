@@ -33,8 +33,7 @@ api.get('/matches', (req, res) => {
     if (req.query.filters) {
         let players = req.query.filters.players
         let strict = req.query.filters.strict === 'true' ? true : false
-        let group = req.query.filters.group.name ? req.query.filters.group : null
-        let type = req.query.filters.type
+        let group = req.query.filters.group.title ? req.query.filters.group : null
         let hasFile = req.query.filters.hasFile === 'true' ? true : false
         let hasVideo = req.query.filters.hasVideo === 'true' ? true : false
         let unfiltered = true
@@ -53,7 +52,7 @@ api.get('/matches', (req, res) => {
             }
         }
 
-        query = formatQuery(players, strict, unfiltered, group, type, hasFile, hasVideo)
+        query = formatQuery(players, strict, unfiltered, group, hasFile, hasVideo)
     } else {
         query = { 'uploadId': req.query.uploadId }
     }
@@ -381,7 +380,7 @@ function formatDate(date) {
 }
 
 // format query object for filtering matches
-function formatQuery(players, strict, unfiltered, group, type, hasFile, hasVideo) {
+function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
     let query = {}
     let p1 = players[0]
     let p2 = players[1]
@@ -448,13 +447,13 @@ function formatQuery(players, strict, unfiltered, group, type, hasFile, hasVideo
     if (group) {
         query = {
             // allow partial matches for group names?
-            'group.name': group.name,
+            'group.title': group.title,
             ...query
         }
 
-        if (group.num) {
+        if (group.part) {
             query = {
-                'group.num': group.num,
+                'group.part': group.part,
                 ...query
             }
         }
@@ -464,13 +463,6 @@ function formatQuery(players, strict, unfiltered, group, type, hasFile, hasVideo
                 'group.date': group.date,
                 ...query
             }
-        }
-    }
-
-    if (type) {
-        query = {
-            'type': type,
-            ...query
         }
     }
 
@@ -496,7 +488,7 @@ function fetchGroups(db) {
     const pipeline = [
         {'$match': { 'group': { '$ne': null } }},
         {'$group': {
-            _id: '$group.name',
+            _id: '$group.title',
             sub: {
                 
                 '$addToSet': {

@@ -1,8 +1,23 @@
 /* matches.vue */
 
 /* general */
+#matches {
+    display: grid;
+    grid-gap: 30px;
+    grid-template-columns: 1fr;
+    width: 100%;
+}
+
 #matches .match-group {
-    max-width: 95%;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#matches .match-group > .row {
+    width: 95%;
 }
 
 
@@ -31,7 +46,6 @@
 }
 
 #matches > hr {
-    margin: 10px 0px;
     border-color: #a6a6a6
 }
 

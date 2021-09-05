@@ -125,10 +125,10 @@
                     justify="center">
                         <v-col
                         :cols="$vuetify.breakpoint.xsOnly ? 12 : undefined"
-                        :class="$vuetify.breakpoint.xsOnly? `name pa-0 mb-6` : `name pa-0 mr-2`">
+                        :class="$vuetify.breakpoint.xsOnly? `title pa-0 mb-6` : `title pa-0 mr-2`">
                             <v-text-field
-                            label="Group Name"
-                            v-model="group.name"
+                            label="Group Title"
+                            v-model="group.title"
                             hint="Required"
                             persistent-hint
                             dense
@@ -216,8 +216,7 @@
 
                     <center v-if="vid">
                         <v-btn
-                        class="mt-5 mb-6"
-                        height="auto"
+                        class="add-match"
                         :ripple="false"
                         @click="addBlankMatch()"
                         plain>

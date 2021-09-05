@@ -27,8 +27,9 @@ firestore-debug.log*
 *.sw?
 
 .firebase/hosting.ZGlzdA.cache
-.firebase/hosting.ZGlzdA.cache
 src/assets/css/global copy.css
 src/components/FilePreview copy.vue
 src/components/FileUploads copy.vue
 src/components/MatchRow copy.vue
+*.log
+*.cache

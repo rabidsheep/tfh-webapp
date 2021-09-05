@@ -2,10 +2,7 @@
   <div id="index">
       <div
       class="loading"
-      v-if="loadingFilterContent"
-      column
-      justify-center
-      align-center>
+      v-if="loadingFilterContent">
           <v-progress-linear
           class="progress"
           color="accent"
@@ -27,14 +24,12 @@
       :group="filters.deep.group"
       :channel="filters.deep.channel"
       :video="filters.deep.video"
-      :type="filters.deep.type"
       :hasFile="filters.deep.hasFile"
       :hasVideo="filters.deep.hasVideo"
       :strict="filters.strict"
       @update-name="filters.deep.players[$event.i].name = $event.name"
       @update-character="filters.deep.players[$event.i].character = $event.character"
       @update-strictness="filters.strict = $event"
-      @update-type="filters.deep.type = $event"
       @update-group="filters.deep.group = $event"
       @update-hasfile="filters.deep.hasFile = $event"
       @update-hasvideo="filters.deep.hasVideo = $event"
@@ -44,8 +39,6 @@
       @swap="swap()"
       @reset-strictness="strict = false"
       @loaded-filter-content="loadingFilterContent = false" />
-      
-      <br />
 
       <v-progress-linear
       style="margin: 15% 0"
@@ -54,9 +47,8 @@
       indeterminate />
       
       <!-- matches table -->
-      <v-layout
+      <div
       id="matches"
-      column
       v-show="!loadingMatches">
         <v-layout
         v-show="resultsCount <= 0"
@@ -67,47 +59,45 @@
 
         <template v-if="resultsCount > 0">
           <template v-for="(group, i, j) in groups">
-              <v-container
-              class="match-group pl-0 pr-0"
-              :key="j">
-                <MatchHeader
-                v-bind="group._id"
-                :downloadAvailable="group.matches.some((match) => match.fileInfo)"
-                :timezone="timezone"
-                @generate-zip-file="generateZipFile(group.matches, group._id.uploadId)" />
+            <div
+            class="match-group"
+            :key="j">
+              <MatchHeader
+              v-bind="group._id"
+              :downloadAvailable="group.matches.some((match) => match.fileInfo)"
+              :timezone="timezone"
+              @generate-zip-file="generateZipFile(group.matches, group._id.uploadId)" />
 
-                <MatchRow
-                v-for="(match, k) in group.matches"
-                :key="k"
-                :p1="match.p1"
-                :p2="match.p2"
-                :fileInfo="match.fileInfo ? match.fileInfo : null"
-                :video="match.video ? match.video : null"
-                @update-character="updateCharacter($event.character, $event.index)"
-                @update-name="updateName($event.name, $event.index)" />
-              </v-container>
+              <MatchRow
+              v-for="(match, k) in group.matches"
+              :key="k"
+              :p1="match.p1"
+              :p2="match.p2"
+              :fileInfo="match.fileInfo ? match.fileInfo : null"
+              :video="match.video ? match.video : null"
+              @update-character="updateCharacter($event.character, $event.index)"
+              @update-name="updateName($event.name, $event.index)" />
+            </div>
 
-              <hr :key="i" v-if="i < groups.length - 1" />
-            </template>
+            <hr :key="i" v-if="i < groups.length - 1" />
           </template>
-      </v-layout>
+        </template>
 
-      <!-- pagination -->
-      <v-layout
-      v-if="!loadingMatches && !(resultsCount <= this.$config.itemsPerPage)"
-      class="mt-3">
-        <v-spacer/>
-        <v-pagination
-        color="accent"
-        v-model="page"
-        :length="resultsCount % this.$config.itemsPerPage === 0 ?
-                  Math.floor(resultsCount / this.$config.itemsPerPage) :
-                  Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
-        :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
-        @input="getMatches(filters, page)"
-        circle />
-        <v-spacer />
-      </v-layout>
+        <!-- pagination -->
+        <div
+        class="pages"
+        v-if="!loadingMatches && !(resultsCount <= this.$config.itemsPerPage)">
+          <v-pagination
+          color="accent"
+          v-model="page"
+          :length="resultsCount % this.$config.itemsPerPage === 0 ?
+                    Math.floor(resultsCount / this.$config.itemsPerPage) :
+                    Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
+          :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
+          @input="getMatches(filters, page)"
+          circle />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -139,7 +129,7 @@ export default {
             {name: null, character: null}
           ],
           group: {
-            name: null,
+            title: null,
             part: null,
             date: null,
           },
@@ -153,7 +143,6 @@ export default {
           },
           hasFile: false,
           hasVideo: false,
-          type: null,
         },
         strict: false,
       },
@@ -230,7 +219,7 @@ export default {
             {name: null, character: null}
           ],
           group: {
-            name: null,
+            title: null,
             part: null,
             date: null,
           },
@@ -240,7 +229,6 @@ export default {
           },
           hasFile: false,
           hasVideo: false,
-          type: null,
         },
         strict: false,
       }

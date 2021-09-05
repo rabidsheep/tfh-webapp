@@ -1,330 +1,323 @@
 <template>
-    <v-layout id="filters" style="position:relative;">
-        <v-btn
-        id="filters__toggle"
-        @click="hidden = !hidden">
-            {{ hidden ? 'Show filters' : 'Hide filters'}}
-        </v-btn>
+    <v-layout id="filters">
+        <div class="header">
+            FILTERS
+        </div>
 
-        <v-expand-transition>
-            <v-container
-            id="filters__main"
-            v-show="!hidden">
-                <v-row
-                justify="center"
-                align="center"
-                class="wrapper">
-                    <!-- player filters -->
-                    <v-col
-                    cols="12"
-                    class="players"
-                    align="center"
-                    justify="center"> 
-                        <v-col
-                        :class="`player p${i + 1}`"
-                        v-for="(player, i) in playersFilter"
-                        :key="i"
-                        :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"> 
-                            <CharacterSelect
-                            :currentCharacter="player.character? player.character : `Any`"
-                            :selectionEnabled="true"
-                            :anyEnabled="true"
-                            @character-select="selectCharacter($event, i)"/>
+        <div
+        class="main">
+            <div class="players"> 
+                <v-layout
+                :class="`player p${i + 1}`"
+                v-for="(player, i) in playersFilter"
+                :key="i"
+                :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"> 
+                    <CharacterSelect
+                    :currentCharacter="player.character? player.character : `Any`"
+                    :selectionEnabled="true"
+                    :anyEnabled="true"
+                    @character-select="selectCharacter($event, i)"/>
 
-                            <v-combobox
-                            clearable
-                            v-model="player.name"
-                            append-icon=""
-                            :menu-props="{
-                                contentClass: 'player-select-menu',
-                                bottom: true,
-                                offsetY: true,
-                                maxHeight: '200'
-                                }"
-                            :hide-no-data="!playerSearch[i]"
-                            :label="strictFilter ? `P${i + 1} Name` : `Player Name`"
-                            :items="playerList"
-                            :search-input.sync="playerSearch[i]"
-                            :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
-                            counter="64"
-                            @change="selectPlayer(player.name, i)">
-                                <template v-slot:no-data>
-                                    <v-list-item>
-                                        <v-list-item-content>
-                                            <v-list-item-title>
-                                                No results matching "<strong>{{ playerSearch[i] }}</strong>".
-                                            </v-list-item-title>
-                                        </v-list-item-content>
-                                    </v-list-item>
-                                </template>
-                            </v-combobox>
-                        </v-col>
-                        
+                    <v-combobox
+                    clearable
+                    v-model="player.name"
+                    append-icon=""
+                    :menu-props="{
+                        contentClass: 'player-select-menu',
+                        bottom: true,
+                        offsetY: true,
+                        maxHeight: '200'
+                        }"
+                    :hide-no-data="!playerSearch[i]"
+                    :label="strictFilter ? `P${i + 1} Name` : `Player Name`"
+                    :items="playerList"
+                    :search-input.sync="playerSearch[i]"
+                    :reverse="i === 0 && !$vuetify.breakpoint.smAndDown"
+                    counter="64"
+                    @change="selectPlayer(player.name, i)">
+                        <template v-slot:no-data>
+                            <v-list-item>
+                                <v-list-item-content>
+                                    <v-list-item-title>
+                                        No results matching "<strong>{{ playerSearch[i] }}</strong>".
+                                    </v-list-item-title>
+                                </v-list-item-content>
+                            </v-list-item>
+                        </template>
+                    </v-combobox>
+                </v-layout>
+                
 
-                        <v-col
-                        class="btns"
-                        :cols="$vuetify.breakpoint.smAndDown ? 12 : 1">
-                            <v-col
-                            class="swap"
-                            cols="12">
-                                <v-btn
-                                fab
-                                small
-                                :disabled="!strict"
-                                color="accent"
-                                @click="$emit('swap')">
-                                    <v-icon>
-                                        {{ $vuetify.breakpoint.mdAndUp ?
-                                        'mdi-swap-horizontal' :
-                                        'mdi-swap-vertical' }}
-                                    </v-icon>
-                                </v-btn>
-                            </v-col>
-                        </v-col>
-                    </v-col>
+                <div
+                class="mid">
+                    <v-btn
+                    v-if="strictFilter"
+                    fab
+                    small
+                    minWidth="40px"
+                    minHeight="40px"
+                    :disabled="!strict"
+                    :ripple="false"
+                    color="accent"
+                    @click="$emit('swap')">
+                        <v-icon>
+                            {{ $vuetify.breakpoint.mdAndUp ?
+                            'mdi-swap-horizontal' :
+                            'mdi-swap-vertical' }}
+                        </v-icon>
+                    </v-btn>
 
-                    <div
-                    class="strictness mt-3 mb-3 pa-0"
-                    justify="center">
-                        <v-switch
-                        color="accent"
-                        v-model="strictFilter"
-                        class="checkbox"
-                        label="Strict Player Sides"
-                        value
-                        @change="$emit('update-strictness', $event)"
-                        hide-details/>
+                    <div v-else>
+                        vs.
                     </div>
-                    <!-- /player filters -->
+                </div>
+            </div>
+            <!-- /player filters -->
+            <div
+            class="advanced">
+                <v-btn
+                :class="hidden ? `toggle` : `toggle--active`"
+                color="button2"
+                width="auto"
+                small
+                elevation="0"
+                :ripple="false"
+                @click="hidden = !hidden">
+                    Advanced
+                    <v-icon>
+                        {{ hidden ? `mdi-chevron-down` : `mdi-chevron-up` }}
+                    </v-icon>
+                </v-btn>
 
-                    <!-- group filters -->
-                    <v-row
-                    justify="center"
-                    class="groups">
-                        <!--<v-col
-                        class="type"
-                        :cols="$vuetify.breakpoint.mdAndUp ? 3 : 12">
-                            <v-select
-                            clearable
-                            v-model="typeFilter"
-                            :items="typeSelect"
-                            label="Category"
-                            @change="$emit('update-type', $event)"
-                            @click:clear="clearGroupFilters()"
-                            dense />
-                        </v-col>-->
+                <v-expand-transition>
+                    <div
+                    class="advanced__outer"
+                    v-show="!hidden">
+                        <div
+                        class="advanced__inner">
+                            <!-- group filters -->
+                            <div
+                            class="group">
+                                <div class="title">
+                                    <v-combobox
+                                    clearable
+                                    v-model="groupFilter.title"
+                                    append-icon=""
+                                    :menu-props="{
+                                        contentClass: 'group-select-menu',
+                                        bottom: true,
+                                        offsetY: true,
+                                        maxHeight: '200'
+                                        }"
+                                    dense
+                                    hint="ex: Grand Stampede, Combo Breaker 2019, etc."
+                                    persistent-hint
+                                    label="Group Title"
+                                    :hide-no-data="!groupSearch"
+                                    :items="groupList"
+                                    item-text="_id"
+                                    item-value="_id"
+                                    :return-object="false"
+                                    :search-input.sync="groupSearch"
+                                    @change="updateParts()">
+                                        <template v-slot:no-data>
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-title>
+                                                        No results matching "<strong>{{ groupSearch }}</strong>".
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </template>
+                                    </v-combobox>
+                                </div>
 
-                        <v-col
-                        class="group__name"
-                        :cols="$vuetify.breakpoint.mdAndUp ? 4 : undefined">
-                            <v-combobox
-                            clearable
-                            v-model="groupFilter.name"
-                            append-icon=""
-                            :menu-props="{
-                                contentClass: 'group-select-menu',
-                                bottom: true,
-                                offsetY: true,
-                                maxHeight: '200'
-                                }"
-                            dense
-                            label="Group Name"
-                            :hide-no-data="!groupSearch"
-                            :items="groupList"
-                            item-text="_id"
-                            item-value="_id"
-                            :return-object="false"
-                            :search-input.sync="groupSearch"
-                            @change="updateParts()">
-                                <template v-slot:no-data>
-                                    <v-list-item>
-                                        <v-list-item-content>
-                                            <v-list-item-title>
-                                                No results matching "<strong>{{ groupSearch }}</strong>".
-                                            </v-list-item-title>
-                                        </v-list-item-content>
-                                    </v-list-item>
-                                </template>
-                            </v-combobox>
-                        </v-col>
+                                <div
+                                class="part">
+                                    <v-combobox
+                                    clearable
+                                    v-model="groupFilter.part"
+                                    append-icon=""
+                                    :menu-props="{
+                                        contentClass: 'group-part-select-menu',
+                                        bottom: true,
+                                        offsetY: true,
+                                        maxHeight: '200'
+                                        }"
+                                    dense
+                                    hint="ex: #1, Finale, etc."
+                                    persistent-hint
+                                    label="Part"
+                                    :hide-no-data="!partSearch"
+                                    :items="partList"
+                                    item-text="part"
+                                    item-value="part"
+                                    :return-object="false"
+                                    :disabled="!groupFilter.title || partList.length === 1 && partList[0].part === null"
+                                    :search-input.sync="partSearch"
+                                    @change="updateDates()">
+                                        <template v-slot:no-data>
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-title>
+                                                        No results matching "<strong>{{ partSearch }}</strong>".
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </template>
+                                    </v-combobox>
+                                </div>
 
-                        <v-col
-                        class="group__part"
-                        :cols="$vuetify.breakpoint.mdAndUp ? 2 : 3">
-                            <v-combobox
-                            clearable
-                            v-model="groupFilter.part"
-                            append-icon=""
-                            :menu-props="{
-                                contentClass: 'group-part-select-menu',
-                                bottom: true,
-                                offsetY: true,
-                                maxHeight: '200'
-                                }"
-                            dense
-                            label="Part"
-                            :hide-no-data="!partSearch"
-                            :items="partList"
-                            item-text="part"
-                            item-value="part"
-                            :return-object="false"
-                            :disabled="!groupFilter.name || partList.length === 1 && partList[0].part === null"
-                            :search-input.sync="partSearch"
-                            @change="updateDates()">
-                                <template v-slot:no-data>
-                                    <v-list-item>
-                                        <v-list-item-content>
-                                            <v-list-item-title>
-                                                No results matching "<strong>{{ partSearch }}</strong>".
-                                            </v-list-item-title>
-                                        </v-list-item-content>
-                                    </v-list-item>
-                                </template>
-                            </v-combobox>
-                        </v-col>
+                                <div
+                                class="date">
+                                    <v-combobox
+                                    clearable
+                                    class="date"
+                                    v-model="groupFilter.date"
+                                    prepend-icon="mdi-calendar"
+                                    append-icon=""
+                                    :menu-props="{
+                                        contentClass: 'group-date-select-menu',
+                                        bottom: true,
+                                        offsetY: true,
+                                        maxHeight: '200'
+                                        }"
+                                    dense
+                                    hint="MM-DD-YYYY"
+                                    persistent-hint
+                                    label="Date"
+                                    :hide-no-data="!dateSearch"
+                                    :items="dateList"
+                                    item-text="date"
+                                    item-value="date"
+                                    :return-object="false"
+                                    @change="$emit('update-group', groupFilter)"
+                                    :disabled="!groupFilter.title"
+                                    :search-input.sync="dateSearch">
+                                        <template v-slot:no-data>
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-title>
+                                                        No results matching "<strong>{{ dateSearch }}</strong>".
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </template>
+                                    </v-combobox>
+                                </div>
+                            </div>
+                            <!-- /group filters -->
 
-                        <v-col
-                        class="group__date"
-                        :cols="$vuetify.breakpoint.mdAndUp ? 3 : 12">
-                            <v-combobox
-                            clearable
-                            v-model="groupFilter.date"
-                            prepend-icon="mdi-calendar"
-                            append-icon=""
-                            :menu-props="{
-                                contentClass: 'group-date-select-menu',
-                                bottom: true,
-                                offsetY: true,
-                                maxHeight: '200'
-                                }"
-                            dense
-                            minWidth="32px"
-                            maxWidth="50px"
-                            label="Date"
-                            :hide-no-data="!dateSearch"
-                            :items="dateList"
-                            item-text="date"
-                            item-value="date"
-                            :return-object="false"
-                            @change="$emit('update-group', groupFilter)"
-                            :disabled="!groupFilter.name"
-                            :search-input.sync="dateSearch">
-                                <template v-slot:no-data>
-                                    <v-list-item>
-                                        <v-list-item-content>
-                                            <v-list-item-title>
-                                                No results matching "<strong>{{ dateSearch }}</strong>".
-                                            </v-list-item-title>
-                                        </v-list-item-content>
-                                    </v-list-item>
-                                </template>
-                            </v-combobox>
-                        </v-col>
-                    </v-row>
-                    <!-- /group filters -->
+                            <!--<v-col
+                            class="videos"
+                            cols="12">
+                                <v-col
+                                class="channel"
+                                cols="5">
+                                    <v-combobox
+                                    clearable
+                                    v-model="channelFilter.name"
+                                    append-icon=""
+                                    :menu-props="{
+                                        contentClass: 'channel-select-menu',
+                                        bottom: true,
+                                        offsetY: true,
+                                        maxHeight: '200'
+                                        }"
+                                    dense
+                                    label="Channel"
+                                    :hide-no-data="!channelSearch"
+                                    :items="channelList"
+                                    item-text="name"
+                                    @change="updateChannel($event)"
+                                    :search-input.sync="channelSearch">
+                                        <template v-slot:no-data>
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-title>
+                                                        No results matching "<strong>{{ channelSearch }}</strong>".
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </template>
+                                    </v-combobox>
+                                </v-col>
 
-                    <!--<v-col
-                    class="videos"
-                    cols="12">
-                        <v-col
-                        class="channel"
-                        cols="5">
-                            <v-combobox
-                            clearable
-                            v-model="channelFilter.name"
-                            append-icon=""
-                            :menu-props="{
-                                contentClass: 'channel-select-menu',
-                                bottom: true,
-                                offsetY: true,
-                                maxHeight: '200'
-                                }"
-                            dense
-                            label="Channel"
-                            :hide-no-data="!channelSearch"
-                            :items="channelList"
-                            item-text="name"
-                            @change="updateChannel($event)"
-                            :search-input.sync="channelSearch">
-                                <template v-slot:no-data>
-                                    <v-list-item>
-                                        <v-list-item-content>
-                                            <v-list-item-title>
-                                                No results matching "<strong>{{ channelSearch }}</strong>".
-                                            </v-list-item-title>
-                                        </v-list-item-content>
-                                    </v-list-item>
-                                </template>
-                            </v-combobox>
-                        </v-col>
+                                <v-col
+                                class="video"
+                                cols="5">
+                                    <v-combobox
+                                    clearable
+                                    v-model="videoFilter.title"
+                                    append-icon=""
+                                    :menu-props="{
+                                        contentClass: 'video-select-menu',
+                                        bottom: true,
+                                        offsetY: true,
+                                        maxHeight: '200'
+                                        }"
+                                    dense
+                                    label="Video"
+                                    :hide-no-data="!videoSearch"
+                                    :items="videoList"
+                                    item-text="title"
+                                    @change="updateVideo($event)"
+                                    :search-input.sync="videoSearch">
+                                        <template v-slot:no-data>
+                                            <v-list-item>
+                                                <v-list-item-content>
+                                                    <v-list-item-title>
+                                                        No results matching "<strong>{{ videoSearch }}</strong>".
+                                                    </v-list-item-title>
+                                                </v-list-item-content>
+                                            </v-list-item>
+                                        </template>
+                                    </v-combobox>
+                                </v-col>
+                            </v-col>-->
 
-                        <v-col
-                        class="video"
-                        cols="5">
-                            <v-combobox
-                            clearable
-                            v-model="videoFilter.title"
-                            append-icon=""
-                            :menu-props="{
-                                contentClass: 'video-select-menu',
-                                bottom: true,
-                                offsetY: true,
-                                maxHeight: '200'
-                                }"
-                            dense
-                            label="Video"
-                            :hide-no-data="!videoSearch"
-                            :items="videoList"
-                            item-text="title"
-                            @change="updateVideo($event)"
-                            :search-input.sync="videoSearch">
-                                <template v-slot:no-data>
-                                    <v-list-item>
-                                        <v-list-item-content>
-                                            <v-list-item-title>
-                                                No results matching "<strong>{{ videoSearch }}</strong>".
-                                            </v-list-item-title>
-                                        </v-list-item-content>
-                                    </v-list-item>
-                                </template>
-                            </v-combobox>
-                        </v-col>
-                    </v-col>-->
+                            <div
+                            class="links">
+                                <label>Show only matches with:</label>
 
-                    <v-row
-                    class="links mb-6" align="center" justify="center">
-                        <label>Show Only Matches With:</label>
+                                <v-checkbox
+                                class="file checkbox"
+                                hide-details
+                                color="accent"
+                                label="TFHR File"
+                                v-model="hasFileFilter"
+                                @change="$emit('update-hasfile', $event)" />
 
-                        <v-checkbox
-                        class="file checkbox"
-                        hide-details
-                        color="accent"
-                        label="TFHR File"
-                        v-model="hasFileFilter"
-                        @change="$emit('update-hasfile', $event)" />
+                                <v-checkbox
+                                class="video checkbox"
+                                hide-details
+                                color="accent"
+                                label="Video"
+                                v-model="hasVideoFilter"
+                                @change="$emit('update-hasvideo', $event)" />
+                            </div>
 
-                        <v-checkbox
-                        class="video checkbox"
-                        hide-details
-                        color="accent"
-                        label="Video"
-                        v-model="hasVideoFilter"
-                        @change="$emit('update-hasvideo', $event)" />
-                    </v-row>
-
-                    <v-col
-                    cols="12"
-                    align="center">
-                        <v-btn
-                        rounded
-                        color="accent"
-                        @click="clear()">
-                            Clear All
-                        </v-btn>
-                    </v-col>
-                </v-row>
-            </v-container>
-        </v-expand-transition>
+                            <v-switch
+                            class="sides"
+                            color="accent"
+                            v-model="strictFilter"
+                            label="Strict Player Sides"
+                            value
+                            @change="$emit('update-strictness', $event)"
+                            hide-details/>
+                        </div>
+                    </div>
+                </v-expand-transition>
+            </div>
+            <v-btn
+            class="clear"
+            width="max-content"
+            rounded
+            color="accent"
+            @click="clear()">
+                Clear All
+            </v-btn>
+        </div>
     </v-layout>
 </template>
 
@@ -333,13 +326,13 @@ import CharacterSelect from './CharacterSelect.vue'
 
 function initializeData() {
     return {
-        hidden: false,
+        hidden: true,
         playersFilter: [
             {name: null, character: null},
             {name: null, character: null}
         ],
         groupFilter: {
-            name: null,
+            title: null,
             part: null,
             date: null,
         },
@@ -352,7 +345,6 @@ function initializeData() {
             title: null,
         },
         strictFilter: false,
-        typeFilter: null,
         hasFileFilter: false,
         hasVideoFilter: false,
         partList: [],
@@ -364,7 +356,6 @@ function initializeData() {
         dateSearch: null,
         channelSearch: null,
         videoSearch: null,
-        typeSelect: ['Individual', 'Group'],
         groupIndex: null,
     }
 }
@@ -379,7 +370,6 @@ export default {
         group: Object,
         channel: Object,
         video: Object,
-        type: [String, null],
         strict: Boolean,
         hasFile: Boolean,
         hasVideo: Boolean,
@@ -412,10 +402,6 @@ export default {
 
         'strict': function(strict) {
             this.strictFilter = strict
-        },
-
-        'type': function(type) {
-            this.typeFilter = type
         },
 
         'hasFile': function(hasFile) {
@@ -480,10 +466,10 @@ export default {
         },
         // update part list
         updateParts() {
-            if (this.groupFilter.name) {
+            if (this.groupFilter.title) {
                 // if group is selected...
                 this.groupIndex = this.groupList.findIndex((t) => 
-                    t._id === this.groupFilter.name
+                    t._id === this.groupFilter.title
                 )
 
                 this.partList = this.groupList[this.groupIndex].sub.filter((n) => {
@@ -507,10 +493,10 @@ export default {
         },
         // update date list
         updateDates() {
-            if (!this.groupFilter.part && this.groupFilter.name) {
+            if (!this.groupFilter.part && this.groupFilter.title) {
                 // if no part is selected...
                 this.dateList = this.groupList[this.groupIndex].sub.map((n) => n.date)
-            } else if (this.groupFilter.part && this.groupFilter.name) {
+            } else if (this.groupFilter.part && this.groupFilter.title) {
                 // else if part is selected...
                 let index = this.partList.findIndex((n) => n.part === this.groupFilter.part)
                 
@@ -540,7 +526,7 @@ export default {
             let group = Object.values(this.groupFilter).every ( e => e === null )
 
             // if anything has been changed, clear the filter (this prevents unnecessary calls to the server)
-            if (!p1 || !p2 || !group || this.type || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter) {
+            if (!p1 || !p2 || !group || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter) {
                 Object.assign(this.$data, { 
                     ...initializeData(),
                     loadingPlayers: this.loadingPlayers,

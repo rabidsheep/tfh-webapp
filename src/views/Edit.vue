@@ -128,7 +128,7 @@
                                 <v-text-field
                                 ref="group" 
                                 label="Group Name"
-                                v-model="group.name"
+                                v-model="group.title"
                                 readonly />
                             </v-col>
 

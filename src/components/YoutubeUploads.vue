@@ -225,7 +225,7 @@
                     :ripple="false"
                     :disabled="!valid"
                     @click="youtubeUpload()">
-                        Upload
+                    Upload
                     </v-btn>
 
                     <!--

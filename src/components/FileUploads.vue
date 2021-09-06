@@ -193,7 +193,7 @@
                 rounded
                 :ripple="false"
                 @click="selectFiles">
-                    Add Files
+                Add Files
                 </v-btn>
                 <!-- :disabled="matches.length >= uploadLimit" -->
 
@@ -214,7 +214,7 @@
                 :ripple="false"
                 :disabled="!valid || matches.length <= 0 || uploading"
                 @click="submitFiles()">
-                    Upload Files
+                Upload Files
                 </v-btn>
             </div>
         </v-form>

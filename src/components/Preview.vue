@@ -18,7 +18,7 @@
                 <div class="matchinfo">
                     <b>{{ 'Match #' + (index+1) }}</b>
                     
-                    <template v-if="fileDate">
+                    <template v-if="fileDate && fileUpload">
                         <br />
                         File Date: {{ fileDate }}
                     </template>
@@ -121,7 +121,7 @@
                 cols="12"
                 class="link">
                     <v-text-field
-                    :readonly="groupMode"
+                    readonly
                     ref="url"
                     label="YouTube Link"
                     placeholder="YouTube Link"
@@ -130,7 +130,6 @@
                     hint="Optional"
                     persistent-hint
                     single-line
-                    @blur="url = tempUrl"
                     :dense="!$vuetify.breakpoint.smOnly"
                     :rules="rules.url.noReq" />
                 </v-col>
@@ -228,7 +227,6 @@ export default {
     data: () => {
         return {
             valid: false,
-            tempUrl: null,
             url: null,
             timestamp: null,
             fileNameStr: null,
@@ -278,19 +276,9 @@ export default {
         },
         'url': function(v) {  
             if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
-                this.tempUrl = v.match(this.$regex.ytUrl)[0]
-
-                if (this.tempUrl && !this.video || this.tempUrl !== this.video.url) {
-                    this.$emit('set-url', this.tempUrl)
-                }
-                
-                if (this.$regex.urlTimestamp.test(v) && v.match(this.$regex.urlTimestamp)[1] !== this.timestamp) {
-                    this.$emit('set-timestamp', v.match(this.$regex.urlTimestamp)[1])
-                }
-            } else {
-                this.tempUrl = null
-                this.timestamp = null
-                this.$emit('delete-video')
+                this.$emit('set-video-id', v.match(this.$regex.ytId))
+            } else if (!v) {
+                this.$emit('remove-video')
             }
         },
         
@@ -299,7 +287,7 @@ export default {
                     if (this.timestamp !== this.video.timestamp) {
                         this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
                     }
-            } else {
+            } else if (!v) {
                 this.$emit('delete-timestamp')
             }
         },

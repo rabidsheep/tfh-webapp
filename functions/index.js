@@ -177,7 +177,7 @@ api.put('/matches', (req, res) => {
 
 /** update match info using edit page */
 api.put('/matches/update', (req, res) => {
-    let matches = req.body.map((match) => {
+    let matches = req.body.matches.map((match) => {
         if (match.video && match.video.id) {
             let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
 

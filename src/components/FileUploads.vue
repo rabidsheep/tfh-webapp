@@ -14,181 +14,162 @@
 
         <v-form
         v-model="valid"
+        class="form"
         ref="form">
-            <v-layout
-            class="options"
-            column
-            align-center
-            justify-center>
-                <v-radio-group
-                class="mb-5 mt-0"
-                v-model="groupMode"
-                row
-                hide-details>
-                    <!--<v-radio
-                    label="Individual Mode"
-                    disabled
-                    :value="false" />-->
-                    <v-radio
-                    label="Group Mode"
-                    :value="true" />
-                </v-radio-group>
+        <!--<v-radio-group
+        class="mb-5 mt-0"
+        v-model="groupMode"
+        row
+        hide-details>
+            <v-radio
+            label="Individual Mode"
+            disabled
+            :value="false" />
+            <v-radio
+            label="Group Mode"
+            :value="true" />
+        </v-radio-group>
 
-                <v-row
-                class="hint mb-3 pa-5">
-                    <div>
-                        <v-col
-                        class="symbol pa-0">
-                            <v-icon
-                            size="36px"
-                            color="accent">
-                                mdi-alert-circle-outline
-                            </v-icon>
-                        </v-col>
+        <v-row
+        class="hint mb-3 pa-5">
+            <div>
+                <v-col
+                class="symbol pa-0">
+                    <v-icon
+                    size="36px"
+                    color="accent">
+                        mdi-alert-circle-outline
+                    </v-icon>
+                </v-col>
 
-                        <v-divider class="mx-2" vertical />
+                <v-divider class="mx-2" vertical />
 
-                        <div class="message">
-                            <template v-if="!groupMode">
-                                Matches uploaded using <b>Individuals</b> <b>Mode</b> will display individually on the main page.
-                            </template>
+                <div class="message">
+                    Matches uploaded using <b>Group</b> <b>Mode</b> will be grouped together on the main page.
+                </div>
+            </div>
+        </v-row>-->
+        
+            <v-row
+            class="group-info"
+            v-show="groupMode">
+                <v-col
+                class="group title pa-0"
+                :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
+                    <v-text-field
+                    ref="group" 
+                    label="Group Title"
+                    v-model="group.title"
+                    hint="Required"
+                    persistent-hint
+                    clearable
+                    :rules="groupMode ? rules.group : undefined"
+                    :required="groupMode" />
+                </v-col>
 
-                            <template v-else>
-                                Matches uploaded using <b>Group</b> <b>Mode</b> will be grouped together on the main page.
-                            </template>
-                        </div>
-                    </div>
-                </v-row>
-                
-                
-            
-                <v-expand-transition>
-                    <v-row
-                    class="group-info"
-                    v-show="groupMode">
-                        <v-col
-                        class="group title pa-0"
-                        :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
+                <v-col
+                class="group part"
+                :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
+                    <v-text-field
+                    label="Part"
+                    v-model="group.part"
+                    hint="Optional"
+                    clearable
+                    persistent-hint />
+                </v-col>
+
+                <v-col
+                class="group date pa-0"
+                :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
+                    <v-menu
+                    transition="scale-transition"
+                    min-width="auto"
+                    v-model="datepicker"
+                    offset-y
+                    :close-on-content-click="false"
+                    :nudge-right="40">
+                        <template v-slot:activator="{ on, attrs }">
                             <v-text-field
-                            ref="group" 
-                            label="Group Title"
-                            v-model="group.Title"
+                            ref="date"
+                            label="Date"
+                            v-model="group.date"
+                            v-bind="attrs"
+                            v-on="on"
+                            prepend-icon="mdi-calendar"
                             hint="Required"
                             persistent-hint
                             clearable
-                            :rules="groupMode ? rules.group : undefined"
+                            :rules="groupMode ? rules.date : undefined"
                             :required="groupMode" />
-                        </v-col>
+                        </template>
 
-                        <v-col
-                        class="group part"
-                        :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
-                            <v-text-field
-                            label="Part"
-                            v-model="group.part"
-                            hint="Optional"
-                            clearable
-                            persistent-hint />
-                        </v-col>
+                        <v-date-picker
+                        v-model="date"
+                        @input="datepicker = false" />
+                    </v-menu>
+                </v-col>
 
-                        <v-col
-                        class="group date pa-0"
-                        :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
-                            <v-menu
-                            transition="scale-transition"
-                            min-width="auto"
-                            v-model="datepicker"
-                            offset-y
-                            :close-on-content-click="false"
-                            :nudge-right="40">
-                                <template v-slot:activator="{ on, attrs }">
-                                    <v-text-field
-                                    ref="date"
-                                    label="Date"
-                                    v-model="group.date"
-                                    v-bind="attrs"
-                                    v-on="on"
-                                    prepend-icon="mdi-calendar"
-                                    hint="Required"
-                                    persistent-hint
-                                    clearable
-                                    :rules="groupMode ? rules.date : undefined"
-                                    :required="groupMode" />
-                                </template>
+                <v-col
+                cols="12"
+                class="pa-0"
+                justify="center"
+                align="center">
+                    <v-col
+                    :cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
+                    class="pa-0 pt-5">
+                        <v-text-field
+                        ref="url"
+                        class="link"
+                        label="YouTube Link"
+                        v-model="url"
+                        prepend-icon="mdi-youtube"
+                        hint="Optional"
+                        persistent-hint
+                        dense
+                        clearable
+                        :rules="rules.url"
+                        :disabled="!groupMode" />
+                    </v-col>
+                </v-col>
+            </v-row>
 
-                                <v-date-picker
-                                v-model="date"
-                                @input="datepicker = false" />
-                            </v-menu>
-                        </v-col>
 
-                        <v-col
-                        cols="12"
-                        class="pa-0"
-                        justify="center"
-                        align="center">
-                            <v-col
-                            :cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
-                            class="pa-0 pt-5">
-                                <v-text-field
-                                ref="url"
-                                class="link"
-                                label="YouTube Link"
-                                v-model="url"
-                                prepend-icon="mdi-youtube"
-                                hint="Optional"
-                                persistent-hint
-                                dense
-                                clearable
-                                :rules="rules.url"
-                                :disabled="!groupMode" />
-                            </v-col>
-                        </v-col>
-                    </v-row>
-                </v-expand-transition>
-            </v-layout>
-
-            <v-layout
+            <div
+            v-if="matches.length > 0"
+            class="match-list"
             column
             justify-center
-            align-center
-            class="wrapper">
-                <div
-                v-if="matches.length > 0"
-                class="match-list"
-                column
-                justify-center
-                align-center>
-                    <template v-for="(match, i, j) in matches">
-                        <Preview
-                        :key="i"
-                        :index="i"
-                        :fileUpload="true"
-                        :groupMode="groupMode"
-                        :p1="match.p1"
-                        :p2="match.p2"
-                        :uploading="uploading"
-                        :video="match.video ? match.video : null"
-                        :fileName="match.fileInfo.name"
-                        :fileDate="match.fileInfo.date"
-                        :firstMatch="i === 0"
-                        :lastMatch="i === matches.length - 1"
-                        :timestampRequired="false"
-                        :masterUrl="masterUrl"
-                        @update-character="updateCharacter($event.character, $event.index, i)"
-                        @remove="matches.splice(i, 1)"
-                        @set-video-id="setVideoId($event, i)"
-                        @set-timestamp="setTimestamp($event, i)"
-                        @delete-video="deleteVideo(i)"
-                        @delete-timestamp="deleteTimestamp(i)"
-                        @move-up="swapMatches(i, i-1)"
-                        @move-down="swapMatches(i, i+1)"
-                        @update-file-date="match.file.date = $event" />
+            align-center>
+                <template v-for="(match, i, j) in matches">
+                    <Preview
+                    :key="i"
+                    :index="i"
+                    :fileUpload="true"
+                    :groupMode="groupMode"
+                    :p1="match.p1"
+                    :p2="match.p2"
+                    :uploading="uploading"
+                    :video="match.video ? match.video : null"
+                    :fileName="match.fileInfo.name"
+                    :fileDate="match.fileInfo.date"
+                    :firstMatch="i === 0"
+                    :lastMatch="i === matches.length - 1"
+                    :timestampRequired="false"
+                    :masterUrl="masterUrl"
+                    @update-character="updateCharacter($event.character, $event.index, i)"
+                    @remove="matches.splice(i, 1)"
+                    @set-video-id="setVideoId($event, i)"
+                    @set-timestamp="setTimestamp($event, i)"
+                    @delete-video="deleteVideo(i)"
+                    @delete-timestamp="deleteTimestamp(i)"
+                    @move-up="swapMatches(i, i-1)"
+                    @move-down="swapMatches(i, i+1)"
+                    @update-file-date="match.file.date = $event" />
 
-                        
-                        <hr :key="j" v-if="i < matches.length - 1" />
-                    </template>
-                </div>
+                    
+                    <hr :key="j" v-if="i < matches.length - 1" />
+                </template>
+            </div>
                 
                 <!--<div
                 class="message"
@@ -204,12 +185,9 @@
 
                     <br />
                 </div>-->
-            </v-layout>
 
-            <v-layout
-            class="buttons"
-            justify-center
-            align-center>
+            <div
+            class="buttons">
                 <v-btn
                 color="button2"
                 rounded
@@ -231,14 +209,14 @@
                 required />
 
                 <v-btn
-                color = "accent"
+                color="accent"
                 rounded
                 :ripple="false"
                 :disabled="!valid || matches.length <= 0 || uploading"
                 @click="submitFiles()">
                     Upload Files
                 </v-btn>
-            </v-layout>
+            </div>
         </v-form>
     </div>
 </template>
@@ -279,7 +257,7 @@ export default {
             uploadType: 'Group',
             groupMode: true,
             group: {
-                name: null,
+                title: null,
                 part: null,
                 date: null,
             },

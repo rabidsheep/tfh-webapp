@@ -50,10 +50,71 @@
     width: 100%;
 }
 
+#step__upload {
+    display: grid;
+    row-gap: 10px;
+    justify-items: center;
+}
+
 #forms .form {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
+    display: grid;
+    row-gap: 20px;
+    justify-items: center;
+}
+
+#step__upload #youtube {
+    display: grid;
+    row-gap: 20px;
+    justify-items: center;
+}
+
+#youtube .desc {
+    display: grid;
+    grid-template:
+        'desc reset' auto
+        'desc parse' auto / auto 180px;
+    align-items: center;
+}
+
+.wide #youtube .desc {
+    column-gap: 20px
+}
+
+#youtube .descbox { grid-area: desc; }
+#youtube .reset {
+    grid-area: reset;
+    align-self: center;
+    justify-self: center;
+}
+#youtube .parse {
+    grid-area: parse;
+    align-self: center;
+    justify-self: center;
+}
+
+.small #youtube .desc {
+    grid-template:
+        'desc desc'
+        'reset parse' auto / auto;
+    row-gap: 20px;
+}
+
+.xsmall #youtube .desc {
+    grid-template:
+        'desc desc'
+        'reset reset'
+        'parse parse'
+}
+
+.match-list {
+    display: grid;
+    row-gap: 20px;
+}
+
+.form .buttons {
+    display: grid;
+    grid-template: 'a b';
+    column-gap: 20px;
 }
 
 #forms .step {
@@ -74,7 +135,6 @@
     width: 100%;
     text-align: center;
 }
-
 #forms #step__sign-in .v-btn,
 #forms #step__select .v-btn {
     display: block;
@@ -93,25 +153,12 @@
     overflow: visible;
 }
 
-#forms #step__upload .buttons {
-    width: 100%;
-    flex-wrap: wrap;
-}
-
-#forms #step__upload .buttons > button {
-    margin: 10px 20px;
-}
-
 #forms .form .message > div {
     margin: auto;
 }
 
 #forms .preview__match {
     flex-wrap: nowrap;
-}
-
-#forms #files .preview:not(:first-child) {
-    padding-top: 15px;
 }
 
 
@@ -183,30 +230,17 @@
 }
 
 /** youtubeuploads.vue **/
-#forms #youtube .wrapper > .data {
+#forms #youtube .data {
     width: 95%;
 }
 
-#forms #youtube .group-info {
-    margin-top: 40px !important;
-    margin-bottom: 10px !important;
-}
 
-#forms #youtube .desc-buttons {
-    align-items: baseline;
-}
-
-.small #forms #youtube .desc-buttons > .reset {
-    margin-top: 24px;
-    margin-bottom: 20px;
-}
-
-#forms #youtube .wrapper .data .date-title,
-#forms #youtube .wrapper .data  {
+#forms #youtube .data .date-title,
+#forms #youtube data  {
     justify-content: space-between;
 }
 
-#forms #youtube .wrapper .data .date-title {
+#forms #youtube .data .date-title {
     width: 100%;
 }
 
@@ -222,32 +256,15 @@
     justify-content: end;
 }
 
-#forms #youtube .desc-buttons {
-    padding: 0px;
-    display: flex;
-}
-
 /* desktop */
-.wide #forms #youtube .desc {
+.wide #forms #youtube .descbox {
     min-height: 150px;
-    margin-right: 35px;
-}
-
-.wide #forms #youtube .desc-buttons {
-    min-height: inherit;
-    align-content: space-evenly;
-    flex-wrap: wrap;
-    max-width: min-content;
 }
 
 /* mobile */
-.small #forms #youtube .desc-buttons {
-    justify-content: space-evenly;
-}
-
-.small #forms #youtube .desc-buttons .v-btn span {
-    white-space: normal !important;
-    flex: auto !important;
+#forms #youtube .desc .v-btn span {
+    max-width: 100%;
+    white-space: break-spaces;
 }
 
 /** filepreview.vue **/
@@ -339,7 +356,6 @@
 /* preview rows */
 .preview {
     margin: auto !important;
-    padding: 20px 0px;
 }
 
 .preview .header {
@@ -406,14 +422,6 @@
     order: 3;
 }
 
-.preview .v-textarea.comment .v-text-field__slot {
-    height: 100%;
-}
-
-.wide .preview .v-textarea.comment {
-    height: 100%;
-    margin-top: 6px;
-}
 
 .preview .players {
  display: flex;
@@ -441,9 +449,6 @@
     margin-bottom: 5px;
 }
 
-.wide .preview {
-    margin-top: 20px;
-}
 
 .wide .preview .players {
     margin-bottom: 10px;
@@ -455,15 +460,11 @@
     margin-bottom: 10px;
 }
 
-.small .preview .header {
-    margin-top: 10px;
-}
 
 .small:not(.xsmall) .preview .add {
     max-width: 200px;
     min-width: 200px;
 }
-
 
 .xsmall .preview .icon {
     margin-right: 10px !important;
@@ -500,11 +501,14 @@
 
 /** svg buttons **/
 .preview button svg {
-    box-shadow: 0 2px 4px -1px rgba(0,0,0,.2),0 4px 5px 0 rgba(0,0,0,.14),0 1px 10px 0 rgba(0,0,0,.12);
+    box-shadow:
+        0 2px 4px -1px rgba(0,0,0,.2),
+        0 4px 5px 0 rgba(0,0,0,.14),
+        0 1px 10px 0 rgba(0,0,0,.12);
 }
 .preview button svg {
-    height: 32px;
-    width: 32px;
+    height: 30px;
+    width: 30px;
     border-radius: 100%;
 }
 
@@ -574,11 +578,20 @@ button.move:not(.disabled):hover .st0 {
     align-items: center;
 }
 
-.match-list {
-    display: flex;
-    flex-direction: column;
-}
 
 #forms .wrapper {
     width: 100%;
 }
+
+#step__edit {
+    display: grid;
+    grid-template:
+        'title'
+        'subtitle'
+        'form';
+    row-gap: 20px;
+}
+
+#step__edit h1 { grid-area: title; }
+#step__edit .subtitle { grid-area: subtitle; }
+#step__edit form { grid-area: form; }

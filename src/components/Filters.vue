@@ -89,7 +89,6 @@
                     </v-icon>
                 </v-btn>
 
-                <v-expand-transition>
                     <div
                     class="advanced__outer"
                     v-show="!hidden">
@@ -307,7 +306,6 @@
                             hide-details/>
                         </div>
                     </div>
-                </v-expand-transition>
             </div>
             <v-btn
             class="clear"

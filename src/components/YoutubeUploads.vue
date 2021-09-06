@@ -16,236 +16,222 @@
         @clear-errors="clearErrors()"
         @close="resetForm()" />
 
-        <v-layout
-        class="wrapper"
-        column
-        align-center
-        justify-center>
-            <v-row
-            class="url-input pb-5">
-                <v-text-field
-                class="url"
-                ref="url"
-                label="YouTube Link"
-                v-model="url"
-                prepend-icon="mdi-youtube"
-                hide-details
-                clearable
-                required
-                :rules="rules.url" />
+        <v-row
+        class="url-input">
+            <v-text-field
+            class="url"
+            ref="url"
+            label="YouTube Link"
+            v-model="url"
+            prepend-icon="mdi-youtube"
+            hide-details
+            clearable
+            required
+            :rules="rules.url" />
 
-                <v-btn
-                v-if="$refs.url"
-                color = "accent"
-                rounded
-                :ripple="false"
-                :disabled="!$refs.url.valid"
-                @click="validateYoutubeID()">
-                    Go
-                </v-btn>
-            </v-row>
+            <v-btn
+            v-if="$refs.url"
+            color = "accent"
+            rounded
+            :ripple="false"
+            :disabled="!$refs.url.valid"
+            @click="validateYoutubeID()">
+                Go
+            </v-btn>
+        </v-row>
 
-            <v-progress-circular
-            v-if="loading"
-            indeterminate />
-            
-            <template v-if="!loading">
-                <template v-if="invalidId">
-                    No video found under ID '{{ vid }}'
-                </template>
+        <v-progress-circular
+        v-if="loading"
+        indeterminate />
+        
+        <template v-if="!loading">
+            <template v-if="invalidId">
+                No video found under ID '{{ vid }}'
+            </template>
 
-                <div
-                v-if="Object.keys(video).length"
-                class="data"
-                column
-                justify-center
-                align-center>
-                    <template v-if="Object.keys(video).length > 0">
-                        <v-row
-                        class="date-title">
-                            <v-text-field
-                            class="title"
-                            label="Video Title"
-                            v-model="video.title"
-                            readonly
-                            disabled />
-
-                            <v-text-field
-                            class="date"
-                            label="Date Uploaded"
-                            v-model="video.date"
-                            readonly
-                            disabled />
-                        </v-row>
-
-                        <v-row
-                        style="position: relative; width: 100%;"
-                        justify="space-between"
-                        class="desc">
-                            <v-textarea
-                            class="desc"
-                            label="Description"
-                            v-model="currentDescription"
-                            hint="Format: HH:mm:ss Name (Character) vs Name (Character)"
-                            persistent-hint
-                            no-resize />
-                            
-                            <v-row
-                            class="desc-buttons">
-                                <v-btn
-                                class="reset"
-                                color="button2"
-                                rounded
-                                :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
-                                :ripple="false"
-                                @click="currentDescription = video.description">
-                                    Reset Timestamps
-                                </v-btn>
-
-                                <v-btn
-                                class="parse"
-                                color="accent"
-                                rounded
-                                :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
-                                :ripple="false"
-                                @click="parseVideoDescription(currentDescription)">
-                                    Parse Timestamps
-                                </v-btn>
-                            </v-row>
-                        </v-row>
-                    </template>
-                </div>
-
-                <v-form
-                v-model="valid"
-                ref="form">
+            <div
+            v-if="Object.keys(video).length"
+            class="data"
+            column
+            justify-center
+            align-center>
+                <template v-if="Object.keys(video).length > 0">
                     <v-row
-                    v-show="currentDescription"
-                    class="group-info pa-0"
-                    justify="center">
-                        <v-col
-                        :cols="$vuetify.breakpoint.xsOnly ? 12 : undefined"
-                        :class="$vuetify.breakpoint.xsOnly? `title pa-0 mb-6` : `title pa-0 mr-2`">
-                            <v-text-field
-                            label="Group Title"
-                            v-model="group.title"
-                            hint="Required"
-                            persistent-hint
-                            dense
-                            clearable
-                            required
-                            :rules="rules.group" />
-                        </v-col>
+                    class="date-title">
+                        <v-text-field
+                        class="title"
+                        label="Video Title"
+                        v-model="video.title"
+                        readonly
+                        disabled />
 
-                        <v-col
-                        :class="$vuetify.breakpoint.xsOnly? `part pa-0 mr-2` : `part pa-0 mx-2`"
-                        :cols="$vuetify.breakpoint.xsOnly ? undefined : 2">
-                            <v-text-field
-                            label="Part"
-                            v-model="group.part"
-                            hint="Optional"
-                            persistent-hint
-                            clearable
-                            dense />
-                        </v-col>
-
-                        <v-col
-                        class="date pa-0 ml-2">
-                            <v-menu
-                            v-model="datepicker"
-                            :close-on-content-click="false"
-                            :nudge-right="40"
-                            transition="scale-transition"
-                            offset-y
-                            min-width="auto">
-                                <template v-slot:activator="{ on, attrs }">
-                                    <v-text-field
-                                    label="Date"
-                                    v-model="dateFormatted"
-                                    v-bind="attrs"
-                                    v-on="on"
-                                    prepend-icon="mdi-calendar"
-                                    hint="Required"
-                                    persistent-hint
-                                    dense
-                                    required
-                                    clearable
-                                    :rules="rules.date" />
-                                </template>
-
-                                <v-date-picker
-                                v-model="date"
-                                @input="datepicker = false" />
-                            </v-menu>
-                        </v-col>
+                        <v-text-field
+                        class="date"
+                        label="Date Uploaded"
+                        v-model="video.date"
+                        readonly
+                        disabled />
                     </v-row>
 
                     <div
-                    class="match-list">
-                        <template v-if="!loading && matches.length > 0">
-                            <template v-for="(match, i, j) in matches">
-                                <Preview
-                                :key="i"
-                                :index="i"
-                                :youtubeUpload="true"
-                                :groupMode="true"
-                                :p1="match.p1"
-                                :p2="match.p2"
-                                :video="match.video"
-                                :fileName="match.fileInfo ? match.fileInfo.name : null"
-                                :firstMatch="i === 0"
-                                :lastMatch="i === matches.length - 1"
-                                :timestampRequired="matches.length > 1 ? true : false"
-                                @remove="removeMatch(i)"
-                                @update-character="updateCharacter($event.character, $event.index, i)"
-                                @move-up="swapMatches(i, i-1)"
-                                @move-down="swapMatches(i, i+1)"
-                                @add-file="readFile($event, i)"
-                                @remove-file="removeFile(i)"
-                                @set-timestamp="matches[i].video.timestamp = $event"
-                                @delete-timestamp="delete matches[i].video.timestamp" />
-
-                                <hr v-if="i < matches.length - 1" :key="j" />
-                            </template>
-                        </template>
-                    </div>
-
-                    <center v-show="matches.length <= 0 && parsed">
-                        No matches found!
-                    </center>
-
-                    <center v-if="vid">
+                    class="desc">
+                        <v-textarea
+                        class="descbox"
+                        label="Description"
+                        v-model="currentDescription"
+                        hint="Format: HH:mm:ss Name (Character) vs Name (Character)"
+                        persistent-hint
+                        no-resize />
+                        
                         <v-btn
-                        class="add-match"
+                        class="reset"
+                        color="button2"
+                        rounded
+                        :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
                         :ripple="false"
-                        @click="addBlankMatch()"
-                        plain>
-                            <v-icon left>mdi-plus-thick</v-icon> Add Match
+                        @click="currentDescription = video.description">
+                            Reset Timestamps
                         </v-btn>
-                        <!-- 
-                        :disabled="matches.length > 15" -->
-                    </center>
 
-                    <div
-                    v-if="matches.length > 0"
-                    class="buttons"
-                    justify-center
-                    align-center>
                         <v-btn
+                        class="parse"
                         color="accent"
                         rounded
+                        :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
                         :ripple="false"
-                        :disabled="!valid"
-                        @click="youtubeUpload()">
-                            Upload
+                        @click="parseVideoDescription(currentDescription)">
+                            Parse Timestamps
                         </v-btn>
-
-                        <!--
-                        :disabled="!valid || matches.length > 16"-->
                     </div>
-                </v-form>
-            </template>
-        </v-layout>
+                </template>
+            </div>
+
+            <v-form
+            class="form"
+            v-model="valid"
+            ref="form">
+                <v-row
+                v-show="currentDescription"
+                class="group-info pa-0"
+                justify="center">
+                    <v-col
+                    :cols="$vuetify.breakpoint.xsOnly ? 12 : undefined"
+                    :class="$vuetify.breakpoint.xsOnly? `title pa-0 mb-6` : `title pa-0 mr-2`">
+                        <v-text-field
+                        label="Group Title"
+                        v-model="group.title"
+                        hint="Required"
+                        persistent-hint
+                        dense
+                        clearable
+                        required
+                        :rules="rules.group" />
+                    </v-col>
+
+                    <v-col
+                    :class="$vuetify.breakpoint.xsOnly? `part pa-0 mr-2` : `part pa-0 mx-2`"
+                    :cols="$vuetify.breakpoint.xsOnly ? undefined : 2">
+                        <v-text-field
+                        label="Part"
+                        v-model="group.part"
+                        hint="Optional"
+                        persistent-hint
+                        clearable
+                        dense />
+                    </v-col>
+
+                    <v-col
+                    class="date pa-0 ml-2">
+                        <v-menu
+                        v-model="datepicker"
+                        :close-on-content-click="false"
+                        :nudge-right="40"
+                        transition="scale-transition"
+                        offset-y
+                        min-width="auto">
+                            <template v-slot:activator="{ on, attrs }">
+                                <v-text-field
+                                label="Date"
+                                v-model="dateFormatted"
+                                v-bind="attrs"
+                                v-on="on"
+                                prepend-icon="mdi-calendar"
+                                hint="Required"
+                                persistent-hint
+                                dense
+                                required
+                                clearable
+                                :rules="rules.date" />
+                            </template>
+
+                            <v-date-picker
+                            v-model="date"
+                            @input="datepicker = false" />
+                        </v-menu>
+                    </v-col>
+                </v-row>
+
+                <div
+                class="match-list">
+                    <template v-if="!loading && matches.length > 0">
+                        <template v-for="(match, i, j) in matches">
+                            <Preview
+                            :key="i"
+                            :index="i"
+                            :youtubeUpload="true"
+                            :groupMode="true"
+                            :p1="match.p1"
+                            :p2="match.p2"
+                            :video="match.video"
+                            :fileName="match.fileInfo ? match.fileInfo.name : null"
+                            :firstMatch="i === 0"
+                            :lastMatch="i === matches.length - 1"
+                            :timestampRequired="matches.length > 1 ? true : false"
+                            @remove="removeMatch(i)"
+                            @update-character="updateCharacter($event.character, $event.index, i)"
+                            @move-up="swapMatches(i, i-1)"
+                            @move-down="swapMatches(i, i+1)"
+                            @add-file="readFile($event, i)"
+                            @remove-file="removeFile(i)"
+                            @set-timestamp="matches[i].video.timestamp = $event"
+                            @delete-timestamp="delete matches[i].video.timestamp" />
+
+                            <hr v-if="i < matches.length - 1" :key="j" />
+                        </template>
+                    </template>
+                </div>
+
+                <center v-show="matches.length <= 0 && parsed">
+                    No matches found!
+                </center>
+
+                    <v-btn
+                    v-if="vid"
+                    class="add-match"
+                    height="auto"
+                    :ripple="false"
+                    @click="addBlankMatch()"
+                    plain>
+                        <v-icon left>mdi-plus-thick</v-icon> Add Match
+                    </v-btn>
+                    <!-- 
+                    :disabled="matches.length > 15" -->
+
+
+                    <v-btn
+                    v-if="matches.length > 0"
+                    color="accent"
+                    rounded
+                    :ripple="false"
+                    :disabled="!valid"
+                    @click="youtubeUpload()">
+                        Upload
+                    </v-btn>
+
+                    <!--
+                    :disabled="!valid || matches.length > 16"-->
+            </v-form>
+        </template>
     </div>
 </template>
 
@@ -438,59 +424,36 @@ export default {
         /** upload youtube-only object */
         youtubeUpload() {
             this.uploading = true
-            let files = []
             let time = (new Date()).toISOString().split('T')
-
-            let matches = this.matches.map((match) => {
-
-                //this.printObj(match)
-
-                
+            let files = []
+            
+            this.matches.map((match) => {
                 if (match.file) {
                     files.push(match.file)
                     delete match.file
                 }
-
-                match = {
-                    userId: this.uid,
-                    uploadForm: 'YouTube',
-                    type: 'Group',
-                    matchDate: this.group.date,
-                    uploadDate: time[0],
-                    uploadTime: time[1],
-                    group: this.group,
-                    channel: this.video.channel,
-                    ...match
-                }
-
-                //this.printObj(match)
-
-                return match
             })
 
-            if (process.env.NODE_ENV === 'development') {
-                this.$matches.save({matches: matches, getYoutubeData: false})
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
-                            console.log('ID:', response.body.matchIds[i])
-                        }
+            if (process.env.NODE_ENV === 'development' || files.length <= 0) {
+                let matches = this.matches.map((match) => {
+
+                    //this.printObj(match)
+                    match = {
+                        userId: this.uid,
+                        uploadForm: 'YouTube',
+                        type: 'Group',
+                        matchDate: this.group.date,
+                        uploadDate: time[0],
+                        uploadTime: time[1],
+                        group: this.group,
+                        channel: this.video.channel,
+                        ...match
                     }
 
-                    this.uploading = false
-                    this.finished = true
+                    return match
                 })
-                .catch((error) => {
-                    console.log(error)
-                    console.log('Failed to upload')
-                    this.setErrors('upload')
-                    this.uploading = false
-                    this.error = true
-                })
-            } else if (files.length > 0) {
-                Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
-                .then(() => this.$matches.save({matches: matches, getYoutubeData: false}))
+
+                this.$matches.save({matches: matches, getYoutubeData: false})
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
@@ -510,7 +473,30 @@ export default {
                     this.error = true
                 })
             } else {
-                this.$matches.save({matches: matches, getYoutubeData: false})
+                Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
+                .then(() => {
+                    
+                    let matches = this.matches.map((match) => {
+
+                        //this.printObj(match)
+                        match = {
+                            userId: this.uid,
+                            uploadForm: 'YouTube',
+                            type: 'Group',
+                            matchDate: this.group.date,
+                            uploadDate: time[0],
+                            uploadTime: time[1],
+                            group: this.group,
+                            channel: this.video.channel,
+                            ...match
+                        }
+
+                        //this.printObj(match)
+                        return match
+                    })
+
+                    return this.$matches.save({matches: matches, getYoutubeData: false})
+                })
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
@@ -555,6 +541,12 @@ export default {
         clearErrors() {
            this.error = false
            this.errors = []
+        },
+        closeWarning() {
+            this.formData = null
+            this.fileData = null
+            this.tempData = null
+            this.warning = false
         },
         resetForm() {
             this.matches = []
@@ -719,12 +711,7 @@ export default {
             delete this.matches[i].file
             delete this.matches[i].fileInfo
         },
-        closeWarning() {
-            this.formData = null
-            this.fileData = null
-            this.tempData = null
-            this.warning = false
-        },
+        
         /** sets errors array for display once files finish being read */
         setErrors(type, file) {
             let index = this.errors.findIndex(e => e.type == type)

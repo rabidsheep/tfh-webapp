@@ -110,17 +110,11 @@
 
                 <!-- upload form -->
                 <v-stepper-content step="3">
-                    <v-layout
+                    <div
                     id="step__upload"
-                    class="step"
-                    column
-                    justify-center
-                    align-center>
-                        <v-layout
-                        column
-                        align-center
-                        justify-center
-                        class="heading mb-6">
+                    class="step">
+                        <div
+                        class="heading">
                             <v-btn
                             color="button2"
                             class="back"
@@ -132,7 +126,7 @@
                             </v-btn>
 
                             <h1>Upload Matches</h1>
-                        </v-layout>
+                        </div>
                         
                         <FileUploads
                         v-if="uploadType == 'files'"
@@ -141,7 +135,7 @@
                         <YoutubeUploads
                         v-else-if="uploadType === 'youtube'"
                         :uid="uid"/>
-                    </v-layout>
+                    </div>
                 </v-stepper-content>
             </v-stepper-items>
         </v-stepper>

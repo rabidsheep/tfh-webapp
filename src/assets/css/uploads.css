@@ -2,7 +2,7 @@
 
 /* general */
 #app {
-    overflow: scroll;
+    overflow-x: scroll;
 }
 
 #forms {

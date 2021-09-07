@@ -396,7 +396,7 @@ export default {
             })
         },
         resetMatches() {
-            this.updated = JSON.parse(this.originalStringified)
+            this.updated = JSON.parse(JSON.stringify(this.original))
             this.resetData = !this.resetData
         },
         updateCharacter(character, i) {

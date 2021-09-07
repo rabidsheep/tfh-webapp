@@ -315,7 +315,7 @@ export default {
       },
         'dateFormatted': function(date) {
             this.group.date = date
-        }
+        },
     },
     methods: {
         validateYoutubeID() {
@@ -385,7 +385,7 @@ export default {
                         let timestamp = `${times[0]}h${times[1]}m${times[2]}s`
 
                         let players = matched[4]
-                        let playersPattern = /\s*(.*)\s+\(\s*(.*)\s*\)\s+vs\s+(.*)\s+\(\s*(.*)\s*\)\s*/i
+                        let playersPattern = /\s*(.*)\s+\(\s*(.*)\s*\)\s+vs.?\s+(.*)\s+\(\s*(.*)\s*\)\s*/i
 
                         if (players.match(playersPattern)) {
                             let matched = players.match(playersPattern)

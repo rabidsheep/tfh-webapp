@@ -59,6 +59,7 @@ api.get('/matches', (req, res) => {
 
     const pipeline = [
         { '$match': query },
+        { '$sort': { 'order': 1 } },
         { '$group': {
             _id: {
                 uploadId: '$uploadId',
@@ -84,6 +85,7 @@ api.get('/matches', (req, res) => {
                     uploadId: '$uploadId',
                     video: '$video',
                     fileInfo: '$fileInfo',
+                    order: '$order',
                 }
             },
         }},
@@ -187,6 +189,8 @@ api.put('/matches/update', (req, res) => {
         }
     })
 
+    let deleted = req.body.deleted.map(id => mongo.ObjectId(id))
+
     Promise.all(matches).then((matches) => {
         return Promise.all([
             matches,
@@ -208,9 +212,12 @@ api.put('/matches/update', (req, res) => {
                     p2: matches[i].p2,
                     video: matches[i].video,
                     channel: matches[i].channel,
+                    order: matches[i].order
                 }},
             )
         }
+
+        db.collection('matches').deleteMany({ _id: { $in: deleted } })
 
         return null
     })
@@ -382,6 +389,8 @@ function formatDate(date) {
 // format query object for filtering matches
 function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
     let query = {}
+    if (players[0].name) players[0].name = new RegExp([players[0].name.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i')
+    if (players[1].name) players[1].name = new RegExp([players[1].name.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i')
     let p1 = players[0]
     let p2 = players[1]
 
@@ -391,22 +400,22 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
         // need help trimming this down
         if (p1.name) {
             query.$or[0] = {
-                'p1.name': new RegExp(['^' + p1.name], 'i'),
+                'p1.name': p1.name,
                 ...query.$or[0]
             }
             query.$or[1] = {
-                'p2.name': new RegExp(['^' + p1.name], 'i'),
+                'p2.name': p1.name,
                 ...query.$or[1]
             }
         }
 
         if (p2.name) {
             query.$or[0] = {
-                'p2.name': new RegExp(['^' + p2.name], 'i'),
+                'p2.name': p2.name,
                 ...query.$or[0]
             }
             query.$or[1] = {
-                'p1.name': new RegExp(['^' + p2.name], 'i'),
+                'p1.name': p2.name,
                 ...query.$or[1]
             }
         }
@@ -447,13 +456,13 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
     if (group) {
         query = {
             // allow partial matches for group names?
-            'group.title': group.title,
+            'group.title': new RegExp([group.title.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i'),
             ...query
         }
 
         if (group.part) {
             query = {
-                'group.part': group.part,
+                'group.part': new RegExp([group.part.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i'),
                 ...query
             }
         }

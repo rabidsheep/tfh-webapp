@@ -541,7 +541,7 @@ export default {
         },
         clearGroupFilters() {
             this.groupFilter = {
-                name: null,
+                title: null,
                 part: null,
                 date: null,
             }

@@ -9,8 +9,7 @@
                 <button
                 aria-label="Remove Match"
                 :ripple="false"
-                :class="$route.path === '/edit' ? `remove disabled` : `remove`"
-                :disabled="$route.path === '/edit'"
+                class="remove"
                 @click.prevent="$emit('remove')">
                     <RemoveButton />
                 </button>
@@ -45,7 +44,6 @@
         </v-col>
 
         <v-col
-        v-show="groupMode && $route.path !== '/edit'"
         class="swap">
             <button
             aria-label="Move Up"

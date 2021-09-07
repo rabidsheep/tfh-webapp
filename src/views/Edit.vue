@@ -16,7 +16,7 @@
         @add-file-anyways="addFile(tempData)"
         @close-warning="closeWarning()"
         @clear-errors="clearErrors()"
-        @close="resetForm()" />
+        @close="reload()" />
 
 
         <v-overlay v-show="uploading || finished">
@@ -208,7 +208,10 @@
                                     @set-url="setUrl($event, i)"
                                     @delete-timestamp="deleteTimestamp(i)"
                                     @delete-video="deleteVideo(i)"
-                                    @remove-file="removeFile(i)" />
+                                    @remove-file="removeFile(i)"
+                                    @remove="removeMatch(i)"
+                                    @move-up="swapMatches(i, i-1)"
+                                    @move-down="swapMatches(i, i+1)" />
 
                                     <hr :key="j" v-if="i < updated.length - 1" />
                                 </template>
@@ -271,6 +274,7 @@ export default {
             step: 1,
             original: [],
             updated: [],
+            deleted: [],
             valid: false,
             uploading: false,
             finished: false,
@@ -437,7 +441,7 @@ export default {
         updateMatches() {
             this.uploading = true
             let files = []
-            
+
             this.updated.map((match) => {
                 if (match.file) {
                     files.push(match.file)
@@ -448,13 +452,14 @@ export default {
             if (process.env.NODE_ENV === 'development' || files.length <= 0) {
                 let matches = this.updated.map((match) => match)
 
-                this.$update.save({matches: matches, getYoutubeData: false})
+                this.$update.save({
+                    matches: matches,
+                    deleted: this.deleted,
+                    getYoutubeData: false
+                })
                 .then((response) => {
                     if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
-                            console.log('ID:', response.body.matchIds[i])
-                        }
+                        console.log('Updated matches')
                     }
 
                     this.uploading = false
@@ -462,7 +467,7 @@ export default {
                 })
                 .catch((error) => {
                     console.log(error)
-                    console.log('Failed to upload')
+                    console.log('Failed to update')
                     this.setErrors('upload')
                     this.uploading = false
                     this.error = true
@@ -481,14 +486,15 @@ export default {
                     })
                     .map((match) => match)
 
-                    return this.$update.save({matches: matches, getYoutubeData: false})
+                    return this.$update.save({
+                        matches: matches,
+                        deleted: this.deleted,
+                        getYoutubeData: false
+                    })
                 })
                 .then((response) => {
                     if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
-                            console.log('ID:', response.body.matchIds[i])
-                        }
+                        console.log('Updated matches')
                     }
 
                     this.uploading = false
@@ -496,7 +502,7 @@ export default {
                 })
                 .catch((error) => {
                     console.log(error)
-                    console.log('Failed to upload')
+                    console.log('Failed to update matches')
                     this.setErrors('upload')
                     this.uploading = false
                     this.error = true
@@ -711,6 +717,27 @@ export default {
                 }
             } else if (file) {
                 this.errors[index].files.push(file)
+            }
+        },
+        removeMatch(i) {
+            console.log("Deleting match #", (i+1))
+            
+            this.deleted.push(this.updated[i]._id)
+            this.updated.splice(i, 1)
+        },
+        swapMatches(i, j) {
+            let tempMatch = this.updated[i]
+            this.$set(this.updated, i, this.updated[j])
+            this.$set(this.updated, j, tempMatch)
+
+            if (i > j) {
+                // move up
+                this.updated[i].order += 1
+                this.updated[j].order -= 1
+            } else if (i < j) {
+                // move down
+                this.updated[i].order -= 1
+                this.updated[j].order += 1
             }
         },
     }

@@ -141,11 +141,14 @@ export default {
       url: String,
       timestamp: String,
     },
+    order: Number,
   },
   data: () => {
     return {
       show: false,
     }
   },
+  mounted() {
+  }
 }
 </script>

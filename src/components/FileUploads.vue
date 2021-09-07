@@ -105,6 +105,7 @@
 
                         <v-date-picker
                         v-model="date"
+                        :max="currentDate"
                         @input="datepicker = false" />
                     </v-menu>
                 </v-col>
@@ -272,28 +273,17 @@ export default {
                     v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
                     v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
                 ]
-            }
+            },
+            currentDate: new Date().toISOString().split('T').toString()
         }
     },
     watch: {
-        'uploadType': function(type) {
-
-               this.date = null
-               this.group = {
-                    title: null,
-                    part: null,
-                    date: null,
-               }
-               this.url = null
-               this.vod = null
-        },
-
       'date': function(date) {
-          if (this.groupMode) this.group.date = this.formatDate(date)
+          this.group.date = this.formatDate(date)
       },
 
       'url': function(url) {
-          if (this.$refs.url.validate() && this.groupMode) {
+          if (this.$refs.url.validate()) {
               this.masterUrl = url
           }
 
@@ -312,13 +302,12 @@ export default {
         },
         /** tell parent component to begin uploading files */
         submitFiles() {
-            let time = (new Date()).toISOString().split('T')
+            let time = new Date().toISOString().split('T')
             let files = []
+            let order = 0
 
             this.uploading = true
             let matches = this.matches.map((match) => {
-                
-
                 let newMatch = {
                     userId: this.uid,
                     uploadForm: 'Files',
@@ -327,12 +316,16 @@ export default {
                     uploadTime: time[1],
                     ...match
                 }
+
                 if (this.groupMode) {
                     newMatch.group = this.group
                     newMatch.matchDate = this.group.date
                 } else {
                     newMatch.matchDate = match.file.date
                 }
+
+                newMatch.order = order
+                order += 1
 
                 
                 files.push(match.file)
@@ -342,7 +335,7 @@ export default {
                 return newMatch
             })
 
-            this.printObj(this.matches)
+            //this.printObj(this.matches)
 
             if (process.env.NODE_ENV === 'development') {
                 this.$matches.save({matches: matches, getYoutubeData: true})
@@ -399,7 +392,6 @@ export default {
                 return snapshot.ref.getDownloadURL()
             })
             .then((url) => {
-                console.log(url)
                 let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
                 return this.matches[i].fileInfo.url = url
             })
@@ -472,7 +464,7 @@ export default {
                     var textReader = new FileReader()
 
                     textReader.onload = function(e) {
-                        that.parseFileData(e.target.result, file, timestamp)
+                        that.parseFileData(e.target.result, file, timestamp, i, files.length - 1)
                     }
 
                     textReader.readAsText(file)
@@ -481,12 +473,9 @@ export default {
                     //if (i < files.length - 1 && that.matches.length < that.uploadLimit)
                     if (i < files.length - 1)
                         that.readFiles(files, i + 1)
-                    else
-                        if (that.errors.length > 0) that.error = true
                 })
                 .catch((error) => {
                     console.log(error)
-
                     //if (i < files.length - 1 && that.matches.length < that.uploadLimit)
                     if (i < files.length - 1)
                         that.readFiles(files, i + 1)
@@ -512,13 +501,14 @@ export default {
          * character hexes @ 197-213 (max)
          * version @ 
          */
-        parseFileData(fileText, file, timestamp) {
+        parseFileData(fileText, file, timestamp, i, endOfFiles) {
             // error if file uses non-.tfhr extension
             let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2)
             let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
 
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
+                console.log("Parsing error with file", file.name)
                 this.setErrors('parse', file.name)
             } else {
                 let match = {
@@ -541,18 +531,23 @@ export default {
 
                 this.matches.push(match)
             }
+
+            if (i >= endOfFiles)
+                if (this.errors.length > 0) this.error = true
         },
         /** sets errors array for display once files finish being read */
         setErrors(type, file) {
             let index = this.errors.findIndex(e => e.type == type)
-
             if (index === -1) {
                 if (!file) {
+                    console.log("Adding error type to array")
                     this.errors.push({type: type})
                 } else {
+                    console.log("Adding error type + file name to array")
                     this.errors.push({type: type, files: [file]})
                 }
             } else if (file) {
+                console.log("Adding file name to " + type + " file array")
                 this.errors[index].files.push(file)
             }
         },
@@ -566,7 +561,7 @@ export default {
         resetForm() {
             this.matches = []
             this.group = {
-                name: null,
+                title: null,
                 part: null,
                 date: null
             }
@@ -577,7 +572,6 @@ export default {
             this.$set(this.matches[i][`p${j+1}`], 'character', character)
         },
         setVideoId(id, i) {
-            
             if (!this.matches[i].video) {
                 this.$set(this.matches[i], 'video', {})
             }
@@ -606,25 +600,9 @@ export default {
             }
         },
         swapMatches(i, j) {
-            
-            
-            /*console.log('ORIGINAL\n--------' +
-            '\nMatch @ pos ' + i + ': ' +
-            this.matches[i].p1.name + ' vs ' + this.matches[i].p2.name +
-            '\nMatch @ pos' + j + ': ' +
-            this.matches[j].p1.name + ' vs ' + this.matches[j].p2.name)*/
-            
             let tempMatch = this.matches[i]
             this.$set(this.matches, i, this.matches[j])
             this.$set(this.matches, j, tempMatch)
-
-            
-            /*console.log('NEW\n--------' +
-            '\nMatch @ pos' + i + ': ' +
-            this.matches[i].p1.name + ' vs ' + this.matches[i].p2.name +
-            '\nMatch @ pos' + j + ': ' +
-            this.matches[j].p1.name + ' vs ' + this.matches[j].p2.name)*/
-            
         },
         
     }

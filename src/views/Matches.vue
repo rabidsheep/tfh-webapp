@@ -1,17 +1,13 @@
 <template>
   <div id="index">
       <div
-      class="loading"
+      class="loading__filters"
       v-if="loadingFilterContent">
           <v-progress-linear
-          class="progress"
+          class="progress__filters"
           color="accent"
           indeterminate />
-
-          <p>
-            <br />
-            Retrieving content...
-          </p>
+          Retrieving content...
       </div>
 
     <div
@@ -40,11 +36,14 @@
       @reset-strictness="strict = false"
       @loaded-filter-content="loadingFilterContent = false" />
 
-      <v-progress-linear
-      style="margin: 15% 0"
-      color="accent"
-      v-show="loadingMatches"
-      indeterminate />
+      <div
+      class="loading__matches"
+      v-show="loadingMatches">
+        <v-progress-linear
+        color="accent"
+        class="progress__matches"
+        indeterminate />
+      </div>
       
       <!-- matches table -->
       <div
@@ -75,6 +74,7 @@
               :p2="match.p2"
               :fileInfo="match.fileInfo ? match.fileInfo : null"
               :video="match.video ? match.video : null"
+              :order="match.order"
               @update-character="updateCharacter($event.character, $event.index)"
               @update-name="updateName($event.name, $event.index)" />
             </div>

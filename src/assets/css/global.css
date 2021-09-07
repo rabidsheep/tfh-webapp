@@ -1,4 +1,8 @@
 /** main html stuff **/
+#app {
+    overflow-x: auto;
+}
+
 #app .v-application--wrap {
     max-width: inherit !important;
     flex: 1 1 auto;
@@ -91,23 +95,34 @@ a {
     height: 100%;
 }
 
-#index .loading {
-    align-self: center;
+#index .loading__filters {
+    display: grid;
     text-align: center;
     width: 100%;
     min-height: 100vh;
+    row-gap: 20px;
 }
 
 
-#index .loading .progress {
+#index .progress__filters {
     align-self: end;
 }
 
 #index .index__body {
     display: grid;
-    row-gap: 20px;
+    row-gap: 30px;
 }
 
+#index .loading__matches {
+    display: grid;
+    row-gap: 20px;
+    align-items: center;
+}
+
+#index .progress__matches {
+    width: 70%;
+    justify-self: center;
+}
 
 picture.icon {
     height: 56px;
@@ -214,18 +229,82 @@ picture.icon source, picture.icon img {
 }
 
 .status .character-icon,
-.match .character-icon {
+.match .character-icon,
+.status .character-icon > *,
+.match .character-icon > * {
     height: 52px;
     width: 45px;
     min-width: 45px;
 }
 
-.status .character-icon > *,
-.match .character-icon > * {
-    height: 100%;
-    width: 100%;
-    min-width: 100%;
+/*** status overlay ***/
+#forms .v-overlay__content {
+    background-color: var(--v-subBackground2-darken1)
 }
+
+    /* desktop */
+    .wide #forms .v-overlay__content {
+        width: 600px;
+    }
+    /* mobile */
+    .small #forms .v-overlay__content {
+        width: 80%;
+    }
+
+.status > div {
+    display: grid;
+    row-gap: 20px;
+    padding: 20px;
+    width: 100%;
+}
+
+.status .v-progress-linear {
+    height: 50px;
+    border-radius: 10px;
+    -webkit-border-radius: 10px;
+}
+
+.status .heading,
+.status .buttons {
+    justify-self: center;
+}
+
+.status .data {
+    display: grid;
+    grid-template:
+        'form divider file' auto / 1fr 0fr 1fr;
+    column-gap: 15px;
+}
+
+.status .data__inner {
+    display: grid;
+    grid-template:
+        'a' 30px
+        'b' 70px
+        'c' 70px;
+}
+
+.status .data__inner h4 {
+    justify-self: center;
+}
+
+.status__finished .v-btn, .status__error .v-btn {
+    justify-self: center;
+}
+
+.status .status__warning .buttons {
+    display: grid;
+    grid-template:
+        'a b';
+    column-gap: 20px;
+}
+
+.status .status__warning .form-data { grid-area: form; }
+.status .status__warning .v-divider {
+    grid-area: divider;
+    justify-self: center;
+}
+.status .status__warning .file-data { grid-area: file; }
 
 .status .player {
     flex-wrap: nowrap;
@@ -246,40 +325,7 @@ picture.icon source, picture.icon img {
     -webkit-box-orient: vertical;
 }
 
-.status .p1 {
-    margin-bottom: 10px;
-}
-
-.status .col {
-    padding: 0px;
-}
 
 .status .character-icon {
     margin-right: 15px;
-}
-
-.status .file-data {
-    margin-left: 30px;
-}
-
-.status .form-data {
-    margin-right: 30px;
-}
-
-.status .data,
-.status .data__inner,
-.status .data > hr  {
-    margin-top: 15px !important;
-}
-
-.status .data__inner > h4 {
-    margin-bottom: 10px;
-}
-
-.status .data {
-    justify-content: center;
-}
-
-.status .btns {
-    margin-top: 15px;
 }

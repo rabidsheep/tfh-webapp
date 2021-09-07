@@ -1,9 +1,6 @@
 /** uploadform.vue **/
 
 /* general */
-#app {
-    overflow-x: scroll;
-}
 
 #forms {
     width: 100%;
@@ -190,33 +187,6 @@
     padding-top: 12px !important;
 }
 
-
-/** statusoverlay.vue **/
-
-#forms .v-overlay .v-progress-linear {
-    margin: 20px 0px;
-    height: 50px;
-    border-radius: 10px;
-    -webkit-border-radius: 10px;
-}
-
-#forms .v-overlay__content {
-    background-color: #171717
-}
-
-#forms .v-overlay__content .status > div {
-    width: 80%;
-}
-
-#forms .v-overlay .v-btn {
-    margin-top: 10px;
-}
-
-/* desktop */
-.wide #forms .v-overlay__content {
-    width: 600px;
-}
-
 .wide #forms .back {
     position: absolute;
     margin: auto;
@@ -226,9 +196,6 @@
 }
 
 /* mobile */
-.small #forms .v-overlay__content {
-    width: 80%;
-}
 
 .small #forms .back {
     margin-bottom: 10px;
@@ -238,7 +205,6 @@
 #forms #youtube .data {
     width: 95%;
 }
-
 
 #forms #youtube .data .date-title,
 #forms #youtube data  {

@@ -1,95 +1,103 @@
 <template>
     <v-overlay v-show="error || warning || uploading || finished">
         <v-container fluid fill-height>
-            <v-layout class="status" column justify-center align-center>
-                <template v-if="uploading">
+            <v-layout class="status" justify-center align-center>
+                <div 
+                v-if="uploading"
+                class="status__uploading">
                     <h1>Uploading...</h1>
-
-                    <br />
 
                     <v-progress-linear
                     color="accent"
                     indeterminate />
-                </template>
+                </div>
 
-                <template v-else-if="finished">
-                    <v-icon
-                    class="green--text lighten-2"
-                    large>
-                        mdi-check-circle
-                    </v-icon>
+                <div
+                v-else-if="finished"
+                class="status__finished">
+                    <div class="heading">
+                        <v-icon
+                        class="green--text lighten-2"
+                        large>
+                            mdi-check-circle
+                        </v-icon>
 
-                    <h1>
-                        Upload Finished
-                    </h1>
+                        <h1>
+                            Upload Finished
+                        </h1>
+                    </div>
 
                     <v-btn
+                    width="50px"
+                    height="40px"
                     rounded
                     @click="$emit('close')"
                     color="accent">
                         OK
                     </v-btn>
-                </template>
+                </div>
 
-                <template v-else-if="error">
+                <div
+                v-else-if="error"
+                class="status__error">
                     <h1>Error</h1>
-                    
-                    <div><br /></div>
 
                     <div
                     v-for="(error, i) in errors"
                     :key="i">
-                        
-                        <template v-if="error.type === 'limit'">
-                            <center>
-                                {{ errors.length > 1 ? i + 1 + ') ' : '' }}
-                                {{ errorMsg[error.type] }}
-                            </center>
-                        </template>
+                        <center v-if="error.type === 'limit'">
+                            {{ errors.length > 1 ? i + 1 + ') ' : '' }}
+                            {{ errorMsg[error.type] }}
+                        </center>
 
-                        <template v-else>
-                            <center>
-                                {{ errors.length > 1 ? i + 1 + ') ' : '' }}
-                                {{ errorMsg[error.type] }}
-                                
+                        <center v-else>
+                            {{ errors.length > 1 ? i + 1 + ') ' : '' }}
+                            {{ errorMsg[error.type] }}
+                            
 
-                                <ul v-if="error.files && error.files.length > 0">
-                                    <li
-                                    v-for="(file, j) in error.files"
-                                    :key="j">
-                                        {{ file }}
-                                    </li>
-                                </ul>
-                            </center>
-                        </template>
-
-                        <br />
+                            <ul v-if="error.files && error.files.length > 0">
+                                <li
+                                class="pa-0"
+                                v-for="(file, j) in error.files"
+                                :key="j">
+                                    {{ file }}
+                                </li>
+                            </ul>
+                        </center>
                     </div>
                     
                     <v-btn
+                    width="50px"
+                    height="40px"
                     rounded
                     @click="$emit('clear-errors')"
                     color="accent">
                         OK
                     </v-btn>
-                </template>
+                </div>
 
-                <template v-else-if="warning">
-                    <v-icon
-                    class="amber--text lighten-3"
-                    large>
-                        mdi-alert
-                    </v-icon>
 
-                    <h1>Warning</h1>
+                <div
+                v-else-if="warning"
+                class="status__warning">
+                    <div class="heading">
+                        <v-icon
+                        class="amber--text lighten-3"
+                        large>
+                            mdi-alert
+                        </v-icon>
+                        
+                        <h1>Warning</h1>
 
-                    <v-row class="data">
                         There appears to be a mismatch between data pulled from the file and data pulled from the form for this set.
-                        <v-col
+                    </div>
+
+                    <div class="data">
+                        <div
                         class="data__inner form-data"
                         :cols="$vuetify.breakpoint.xsOnly? 4 : 5">
                             <h4>Form Data:</h4>
-                            <v-col
+                            <div
                             v-for="(player, i) in [formData.p1, formData.p2]"
                             :class="`player p${i+1}`"
                             :cols="12"
@@ -115,17 +123,17 @@
                                 @click="$emit('update-name', {name: player.name, index: i})">
                                     {{ player.name }}
                                 </p>
-                            </v-col>
-                        </v-col>
+                            </div>
+                        </div>
 
                         <v-divider vertical />
                         
-                        <v-col
+                        <div
                         class="data__inner file-data"
                         :cols="$vuetify.breakpoint.xsOnly? 4: 5">
                             <h4>File Data:</h4>
 
-                            <v-col
+                            <div
                             v-for="(player, i) in [fileData.p1, fileData.p2]"
                             :class="`player p${i+1}`"
                             :cols="12"
@@ -151,34 +159,31 @@
                                 @click="$emit('update-name', {name: player.name, index: i})">
                                     {{ player.name }}
                                 </p>
-                            </v-col>
-                        </v-col>
-                        
-                        
-                        
-                    </v-row>
+                            </div>
+                        </div>
+                    </div>
                     
 
-                    <v-row class="btns">
-                        <v-col class="ignore-file" cols="12">
-                            <v-btn
-                            rounded
-                            @click="$emit('close-warning')"
-                            color="button2">
-                                Oops! Don't Add That
-                            </v-btn>
-                        </v-col>
+                    <div class="buttons">
+                        <v-btn
+                        width="140px"
+                        height="50px"
+                        rounded
+                        @click="$emit('close-warning')"
+                        color="button2">
+                            Oops! Don't Add That
+                        </v-btn>
 
-                        <v-col class="add-file" cols="12">
-                            <v-btn
-                            rounded
-                            @click="$emit('add-file-anyways')"
-                            color="accent">
-                                Add File Anyways
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                </template>
+                        <v-btn
+                        rounded
+                        width="140px"
+                        height="50px"
+                        @click="$emit('add-file-anyways')"
+                        color="accent">
+                            Add File Anyways
+                        </v-btn>
+                    </div>
+                </div>
             </v-layout>
         </v-container>
     </v-overlay>

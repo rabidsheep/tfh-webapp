@@ -166,6 +166,7 @@
 
                             <v-date-picker
                             v-model="date"
+                            :max="currentDate"
                             @input="datepicker = false" />
                         </v-menu>
                     </v-col>
@@ -259,7 +260,7 @@ export default {
             datepicker: false,
             date: null,
             group: {
-                name: null,
+                title: null,
                 part: null,
                 date: null
             },
@@ -300,6 +301,7 @@ export default {
             matchesFound: false,
             parsed: false,
             invalidId: false,
+            currentDate: new Date().toISOString().split('T').toString(),
         }
     },
     mounted() {
@@ -426,6 +428,7 @@ export default {
             this.uploading = true
             let time = (new Date()).toISOString().split('T')
             let files = []
+            let order = 0
             
             this.matches.map((match) => {
                 if (match.file) {
@@ -449,6 +452,9 @@ export default {
                         channel: this.video.channel,
                         ...match
                     }
+
+                    match.order = order
+                    order += 1
 
                     return match
                 })
@@ -554,7 +560,7 @@ export default {
             this.video = {}
             this.vid = null
             this.group = {
-                name: null,
+                title: null,
                 part: null,
                 date: null
             }

@@ -529,6 +529,8 @@ export default {
                     },
                 }
 
+                if (this.matches.length === 0) this.date = timestamp
+
                 this.matches.push(match)
             }
 

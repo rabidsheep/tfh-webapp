@@ -65,7 +65,7 @@
               v-bind="group._id"
               :downloadAvailable="group.matches.some((match) => match.fileInfo)"
               :timezone="timezone"
-              @generate-zip-file="generateZipFile(group.matches, group._id.uploadId)" />
+              @generate-zip-file="generateZipFile(group.matches, group._id.group)" />
 
               <MatchRow
               v-for="(match, k) in group.matches"
@@ -255,7 +255,7 @@ export default {
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250
     },
-    generateZipFile(matches, groupId) {
+    generateZipFile(matches, group) {
       let jszip = new JSZip()
 
       Promise.all([
@@ -271,7 +271,7 @@ export default {
       .then(() => {
         jszip.generateAsync({type: 'blob'})
         .then(function(content) {
-          saveAs(content, `${groupId}.zip`)
+          saveAs(content, `${group.date}_${group.title.replace(/\s/g, '_').replace(/[-[\]'{}()*+?.,\\^$|]/g, '')}.zip`)
         })
       })
 

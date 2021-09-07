@@ -312,9 +312,10 @@ export default {
     watch: {
         'date': function(v) {
             this.dateFormatted = this.formatDate(v)
-            
-            this.group.date = this.dateFormatted
-      }
+      },
+        'dateFormatted': function(date) {
+            this.group.date = date
+        }
     },
     methods: {
         validateYoutubeID() {
@@ -338,6 +339,7 @@ export default {
                     this.video = response.body
                     this.invalidId = false
                     this.currentDescription = this.video.description
+                    this.dateFormatted = this.video.date
 
                     this.parseVideoDescription(this.currentDescription)
                 }

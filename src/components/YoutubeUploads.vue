@@ -121,8 +121,7 @@
                         label="Group Title"
                         v-model="group.title"
                         hint="Required"
-                        persistent-hint
-                        dense
+                        maxLength="32"
                         clearable
                         required
                         :rules="rules.group" />
@@ -134,38 +133,39 @@
                         <v-text-field
                         label="Part"
                         v-model="group.part"
+                        maxLength="16"
                         hint="Optional"
-                        persistent-hint
-                        clearable
-                        dense />
+                        clearable />
                     </v-col>
 
                     <v-col
                     class="date pa-0 ml-2">
                         <v-menu
-                        v-model="datepicker"
-                        :close-on-content-click="false"
-                        :nudge-right="40"
+                        label="Date"
+                        content-class="datepicker__menu"
+                        attach=".date__input .v-input__control"
                         transition="scale-transition"
-                        offset-y
-                        min-width="auto">
+                        min-width="auto"
+                        v-model="datepicker"
+                        :close-on-content-click="false">
                             <template v-slot:activator="{ on, attrs }">
                                 <v-text-field
+                                class="date__input"
+                                ref="date"
                                 label="Date"
                                 v-model="dateFormatted"
                                 v-bind="attrs"
                                 v-on="on"
                                 prepend-icon="mdi-calendar"
                                 hint="Required"
-                                persistent-hint
-                                dense
-                                required
                                 clearable
                                 :rules="rules.date" />
                             </template>
 
                             <v-date-picker
                             v-model="date"
+                            no-title
+                            scrollable
                             :max="currentDate"
                             @input="datepicker = false" />
                         </v-menu>

@@ -35,7 +35,7 @@
                 </v-stepper-header>
                 
                 <!-- sign in -->
-                <v-stepper-content step="1">
+                <div v-show="step === 1">
                    <div
                     id="step__sign-in"
                     class="step">
@@ -84,9 +84,9 @@
                             </template>
                         </div>
                     </div>
-                </v-stepper-content>
+                </div>
 
-                <v-stepper-content step="2">
+                <div v-show="step === 2">
                     <div
                     id="step__edit"
                     class="step">
@@ -209,7 +209,7 @@
                             </v-row>
                         </v-form>
                     </div>
-                </v-stepper-content>
+                </div>
             </v-stepper-items>
         </v-stepper>
     </v-container>

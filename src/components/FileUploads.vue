@@ -61,8 +61,9 @@
                     label="Group Title"
                     v-model="group.title"
                     hint="Required"
-                    persistent-hint
+                    maxLength="32"
                     clearable
+                    persistent-hint
                     :rules="groupMode ? rules.group : undefined"
                     :required="groupMode" />
                 </v-col>
@@ -74,22 +75,25 @@
                     label="Part"
                     v-model="group.part"
                     hint="Optional"
-                    clearable
-                    persistent-hint />
+                    maxLength="16"
+                    persistent-hint
+                    clearable />
                 </v-col>
 
                 <v-col
                 class="group date pa-0"
                 :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
                     <v-menu
+                    label="Date"
+                    content-class="datepicker__menu"
+                    attach=".date__input .v-input__control"
                     transition="scale-transition"
                     min-width="auto"
                     v-model="datepicker"
-                    offset-y
-                    :close-on-content-click="false"
-                    :nudge-right="40">
+                    :close-on-content-click="false">
                         <template v-slot:activator="{ on, attrs }">
                             <v-text-field
+                            class="date__input"
                             ref="date"
                             label="Date"
                             v-model="group.date"
@@ -105,6 +109,8 @@
 
                         <v-date-picker
                         v-model="date"
+                        no-title
+                        scrollable
                         :max="currentDate"
                         @input="datepicker = false" />
                     </v-menu>

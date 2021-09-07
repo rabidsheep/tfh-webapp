@@ -127,12 +127,6 @@
     padding-bottom: 14px !important;
 }
 
-#forms .step .v-btn:not(.back):not(.remove) {
-    max-width: min-content;
-    flex-wrap: wrap;
-    height: 50px;
-}
-
 .step > * {
     width: 100%;
     text-align: center;
@@ -263,7 +257,6 @@
     max-width: max-content;
     min-height: max-content;   
 }
-
 
 #forms #files .group-info .v-input__append-inner {
     position: absolute;
@@ -566,3 +559,13 @@ button.move:not(.disabled):hover .st0 {
 #step__edit h1 { grid-area: title; }
 #step__edit .subtitle { grid-area: subtitle; }
 #step__edit form { grid-area: form; }
+
+.date__input .v-input__control {
+    position: relative;
+}
+
+.datepicker__menu {
+    top: 33px !important;
+    max-width: max-content !important;
+    left: -2px !important
+}

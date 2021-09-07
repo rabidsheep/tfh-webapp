@@ -26,7 +26,7 @@
                 </v-stepper-header>
                 
                 <!-- sign in -->
-                <v-stepper-content step="1">
+                <div v-show="step === 1">
                     <div
                     id="step__sign-in"
                     class="step">
@@ -78,9 +78,9 @@
                         
                         
                     </div>
-                </v-stepper-content>
+                </div>
 
-                <v-stepper-content step="2">
+                <div v-show="step === 2">
                     <div
                     id="step__select"
                     class="step">
@@ -106,10 +106,10 @@
                             YouTube Link
                         </v-btn>
                     </div>
-                </v-stepper-content>
+                </div>
 
                 <!-- upload form -->
-                <v-stepper-content step="3">
+                <div v-show="step === 3">
                     <div
                     id="step__upload"
                     class="step">
@@ -136,7 +136,7 @@
                         v-else-if="uploadType === 'youtube'"
                         :uid="uid"/>
                     </div>
-                </v-stepper-content>
+                </div>
             </v-stepper-items>
         </v-stepper>
     </v-container>

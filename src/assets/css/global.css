@@ -1,6 +1,10 @@
 /** main html stuff **/
-#app {
-    overflow-x: auto;
+html {
+    overflow-x: auto !important;
+}
+
+body {
+    background-color: var(--v-background-base)
 }
 
 #app .v-application--wrap {
@@ -135,6 +139,11 @@ picture.icon source, picture.icon img {
 /* display width */
 #router-view.small {
     width: 80%;
+}
+
+.v-stepper__items, .v-stepper {
+    overflow: visible !important;
+
 }
 
 .wide .p1 > .v-input > .v-input__control > .v-text-field__details {

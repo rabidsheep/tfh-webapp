@@ -27,7 +27,7 @@
         <v-toolbar-items>
           <v-col
           class="version">
-            v0.1.0
+            v0.1.1
           </v-col>
         </v-toolbar-items>
     </v-toolbar>
@@ -46,9 +46,11 @@
     <v-container id="footer" class="pb-4">
       <v-row>
         <v-col class="copyright pa-0">
-          THEM’S FIGHTIN’ HERDS ® & © 2017-2020 Mane6, Inc.
+          THEM’S FIGHTIN’ HERDS ® & © 2017-2021 Mane6, Inc.
           <br />
           THEM’S FIGHTIN’ HERDS is a registered trademark of Mane6, Inc.
+          <br />
+          kickandstomp.in is not officially affiliated with Mane6, Inc.
         </v-col>
       </v-row>
     </v-container>

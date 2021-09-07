@@ -50,6 +50,10 @@
                             {{ errorMsg[error.type] }}
                         </center>
 
+                        <center v-else-if="error.type === 'upload'">
+                            {{ errorMsg[error.type] }}
+                        </center>
+
                         <center v-else>
                             {{ errors.length > 1 ? i + 1 + ') ' : '' }}
                             {{ errorMsg[error.type] }}
@@ -204,9 +208,9 @@ export default {
     data: () => {
         return {
             errorMsg: {
-                limit: 'The amount of files selected exceeds the upload limit.',
+                limit: 'The amount of matches added exceeds the upload limit.',
                 parse: 'The following files could not be parsed:',
-                upload: 'The following files could not be uploaded:',
+                upload: 'Matches failed to upload.',
                 extension: 'The following files use an invalid extension:',
                 duplicate: 'The following files have already been selected:',
             }

@@ -18,42 +18,6 @@
         @clear-errors="clearErrors()"
         @close="reload()" />
 
-
-        <v-overlay v-show="uploading || finished">
-            <v-container fluid fill-height>
-                <v-layout class="status" column justify-center align-center>
-                    <template v-if="uploading">
-                        <h1>Uploading...</h1>
-
-                        <br />
-
-                        <v-progress-linear
-                        color="accent"
-                        indeterminate />
-                    </template>
-
-                    <template v-else-if="finished">
-                        <v-icon
-                        class="green--text lighten-2"
-                        large>
-                            mdi-check-circle
-                        </v-icon>
-
-                        <h1>
-                            Upload Finished
-                        </h1>
-
-                        <v-btn
-                        rounded
-                        @click="reload()"
-                        color="accent">
-                            OK
-                        </v-btn>
-                    </template>
-                </v-layout>
-            </v-container>
-        </v-overlay>
-
         <v-stepper v-model="step" flat>
             <v-stepper-items>
                 <v-stepper-header>
@@ -441,16 +405,28 @@ export default {
         updateMatches() {
             this.uploading = true
             let files = []
+            let order = 0
 
             this.updated.map((match) => {
                 if (match.file) {
                     files.push(match.file)
                     delete match.file
                 }
+
+                match.order = order
+                order += 1
             })
 
             if (process.env.NODE_ENV === 'development' || files.length <= 0) {
-                let matches = this.updated.map((match) => match)
+                let matches = this.updated.filter((match) => {
+                    let i = this.original.findIndex(original => original._id === match._id)
+
+                    if (JSON.stringify(match) !== JSON.stringify(this.original[i]))
+                        return true
+                    else
+                        return false
+                })
+                .map((match) => match)
 
                 this.$update.save({
                     matches: matches,
@@ -475,7 +451,6 @@ export default {
             } else {
                 Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
                 .then(() => {
-                    
                     let matches = this.updated.filter((match) => {
                         let i = this.original.findIndex(original => original._id === match._id)
 
@@ -729,16 +704,6 @@ export default {
             let tempMatch = this.updated[i]
             this.$set(this.updated, i, this.updated[j])
             this.$set(this.updated, j, tempMatch)
-
-            if (i > j) {
-                // move up
-                this.updated[i].order += 1
-                this.updated[j].order -= 1
-            } else if (i < j) {
-                // move down
-                this.updated[i].order -= 1
-                this.updated[j].order += 1
-            }
         },
     }
 }

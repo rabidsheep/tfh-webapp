@@ -190,6 +190,7 @@
                             justify="space-around">
                                 <v-col class="reset pr-5">
                                     <v-btn
+                                    height="50px"
                                     rounded
                                     color="button2"
                                     @click="resetMatches()">
@@ -199,6 +200,7 @@
 
                                 <v-col class="submit pl-5">
                                     <v-btn
+                                    height="50px"
                                     rounded
                                     :disabled="!valid || !changesFound"
                                     color="accent"

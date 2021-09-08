@@ -43,7 +43,7 @@
                         align-center>
                             <v-btn
                             color="button2"
-                            height="50"
+                            height="50px"
                             rounded
                             :disabled="!allowLogin"
                             @click="signIn('google')">
@@ -89,6 +89,7 @@
                         <br />
 
                         <v-btn
+                        height="50px"
                         color="button2"
                         rounded
                         @click="setUploadType('files')">
@@ -99,6 +100,7 @@
                         <br />
                         
                         <v-btn
+                        height="50px"
                         color="button2"
                         rounded
                         @click="setUploadType('youtube')">
@@ -130,11 +132,15 @@
                         
                         <FileUploads
                         v-if="uploadType == 'files'"
-                        :uid="uid" />
+                        :key="filesKey"
+                        :uid="uid"
+                        @reload-form="fileKey = !fileKey" />
 
                         <YoutubeUploads
                         v-else-if="uploadType === 'youtube'"
-                        :uid="uid"/>
+                        :key="youtubeKey"
+                        :uid="uid"
+                        @reload-form="youtubeKey = !youtubeKey" />
                     </div>
                 </div>
             </v-stepper-items>
@@ -169,6 +175,8 @@ export default {
             loggingIn: false,
             allowLogin: false,
             loggedIn: false,
+            youtubeKey: false,
+            filesKey: false,
         }
     },
     watch: {

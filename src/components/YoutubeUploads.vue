@@ -31,7 +31,8 @@
 
             <v-btn
             v-if="$refs.url"
-            color = "accent"
+            color="accent"
+            height="50px"
             rounded
             :ripple="false"
             :disabled="!$refs.url.valid"
@@ -85,6 +86,7 @@
                         
                         <v-btn
                         class="reset"
+                        height="50px"
                         color="button2"
                         rounded
                         :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
@@ -95,6 +97,7 @@
 
                         <v-btn
                         class="parse"
+                        height="50px"
                         color="accent"
                         rounded
                         :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
@@ -107,6 +110,7 @@
             </div>
 
             <v-form
+            v-if="parsed"
             class="form"
             v-model="valid"
             ref="form">
@@ -153,7 +157,7 @@
                                 class="date__input"
                                 ref="date"
                                 label="Date"
-                                v-model="dateFormatted"
+                                v-model="group.date"
                                 v-bind="attrs"
                                 v-on="on"
                                 prepend-icon="mdi-calendar"
@@ -197,40 +201,47 @@
                             @set-timestamp="matches[i].video.timestamp = $event"
                             @delete-timestamp="delete matches[i].video.timestamp" />
 
-                            <hr v-if="i < matches.length - 1" :key="j" />
+                            <div class="match-divider" :key="j">
+                                <hr />
+
+                                <v-btn
+                                class="add-match"
+                                height="28px"
+                                rounded
+                                plain
+                                outlined
+                                @click="addBlankMatch(i+1)">
+                                    <v-icon
+                                    left
+                                    color="accent">
+                                        mdi-plus-thick
+                                    </v-icon>
+                                    Add Match Here
+                                </v-btn>
+
+                                <hr />
+                            </div>
                         </template>
                     </template>
                 </div>
-
-                <center v-show="matches.length <= 0 && parsed">
-                    No matches found!
-                </center>
-
-                    <v-btn
-                    v-if="vid"
-                    class="add-match"
-                    height="auto"
-                    :ripple="false"
-                    @click="addBlankMatch()"
-                    plain>
-                        <v-icon left>mdi-plus-thick</v-icon> Add Match
-                    </v-btn>
-                    <!-- 
-                    :disabled="matches.length > 15" -->
-
+                
+                <div class="foot">
+                    <center v-show="matches.length <= 0 && parsed">
+                        No matches found!
+                    </center>
 
                     <v-btn
+                    class="upload"
                     v-if="matches.length > 0"
+                    height="50px"
                     color="accent"
                     rounded
                     :ripple="false"
                     :disabled="!valid"
                     @click="youtubeUpload()">
-                    Upload
+                        Upload
                     </v-btn>
-
-                    <!--
-                    :disabled="!valid || matches.length > 16"-->
+                </div>
             </v-form>
         </template>
     </div>
@@ -240,6 +251,38 @@
 import Preview from './Preview.vue'
 import StatusOverlay from './StatusOverlay.vue'
 // youtube test video url: https://www.youtube.com/watch?v=uciAaVk3xaE
+
+function initializeData() {
+    return {
+        valid: false,
+        loading: false,
+        url: null,
+        video: {},
+        vid: null,
+        currentDescription: null,
+        parsed: false,
+        invalidId: false,
+        group: {
+            title: null,
+            part: null,
+            date: null
+        },
+        datepicker: false,
+        date: null,
+        matches: [],
+        files: [],
+        timestamp: null,
+        error: false,
+        uploading: false,
+        finished: false,
+        warning: false,
+        errors: [],
+        fileData: null,
+        formData: null,
+        tempData: null,
+        currentDate: new Date().toISOString().split('T').toString(),
+    }
+}
 
 export default {
     components: {
@@ -252,31 +295,33 @@ export default {
     },
     data: () => {
         return {
-            form: 1,
             valid: false,
             loading: false,
-            url: '',
-            currentDescription: '',
-            datepicker: false,
-            date: null,
+            url: null,
+            video: {},
+            vid: null,
+            currentDescription: null,
+            parsed: false,
+            invalidId: false,
             group: {
                 title: null,
                 part: null,
                 date: null
             },
-            dateFormatted: null,
+            datepicker: false,
+            date: null,
             matches: [],
+            files: [],
+            timestamp: null,
             error: false,
             uploading: false,
             finished: false,
             warning: false,
+            errors: [],
             fileData: null,
             formData: null,
-            errors: [],
-            timestamp: null,
             tempData: null,
-            vid: null,
-            video: {},
+            currentDate: new Date().toISOString().split('T').toString(),
             rules: {
                 name: [
                     v => !!v || 'Required'
@@ -296,28 +341,28 @@ export default {
                     v => !!v || 'Required'
                 ]
             },
-            hidden: true,
-            valid: false,
-            matchesFound: false,
-            parsed: false,
-            invalidId: false,
-            currentDate: new Date().toISOString().split('T').toString(),
         }
     },
     mounted() {
-        if (process.env.NODE_ENV === 'development' ) {
+        if (process.env.NODE_ENV === 'development')
             this.url = 'https://www.youtube.com/watch?v=73vR-i3N4CY'
-        }
     },
     watch: {
-        'date': function(v) {
-            this.dateFormatted = this.formatDate(v)
-      },
-        'dateFormatted': function(date) {
-            this.group.date = date
+        'date': function(date) {
+            this.group.date = this.formatDate(date)
         },
     },
     methods: {
+        setAuthToken: function () {
+            return this.$firebase.auth().currentUser.getIdToken()
+                .then((token) => {
+                    console.log('Setting auth token')
+                    return this.$httpInterceptors.push((request) => {
+                        request.headers.set('Authorization', token)
+                    })
+                })
+                .catch((error) => console.log(error))
+        },
         validateYoutubeID() {
             this.loading = true
             this.vid = this.url.match(this.$regex.ytId)[1]
@@ -334,34 +379,22 @@ export default {
             }
 
             youtubeRef.then((response) => {
-                
                 if (response.ok) {
                     this.video = response.body
-                    this.invalidId = false
                     this.currentDescription = this.video.description
-                    this.dateFormatted = this.video.date
-
+                    this.group.date = this.video.date
                     this.parseVideoDescription(this.currentDescription)
+                    this.invalidId = false
                 }
                 this.loading = false
                 this.error = false
             })
             .catch((error) => {
+                console.log(error)
                 this.invalidId = true
                 this.loading = false
-                console.log(error)
             })
             
-        },
-        setAuthToken: function () {
-            return this.$firebase.auth().currentUser.getIdToken()
-                .then((token) => {
-                    console.log('Setting auth token')
-                    return this.$httpInterceptors.push((request) => {
-                        request.headers.set('Authorization', token)
-                    })
-                })
-                .catch((error) => console.log(error))
         },
         parseVideoDescription(desc) {
             this.matches = []
@@ -392,11 +425,11 @@ export default {
                             
                             let match = {
                                 p1: {
-                                    name: matched[1],
+                                    name: matched[1].trim(),
                                     character: (this.$characters.find(c => c.names.includes(matched[2]))?.name)
                                 },
                                 p2: {
-                                    name: matched[3],
+                                    name: matched[3].trim(),
                                     character: (this.$characters.find(c => c.names.includes(matched[4]))?.name)
                                 },
                                 video: {
@@ -414,24 +447,14 @@ export default {
 
             this.parsed = true
         },
-        addBlankMatch() {
-            this.matches.push({
-                p1: {},
-                p2: {},
-                video: {
-                    id: this.video.id,
-                    title: this.video.title,
-                    timestamp: null,
-                }
-            })
-        },
         /** upload youtube-only object */
         youtubeUpload() {
             this.uploading = true
-            let time = (new Date()).toISOString().split('T')
+            let time = new Date().toISOString().split('T')
             let files = []
             let order = 0
             
+            // add files to file array
             this.matches.map((match) => {
                 if (match.file) {
                     files.push(match.file)
@@ -440,6 +463,8 @@ export default {
             })
 
             if (process.env.NODE_ENV === 'development' || files.length <= 0) {
+                // dev environment OR no files added to matches
+
                 let matches = this.matches.map((match) => {
 
                     //this.printObj(match)
@@ -452,10 +477,10 @@ export default {
                         uploadTime: time[1],
                         group: this.group,
                         channel: this.video.channel,
+                        order: order,
                         ...match
                     }
 
-                    match.order = order
                     order += 1
 
                     return match
@@ -465,9 +490,8 @@ export default {
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
+                        for (const i in response.body.matchIds)
                             console.log('ID:', response.body.matchIds[i])
-                        }
                     }
 
                     this.uploading = false
@@ -481,36 +505,34 @@ export default {
                     this.error = true
                 })
             } else {
+                // production mode & files added to matches
                 Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
                 .then(() => {
-                    
-                    let matches = this.matches.map((match) => {
+                        return this.matches.map((match) => {
+                            match = {
+                                userId: this.uid,
+                                uploadForm: 'YouTube',
+                                type: 'Group',
+                                matchDate: this.group.date,
+                                uploadDate: time[0],
+                                uploadTime: time[1],
+                                group: this.group,
+                                channel: this.video.channel,
+                                order: order,
+                                ...match
+                            }
 
-                        //this.printObj(match)
-                        match = {
-                            userId: this.uid,
-                            uploadForm: 'YouTube',
-                            type: 'Group',
-                            matchDate: this.group.date,
-                            uploadDate: time[0],
-                            uploadTime: time[1],
-                            group: this.group,
-                            channel: this.video.channel,
-                            ...match
-                        }
-
-                        //this.printObj(match)
-                        return match
-                    })
-
-                    return this.$matches.save({matches: matches, getYoutubeData: false})
-                })
+                            order += 1
+                            return match
+                        })
+                    }
+                )
+                .then((matches) => this.$matches.save({matches: matches, getYoutubeData: false}))
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
+                        for (const i in response.body.matchIds)
                             console.log('ID:', response.body.matchIds[i])
-                        }
                     }
 
                     this.uploading = false
@@ -525,64 +547,20 @@ export default {
                 })
             }
         },
+        /** ensure files are uploaded before match docs are pushed to database */
         uploadFilesAsPromise(file) {
-            let storageRef = this.$firebase.storage()
+            let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
+
+            return this.$firebase.storage()
             .ref(`replays/${file.name}`)
             .put(file)
-
-            return storageRef
             .then((snapshot) => snapshot.ref.getDownloadURL())
-            .then((url) => {
-                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
-                this.matches[i].fileInfo.url = url
-            })
+            .then((url) => this.matches[i].fileInfo.url = url)
             .catch((error) => {
                 console.log(error)
-                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
                 console.log("Removing file info from match #" + (i+1))
                 delete this.matches[i].fileInfo
             })
-        },
-        /**
-         * clears errors array
-         */
-        clearErrors() {
-           this.error = false
-           this.errors = []
-        },
-        closeWarning() {
-            this.formData = null
-            this.fileData = null
-            this.tempData = null
-            this.warning = false
-        },
-        resetForm() {
-            this.matches = []
-            this.youtube = {}
-            this.video = {}
-            this.vid = null
-            this.group = {
-                title: null,
-                part: null,
-                date: null
-            }
-            this.currentDescription = null
-            this.invalidId = false
-            this.parsed = false
-            this.url = null
-            this.$refs.url.resetValidation()
-            this.finished = false
-        },
-        removeMatch(i) {
-            this.matches.splice(i, 1)
-        },
-        updateCharacter(character, j, i) {
-            this.$set(this.matches[i][`p${j + 1}`], 'character', character)
-        },
-        swapMatches(i, j) {
-            let temp = this.matches[i]
-            this.$set(this.matches, i, this.matches[j])
-            this.$set(this.matches, j, temp)
         },
         /** generates reader for each file */
         readFile(file, i) {
@@ -626,12 +604,14 @@ export default {
                     textReader.readAsText(file)
                 })
                 .then(() => {
-                    if (that.errors.length > 0) that.error = true
+                    if (that.errors.length > 0)
+                        that.error = true
                 })
                 .catch((error) => {
                     console.log(error)
-
-                    if (that.errors.length > 0) that.error = true
+                    
+                    if (that.errors.length > 0)
+                        that.error = true
                 })
             })(this, file, i)
         },
@@ -665,11 +645,11 @@ export default {
 
                 let players = {
                     p1: {
-                        name: playerNames[0],
+                        name: playerNames[0].trim(),
                         character: (this.$characters.find(c => c.devName == characterNames[0])).name
                     },
                     p2: {
-                        name: playerNames[1],
+                        name: playerNames[1].trim(),
                         character: (this.$characters.find(c => c.devName == characterNames[1])).name
                     }
                 }
@@ -701,13 +681,11 @@ export default {
             }
         },
         addFile(data) {
-
             this.$set(this.matches[data.index], 'file', data.file)
             this.$set(this.matches[data.index], 'fileInfo', data.fileInfo)
             
-            if (this.warning = true) {
+            if (this.warning = true)
                 this.closeWarning()
-            }
 
             console.log("File added to match #" + (data.index + 1))
         },
@@ -719,20 +697,67 @@ export default {
             delete this.matches[i].file
             delete this.matches[i].fileInfo
         },
-        
+        removeMatch(i) {
+            this.matches.splice(i, 1)
+        },
+        swapMatches(i, j) {
+            let temp = this.matches[i]
+            this.$set(this.matches, i, this.matches[j])
+            this.$set(this.matches, j, temp)
+        },
+        addBlankMatch(index) {
+            let match = {
+                p1: {},
+                p2: {},
+                video: {
+                    id: this.video.id,
+                    title: this.video.title,
+                    timestamp: null,
+                }
+            }
+
+            if (index) 
+                this.matches.splice(index, 0, match)
+            else
+                this.matches.push(match)
+            
+        },
+        updateCharacter(character, j, i) {
+            this.$set(this.matches[i][`p${j + 1}`], 'character', character)
+        },
         /** sets errors array for display once files finish being read */
         setErrors(type, file) {
             let index = this.errors.findIndex(e => e.type == type)
 
             if (index === -1) {
-                if (!file) {
+                if (!file)
                     this.errors.push({type: type})
-                } else {
+                else 
                     this.errors.push({type: type, files: [file]})
-                }
             } else if (file) {
                 this.errors[index].files.push(file)
             }
+        },
+        /**
+         * clears errors array
+         */
+        clearErrors() {
+           this.error = false
+           this.errors = []
+        },
+        closeWarning() {
+            this.formData = null
+            this.fileData = null
+            this.tempData = null
+            this.warning = false
+        },
+        resetForm() {
+            /*this.$refs.url.resetValidation()
+            Object.assign(this.$data, { 
+                rules: this.rules,
+                ...initializeData(),
+            })*/
+            this.$emit('reload-form')
         },
     }
 }

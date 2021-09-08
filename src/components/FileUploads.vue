@@ -6,7 +6,6 @@
             error,
             uploading,
             finished,
-            progress,
             }"
         :errors="errors"
         @clear-errors="clearErrors()"
@@ -16,40 +15,6 @@
         v-model="valid"
         class="form"
         ref="form">
-        <!--<v-radio-group
-        class="mb-5 mt-0"
-        v-model="groupMode"
-        row
-        hide-details>
-            <v-radio
-            label="Individual Mode"
-            disabled
-            :value="false" />
-            <v-radio
-            label="Group Mode"
-            :value="true" />
-        </v-radio-group>
-
-        <v-row
-        class="hint mb-3 pa-5">
-            <div>
-                <v-col
-                class="symbol pa-0">
-                    <v-icon
-                    size="36px"
-                    color="accent">
-                        mdi-alert-circle-outline
-                    </v-icon>
-                </v-col>
-
-                <v-divider class="mx-2" vertical />
-
-                <div class="message">
-                    Matches uploaded using <b>Group</b> <b>Mode</b> will be grouped together on the main page.
-                </div>
-            </div>
-        </v-row>-->
-        
             <v-row
             class="group-info"
             v-show="groupMode">
@@ -174,35 +139,40 @@
                     @update-file-date="match.file.date = $event" />
 
                     
-                    <hr :key="j" v-if="i < matches.length - 1" />
+                    <div class="match-divider" :key="j">
+                        <hr />
+
+                        <v-btn
+                        class="add-match"
+                        height="28px"
+                        rounded
+                        plain
+                        outlined
+                        @click="selectFiles(i+1)">
+                            <v-icon
+                            left
+                            color="accent">
+                                mdi-plus-thick
+                            </v-icon>
+                            Add File(s) Here
+                        </v-btn>
+
+                        <hr />
+                    </div>
                 </template>
             </div>
                 
-                <!--<div
-                class="message"
-                column
-                justify-center>
-                    <br v-show="matches.length === 0" />
-                    <div
-                    :style="matches.length >= uploadLimit ? 'color: red;' : ''">
-                        {{ matches.length >= uploadLimit ?
-                        'Maximum file limit reached' :
-                        (uploadLimit - matches.length) + ' slots remaining' }}
-                    </div>
-
-                    <br />
-                </div>-->
-
             <div
             class="buttons">
+                <!-- add matches to end -->
                 <v-btn
+                height="50px"
                 color="button2"
                 rounded
                 :ripple="false"
-                @click="selectFiles">
-                Add Files
+                @click="selectFiles()">
+                    Add Files
                 </v-btn>
-                <!-- :disabled="matches.length >= uploadLimit" -->
 
                 <!-- just here to make upload files
                 button open file viewer -->
@@ -212,10 +182,12 @@
                 type="file"
                 accept=".tfhr"
                 multiple
-                @change="openFiles"
+                @change="readFiles($event.target.files, 0)"
                 required />
+                <!---->
 
                 <v-btn
+                height="50px"
                 color="accent"
                 rounded
                 :ripple="false"
@@ -250,14 +222,12 @@ export default {
             date: null,
             valid: false,
             isSelecting: false,
+            insertAtIndex: null,
             matches: [],
             //uploadLimit: 8,
             error: false,
             uploading: false,
             finished: false,
-            succeeded: 0,
-            failed: 0,
-            progress: 0,
             errors: [],
             url: null,
             masterUrl: null,
@@ -289,23 +259,11 @@ export default {
       },
 
       'url': function(url) {
-          if (this.$refs.url.validate()) {
+          if (this.$refs.url.validate())
               this.masterUrl = url
-          }
-
       }
     },
     methods: {
-        /* makes visible upload button act like html file upload button */
-        selectFiles() {
-            this.isSelecting = true
-
-            window.addEventListener('focus', () => {
-                this.isSelecting = false
-            }, { once: true })
-
-            this.$refs.uploadFilesBtn.click()
-        },
         /** tell parent component to begin uploading files */
         submitFiles() {
             let time = new Date().toISOString().split('T')
@@ -317,26 +275,19 @@ export default {
                 let newMatch = {
                     userId: this.uid,
                     uploadForm: 'Files',
-                    type: this.groupMode ? 'Group' : 'Individual',
+                    type: 'Group',
+                    group: this.group,
+                    matchDate: this.group.date,
                     uploadDate: time[0],
                     uploadTime: time[1],
+                    order: order,
                     ...match
                 }
 
-                if (this.groupMode) {
-                    newMatch.group = this.group
-                    newMatch.matchDate = this.group.date
-                } else {
-                    newMatch.matchDate = match.file.date
-                }
-
-                newMatch.order = order
                 order += 1
 
-                
                 files.push(match.file)
                 delete match.file
-
 
                 return newMatch
             })
@@ -408,35 +359,22 @@ export default {
                 this.matches.splice(i, 1)
             })
         },
-        /**
-         * begins parsing files one by one
-         * it checks to make sure each file is a valid replay file,
-         * and if it's not, it will move on to the next file until 
-         * it reaches the end of the current file list
-        */
-        openFiles(event) {
-            var currentFiles = Array.from(event.target.files)
-            //var slotsLeft = this.uploadLimit - this.matches.length
+        /* makes visible upload button act like html file upload button */
+        selectFiles(index) {
+            this.isSelecting = true
 
-            // stop user from adding more matches if file count exceeds limit
-            /*if (this.matches.length >= this.uploadLimit) {
-                this.setErrors('limit', '')
-            } else {*
-                // alert user of file limit
-                if (currentFiles.length > slotsLeft) {
-                   this.setErrors('limit', '')
-                }
+            if (index) this.insertAtIndex = index
 
-                this.readFiles(currentFiles, 0)
-            }*/
+            window.addEventListener('focus', () => {
+                this.isSelecting = false
+            }, { once: true })
 
-            this.readFiles(currentFiles, 0)
+            this.$refs.uploadFilesBtn.click()
         },
         /** generates reader for each file */
         readFiles(files, i) {
             (function (that, files, i) {
                 var file = files[i];
-                
 
                 new Promise(function(resolve, reject) {
                     // check file extension and duplicate issues first
@@ -476,13 +414,11 @@ export default {
                     textReader.readAsText(file)
                 })
                 .then(() => {
-                    //if (i < files.length - 1 && that.matches.length < that.uploadLimit)
                     if (i < files.length - 1)
                         that.readFiles(files, i + 1)
                 })
                 .catch((error) => {
                     console.log(error)
-                    //if (i < files.length - 1 && that.matches.length < that.uploadLimit)
                     if (i < files.length - 1)
                         that.readFiles(files, i + 1)
                     else
@@ -537,44 +473,18 @@ export default {
 
                 if (this.matches.length === 0) this.date = timestamp
 
-                this.matches.push(match)
+                if (this.insertAtIndex) {
+                    this.matches.splice(this.insertAtIndex, 0, match)
+                    this.insertAtIndex += 1
+                } else
+                    this.matches.push(match)
             }
 
-            if (i >= endOfFiles)
-                if (this.errors.length > 0) this.error = true
-        },
-        /** sets errors array for display once files finish being read */
-        setErrors(type, file) {
-            let index = this.errors.findIndex(e => e.type == type)
-            if (index === -1) {
-                if (!file) {
-                    console.log("Adding error type to array")
-                    this.errors.push({type: type})
-                } else {
-                    console.log("Adding error type + file name to array")
-                    this.errors.push({type: type, files: [file]})
-                }
-            } else if (file) {
-                console.log("Adding file name to " + type + " file array")
-                this.errors[index].files.push(file)
+            if (i >= endOfFiles) {
+                this.insertAtIndex = null
+                if (this.errors.length > 0)
+                    this.error = true
             }
-        },
-        /**
-         * clears errors array
-         */
-        clearErrors() {
-           this.errors = []
-           this.error = false
-        },
-        resetForm() {
-            this.matches = []
-            this.group = {
-                title: null,
-                part: null,
-                date: null
-            }
-            this.finished = false
-            this.$refs.form.resetValidation()
         },
         updateCharacter(character, j, i) {
             this.$set(this.matches[i][`p${j+1}`], 'character', character)
@@ -611,6 +521,30 @@ export default {
             let tempMatch = this.matches[i]
             this.$set(this.matches, i, this.matches[j])
             this.$set(this.matches, j, tempMatch)
+        },
+        /** sets errors array for display once files finish being read */
+        setErrors(type, file) {
+            let index = this.errors.findIndex(e => e.type == type)
+            if (index === -1) {
+                if (!file) {
+                    console.log("Adding error type to array")
+                    this.errors.push({type: type})
+                } else {
+                    console.log("Adding error type + file name to array")
+                    this.errors.push({type: type, files: [file]})
+                }
+            } else if (file) {
+                console.log("Adding file name to " + type + " file array")
+                this.errors[index].files.push(file)
+            }
+        },
+        /** clears errors array */
+        clearErrors() {
+           this.errors = []
+           this.error = false
+        },
+        resetForm() {
+            this.$emit('reload-form')
         },
         
     }

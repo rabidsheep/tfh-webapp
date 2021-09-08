@@ -2,6 +2,31 @@
 
 /* general */
 
+.match-divider {
+    display: grid;
+    grid-template: 'a b c' auto / auto 0fr auto ;
+}
+
+.match-divider hr {
+    align-self: center;
+}
+
+.match-divider .v-btn {
+    justify-self: center;
+}
+
+.v-messages.error--text {
+    max-width: max-content !important;
+}
+
+.player .v-text-field__details {
+    justify-content: flex-end;
+}
+
+.add-match {
+    width: max-content;
+}
+
 #forms {
     width: 100%;
     padding: 0px;
@@ -109,9 +134,11 @@
 }
 
 .match-list {
+    padding: 15px 0px;
     display: grid;
     row-gap: 20px;
 }
+
 
 .form .buttons {
     display: grid;
@@ -121,10 +148,6 @@
 
 #forms .step {
     padding: 24px;
-}
-
-#forms #step__upload.step{
-    padding-bottom: 14px !important;
 }
 
 .step > * {
@@ -408,10 +431,6 @@
 
 
 /* desktop */
-.wide .preview .data {
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
 
 
 .wide .preview .players {

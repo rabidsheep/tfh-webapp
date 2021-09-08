@@ -87,6 +87,7 @@
                     v-model="player.name"
                     maxLength="64"
                     counter="64"
+                    clearable
                     required
                     :rules="rules.name"
                     :reverse="i === 0 && !$vuetify.breakpoint.smAndDown" />
@@ -177,6 +178,7 @@
                 clearable
                 :dense="!$vuetify.breakpoint.smOnly"
                 :required="timestampRequired"
+                :disabled="fileUpload && !this.masterUrl ? true : undefined"
                 :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
             
 

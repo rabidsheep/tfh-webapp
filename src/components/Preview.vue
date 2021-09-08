@@ -45,6 +45,9 @@
         </v-col>
 
         <v-col
+        class="main"
+        cols="12">
+        <v-col
         class="swap">
             <button
             aria-label="Move Up"
@@ -131,7 +134,7 @@
 
                 <v-text-field
                 v-if="fileUpload"
-                class="file mt-0 pt-0"
+                class="file"
                 :title="fileName"
                 label="File"
                 disabled
@@ -140,12 +143,11 @@
                 prepend-icon="mdi-paperclip"
                 hint="Optional"
                 persistent-hint
-                clearable
-                :dense="!$vuetify.breakpoint.smOnly" />
+                clearable />
                 
                 <v-text-field
                 v-else
-                class="file mt-0 pt-0"
+                class="file"
                 label="File"
                 :title="fileNameStr ? fileNameStr : 'No File'"
                 readonly
@@ -154,7 +156,6 @@
                 hint="Optional"
                 persistent-hint
                 clearable
-                :dense="!$vuetify.breakpoint.smOnly"
                 @click="selectFiles()"
                 @click:clear="$emit('remove-file')" />
 
@@ -166,7 +167,7 @@
                 @change="$emit('add-file', $event.target.files[0])" />
 
                 <v-text-field
-                :class="fileUpload? `mt-0 pt-0` : undefined"
+                class="timestamp"
                 ref="timestamp"
                 label="Timestamp"
                 v-model="timestamp"
@@ -176,16 +177,12 @@
                 placeholder="(ex: 01h02m03s)"
                 persistent-placeholder
                 clearable
-                :dense="!$vuetify.breakpoint.smOnly"
                 :required="timestampRequired"
                 :disabled="fileUpload && !this.masterUrl ? true : undefined"
                 :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
-            
-
-                    
             </div>
         </v-col>
-
+        </v-col>
     </v-row>
 </template>
 

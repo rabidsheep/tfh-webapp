@@ -295,10 +295,6 @@
     max-width: 85%;
 }
 
-.xsmall .preview .matchinfo {
-    max-width: 100px;
-}
-
 
 /****/
 .preview .add .v-messages,
@@ -353,13 +349,14 @@
 }
 
 .preview .header .matchinfo {
-    font-size: 18px;
+    font-size: 16px;
     text-align: left;
 }
 
-.preview .timestamp {
-    padding-left: 0px;
+.xsmall .header .matchinfo {
+    font-size: 18px;
 }
+
 
 .preview .header .leader,
 .preview .header .remove {
@@ -367,16 +364,9 @@
 }
 
 .preview .add {
-    padding-top: 15px;
     margin-left: 15px;
     display: grid;
-    row-gap: 15px;
     width: 100%;
-}
-
-.xsmall .preview .add {
-    padding-top: 25px;
-    row-gap: 25px;
 }
 
 .preview .col {
@@ -408,34 +398,16 @@
  flex-wrap: wrap;
 }
 
-.preview .youtubelink {
-    display: flex;
-}
-
 .preview .header > div {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
 }
 
-.preview .youtube {
-    flex-wrap: wrap;
-}
-
-
-/* desktop */
-
-
-.wide .preview .players {
-    margin-bottom: 10px;
-}
-
 /* mobile */
 .small .preview .data {
     flex-wrap: wrap;
-    margin-bottom: 10px;
 }
-
 
 .small:not(.xsmall) .preview .add {
     max-width: 200px;
@@ -447,32 +419,18 @@
     margin-left: 0px !important;
 }
 
-.xsmall .preview .add {
-    margin-left: 0px;
-}
-
 .xsmall .preview .players {
     margin-bottom: 5px;
 }
 
 .xsmall .preview .p2,
-.xsmall .preview .add .file,
 .xsmall .preview .add .link,
 .xsmall .preview .add .timestamp {
     margin-top: 15px;
 }
 
-.xsmall .players {
-    margin-bottom: 0px !important;
-}
-
-
 .xsmall .preview .add {
-    margin: 5px 0px;
-}
-
-.preview .header button {
-    display: flex;
+    margin: 0px;
 }
 
 /** svg buttons **/
@@ -482,7 +440,8 @@
         0 4px 5px 0 rgba(0,0,0,.14),
         0 1px 10px 0 rgba(0,0,0,.12);
 }
-.preview button svg {
+.preview button svg,
+.preview button {
     height: 30px;
     width: 30px;
     border-radius: 100%;
@@ -492,7 +451,8 @@
     border-radius: 100%;
 }
 
-.xsmall .preview button svg {
+.xsmall .preview button svg,
+.xsmall .preview button {
     height: 38px;
     width: 38px;
 }
@@ -527,29 +487,29 @@ button.move:not(.disabled):hover .st0 {
 
 .preview .swap {
     max-width: min-content;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template: 'up' 'down';
+    row-gap: 30px;
     margin-right: 15px;
 }
 
-.xsmall .preview .swap {
-    align-content: center;
+.preview .swap .up {
+    align-self: end;
+}
+
+.preview .swap .down {
+    align-self: start;
 }
 
 .xsmall .preview .swap {
     margin-right: 25px;
-}
-
-.xsmall .preview .up {
-    margin-bottom: 25px;
-}
-
-.xsmall .preview .down {
-    margin-top: 25px;
+    row-gap: 70px;
 }
 
 .upload-url {
     width: 240px;
 }
+
 .v-form {
     align-items: center;
 }

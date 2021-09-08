@@ -24,7 +24,8 @@
                 </div>
             </div>
             
-            <v-divider :vertical="$vuetify.breakpoint.smAndDown && fileUpload" />
+            <v-divider />
+            <!--<v-divider :vertical="$vuetify.breakpoint.smAndDown && fileUpload" />
 
             <v-col
             v-if="fileUpload"
@@ -38,7 +39,7 @@
                 label="File"
                 outlined
                 hide-details />
-            </v-col>
+            </v-col>-->
 
             
         </v-col>
@@ -86,7 +87,6 @@
                     v-model="player.name"
                     maxLength="64"
                     counter="64"
-                    single-line
                     required
                     :rules="rules.name"
                     :reverse="i === 0 && !$vuetify.breakpoint.smAndDown" />
@@ -112,82 +112,76 @@
                 </v-col>
             </v-col>
 
-            <v-col
-            class="add"
-            :cols="$vuetify.breakpoint.smOnly ? 3 : undefined">
-                <v-col
+            <div
+            class="add">
+                <!--<v-text-field
                 v-if="fileUpload"
-                cols="12"
-                class="link">
-                    <v-text-field
-                    readonly
-                    ref="url"
-                    label="YouTube Link"
-                    placeholder="YouTube Link"
-                    v-model="url"
-                    prepend-icon="mdi-youtube"
-                    hint="Optional"
-                    persistent-hint
-                    single-line
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    :rules="rules.url.noReq" />
-                </v-col>
+                readonly
+                ref="url"
+                label="YouTube Link"
+                placeholder="YouTube Link"
+                persistent-placeholder
+                v-model="url"
+                prepend-icon="mdi-youtube"
+                hint="Optional"
+                persistent-hint
+                :dense="!$vuetify.breakpoint.smOnly"
+                :rules="rules.url.noReq" />-->
 
+                <v-text-field
+                v-if="fileUpload"
+                class="file mt-0 pt-0"
+                :title="fileName"
+                label="File"
+                disabled
+                readonly
+                v-model="fileName"
+                prepend-icon="mdi-paperclip"
+                hint="Optional"
+                persistent-hint
+                clearable
+                :dense="!$vuetify.breakpoint.smOnly" />
                 
-                <v-col
-                cols="12"
-                class="timestamp">
-                    <v-text-field
-                    ref="timestamp"
-                    label="Timestamp"
-                    v-model="timestamp"
-                    prepend-icon="mdi-timer-outline"
-                    hint="##h##m##s"
-                    persistent-hint
-                    single-line
-                    clearable
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    :required="timestampRequired"
-                    :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
-                </v-col>
+                <v-text-field
+                v-else
+                class="file mt-0 pt-0"
+                label="File"
+                :title="fileNameStr ? fileNameStr : 'No File'"
+                readonly
+                v-model="fileNameStr"
+                prepend-icon="mdi-paperclip"
+                hint="Optional"
+                persistent-hint
+                clearable
+                :dense="!$vuetify.breakpoint.smOnly"
+                @click="selectFiles()"
+                @click:clear="$emit('remove-file')" />
 
-                <v-col
-                v-if="youtubeUpload"
-                class="file"
-                cols="12">
-                    <!--<v-file-input
-                    v-model="file"
-                    label="File"
-                    accept=".tfhr"
-                    hint="Optional"
-                    persistent-hint
-                    single-line
-                    clearable
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    @change="$emit('add-file', $event)"
-                    @click:clear="$emit('remove-file')" />-->
+                <input
+                v-show="false"
+                ref="uploadFileBtn"
+                type="file"
+                accept=".tfhr"
+                @change="$emit('add-file', $event.target.files[0])" />
 
-                    <v-text-field
-                    label="File"
-                    readonly
-                    v-model="fileNameStr"
-                    prepend-icon="mdi-paperclip"
-                    hint="Optional"
-                    persistent-hint
-                    single-line
-                    clearable
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    @click="selectFiles()"
-                    @click:clear="$emit('remove-file')" />
+                <v-text-field
+                :class="fileUpload? `mt-0 pt-0` : undefined"
+                ref="timestamp"
+                label="Timestamp"
+                v-model="timestamp"
+                prepend-icon="mdi-timer-outline"
+                hint="##h##m##s"
+                persistent-hint
+                placeholder="(ex: 01h02m03s)"
+                persistent-placeholder
+                clearable
+                :dense="!$vuetify.breakpoint.smOnly"
+                :required="timestampRequired"
+                :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
+            
 
-                    <input
-                    v-show="false"
-                    ref="uploadFileBtn"
-                    type="file"
-                    accept=".tfhr"
-                    @change="$emit('add-file', $event.target.files[0])" />
-                </v-col>
-            </v-col>
+                    
+            </div>
         </v-col>
 
     </v-row>
@@ -331,25 +325,8 @@ export default {
     padding-right: 4px;
 }
 
-div:not([class*="file"]) > .v-input--is-readonly >>> .v-input__slot::before {
-    border-color: rgba(255, 255, 255, 0.24) !important;
+::v-deep .add >>> .v-text-field__slot {
+    overflow: visible !important;
 }
 
-div:not([class*="file"]) > .v-input--is-readonly >>> i {
-    color: #5e5e5e !important
-}
-
-.v-input >>> .v-messages__message.message-transition-move {
-    transition: none !important;
-}
-
-div:not([class*="file"]) > .v-input--is-readonly >>> .v-label,
-div:not([class*="file"]) > .v-input--is-readonly >>> .v-messages,
-div:not([class*="file"]) > .v-input--is-readonly >>> input {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-div:not([class*="file"]) > .v-input--is-readonly {
-    pointer-events: none;
-}
 </style>

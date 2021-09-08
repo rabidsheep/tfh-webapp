@@ -25,7 +25,7 @@
                     ref="group" 
                     label="Group Title"
                     v-model="group.title"
-                    hint="Required"
+                    hint="Required (ex: Rodeo Regional, Grand Stampede)"
                     maxLength="32"
                     clearable
                     persistent-hint
@@ -153,7 +153,14 @@
                             color="accent">
                                 mdi-plus-thick
                             </v-icon>
-                            Add File(s) Here
+
+                            <template v-if="i < matches.length - 1">
+                                Insert Files Here
+                            </template>
+                            
+                            <template v-else>
+                                Add Files
+                            </template>
                         </v-btn>
 
                         <hr />

@@ -108,24 +108,22 @@
                             :key="i">
                                 <picture
                                 class="character-icon"
-                                :title="player.character"
-                                @click="$emit('update-character', {character: player.character, index: i})">
+                                :title="player.character ? player.character : 'Uknown Character'">
                                     <source
                                     type="image/webp"
-                                    :srcset="require(`../assets/img/sel/${player.character}.webp`) + ' 136w'" />
+                                    :srcset="require(`../assets/img/sel/${player.character ? player.character : 'Any'}.webp`) + ' 136w'" />
                                     <source
                                     type="image/png"
-                                    :srcset="require(`../assets/img/sel/${player.character}.png`) + ' 136w'" />
+                                    :srcset="require(`../assets/img/sel/${player.character ? player.character : 'Any'}.png`) + ' 136w'" />
                                     <img
-                                    :alt="player.character"
-                                    :src="require(`../assets/img/sel/${player.character}.webp`)" />
+                                    :alt="player.character ? player.character : 'Unknown'"
+                                    :src="require(`../assets/img/sel/${player.character ? player.character : 'Any'}.webp`)" />
                                 </picture>
 
                                 <p
                                 class="name"
-                                :title="player.name"
-                                @click="$emit('update-name', {name: player.name, index: i})">
-                                    {{ player.name }}
+                                :title="player.name ? player.name : 'Unknown Player'">
+                                    {{ player.name ? player.name : '???' }}
                                 </p>
                             </div>
                         </div>
@@ -144,24 +142,22 @@
                             :key="i">
                                 <picture
                                 class="character-icon"
-                                :title="player.character"
-                                @click="$emit('update-character', {character: player.character, index: i})">
+                                :title="player.character ? player.character : 'Unknown'">
                                     <source
                                     type="image/webp"
-                                    :srcset="require(`../assets/img/sel/${player.character}.webp`) + ' 136w'" />
+                                    :srcset="require(`../assets/img/sel/${player.character ? player.character : 'Any'}.webp`) + ' 136w'" />
                                     <source
                                     type="image/png"
-                                    :srcset="require(`../assets/img/sel/${player.character}.png`) + ' 136w'" />
+                                    :srcset="require(`../assets/img/sel/${player.character ? player.character : 'Any'}.png`) + ' 136w'" />
                                     <img
-                                    :alt="player.character"
-                                    :src="require(`../assets/img/sel/${player.character}.webp`)" />
+                                    :alt="player.character ? player.character : 'Uknown'"
+                                    :src="require(`../assets/img/sel/${player.character ? player.character : 'Any'}.webp`)" />
                                 </picture>
 
                                 <p
                                 class="name"
-                                :title="player.name"
-                                @click="$emit('update-name', {name: player.name, index: i})">
-                                    {{ player.name }}
+                                :title="player.name ? player.name : 'Unknown Player'">
+                                    {{ player.name ? player.name : '???' }}
                                 </p>
                             </div>
                         </div>

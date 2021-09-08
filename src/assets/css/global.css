@@ -13,6 +13,7 @@ body {
 
 .icon {
     transition: 1s;
+    transition-property: filter;
 }
 
 .icon.invalid {

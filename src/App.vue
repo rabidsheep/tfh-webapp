@@ -143,10 +143,10 @@ export default {
     -webkit-box-orient: vertical;  
 }
 
-::v-deep .small .v-form .match-list .v-text-field__slot {
+/*::v-deep .small .v-form .match-list div:not([class*="add"]) .v-text-field__slot {
     white-space: nowrap;
     overflow: hidden;
-}
+}*/
 
 ::v-deep .small .v-form .match-list .v-text-field__slot {
   max-width: calc(100% - 30px);

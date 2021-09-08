@@ -124,6 +124,8 @@
                         <v-text-field
                         ref="groupTitle"
                         label="Group Title"
+                        placeholder="(ex: Rodeo Regional, Grand Stampede)"
+                        persistent-placeholder
                         v-model="group.title"
                         hint="Required"
                         persistent-hint
@@ -140,6 +142,8 @@
                         ref="groupPart"
                         label="Part"
                         v-model="group.part"
+                        placeholder="(ex: #3, Finals, etc.)"
+                        persistent-placeholder
                         maxLength="16"
                         hint="Optional"
                         persistent-hint
@@ -161,6 +165,8 @@
                                 class="date__input"
                                 ref="groupDate"
                                 label="Date"
+                                placeholder="MM-DD-YYYY"
+                                persistent-placeholder
                                 v-model="group.date"
                                 v-bind="attrs"
                                 v-on="on"
@@ -319,10 +325,10 @@ export default {
             currentDate: new Date().toISOString().split('T').toString(),
             rules: {
                 name: [
-                    v => !!v || 'Required'
+                    v => !!v
                 ],
                 url: [
-                    v => !!v || 'Required',
+                    v => !!v,
                     v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
                     v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
                 ],
@@ -673,7 +679,7 @@ export default {
                 let p1 = this.matches[i].p1
                 let p2 = this.matches[i].p2
 
-                if (!p1.name.match(p1Regex) || !p2.name.match(p2Regex) ||
+                if (!p1.name?.match(p1Regex) || !p2.name?.match(p2Regex) ||
                     p1.character !== players.p1.character || p2.character !== players.p2.character) {
                     this.fileData = players
                     this.formData = {p1: this.matches[i].p1, p2: this.matches[i].p2}

@@ -300,4 +300,6 @@ export default {
   .v-stepper >>> .v-stepper__wrapper {
       overflow: visible !important;
   }
+
+  
 </style>

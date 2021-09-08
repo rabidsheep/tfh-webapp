@@ -365,30 +365,23 @@
 .preview .header .remove {
     margin-right: 15px;
 }
- 
-.preview:last-child {
-    padding-bottom: 0px;
-}
 
 .preview .add {
+    padding-top: 15px;
     margin-left: 15px;
+    display: grid;
+    row-gap: 15px;
+    width: 100%;
 }
 
-.preview .add {
-    flex-wrap: wrap;
+.xsmall .preview .add {
+    padding-top: 25px;
+    row-gap: 25px;
 }
 
 .preview .col {
     padding: 0px;
     display: flex;
-}
-
-.preview .wrapper {
-    width: 100%;
-}
-
-.options .v-input--radio-group__input {
-    justify-content: center !important;
 }
 
 .preview .player {

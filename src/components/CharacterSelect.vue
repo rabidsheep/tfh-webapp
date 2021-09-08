@@ -6,7 +6,7 @@
         <!-- char select button -->
         <template v-slot:activator="{ on, attrs }">
             <picture
-            class="icon"
+            :class="invalid ? 'icon invalid' : 'icon'"
             v-bind="attrs"
             v-on="on"
             :title="currentCharacter">
@@ -76,6 +76,7 @@ export default {
     currentCharacter: [ String, null ],
     selectionEnabled: Boolean,
     anyEnabled: Boolean,
+    invalid: Boolean,
   },
   methods: {
         /* passes selected character up to parent */ 

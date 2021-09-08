@@ -74,6 +74,7 @@
                 :key="i"
                 :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
                     <CharacterSelect
+                    :invalid="!player.character ? true : false"
                     :currentCharacter ="player.character ? player.character : `Any`"
                     :index="i"
                     :selectionEnabled="true"

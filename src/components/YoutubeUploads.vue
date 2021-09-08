@@ -91,7 +91,7 @@
                         rounded
                         :width="$vuetify.breakpoint.smAndDown? `150px` : undefined"
                         :ripple="false"
-                        @click="currentDescription = video.description">
+                        @click="resetTimestamps()">
                             Reset Timestamps
                         </v-btn>
 
@@ -110,10 +110,10 @@
             </div>
 
             <v-form
-            v-if="parsed"
+            v-show="parsed"
+            ref="form"
             class="form"
-            v-model="valid"
-            ref="form">
+            v-model="valid">
                 <v-row
                 v-show="currentDescription"
                 class="group-info pa-0"
@@ -122,9 +122,11 @@
                     :cols="$vuetify.breakpoint.xsOnly ? 12 : undefined"
                     :class="$vuetify.breakpoint.xsOnly? `title pa-0 mb-6` : `title pa-0 mr-2`">
                         <v-text-field
+                        ref="groupTitle"
                         label="Group Title"
                         v-model="group.title"
                         hint="Required"
+                        persistent-hint
                         maxLength="32"
                         clearable
                         required
@@ -135,10 +137,12 @@
                     :class="$vuetify.breakpoint.xsOnly? `part pa-0 mr-2` : `part pa-0 mx-2`"
                     :cols="$vuetify.breakpoint.xsOnly ? undefined : 2">
                         <v-text-field
+                        ref="groupPart"
                         label="Part"
                         v-model="group.part"
                         maxLength="16"
                         hint="Optional"
+                        persistent-hint
                         clearable />
                     </v-col>
 
@@ -155,15 +159,17 @@
                             <template v-slot:activator="{ on, attrs }">
                                 <v-text-field
                                 class="date__input"
-                                ref="date"
+                                ref="groupDate"
                                 label="Date"
                                 v-model="group.date"
                                 v-bind="attrs"
                                 v-on="on"
                                 prepend-icon="mdi-calendar"
                                 hint="Required"
+                                persistent-hint
                                 clearable
-                                :rules="rules.date" />
+                                :rules="rules.date"
+                                required />
                             </template>
 
                             <v-date-picker
@@ -177,58 +183,79 @@
                 </v-row>
 
                 <div
+                v-show="!loading && matches.length > 0"
                 class="match-list">
-                    <template v-if="!loading && matches.length > 0">
-                        <template v-for="(match, i, j) in matches">
-                            <Preview
-                            :key="i"
-                            :index="i"
-                            :youtubeUpload="true"
-                            :groupMode="true"
-                            :p1="match.p1"
-                            :p2="match.p2"
-                            :video="match.video"
-                            :fileName="match.fileInfo ? match.fileInfo.name : null"
-                            :firstMatch="i === 0"
-                            :lastMatch="i === matches.length - 1"
-                            :timestampRequired="matches.length > 1 ? true : false"
-                            @remove="removeMatch(i)"
-                            @update-character="updateCharacter($event.character, $event.index, i)"
-                            @move-up="swapMatches(i, i-1)"
-                            @move-down="swapMatches(i, i+1)"
-                            @add-file="readFile($event, i)"
-                            @remove-file="removeFile(i)"
-                            @set-timestamp="matches[i].video.timestamp = $event"
-                            @delete-timestamp="delete matches[i].video.timestamp" />
+                    <template v-for="(match, i, j) in matches">
+                        <Preview
+                        :key="i"
+                        :index="i"
+                        :youtubeUpload="true"
+                        :groupMode="true"
+                        :p1="match.p1"
+                        :p2="match.p2"
+                        :video="match.video"
+                        :fileName="match.fileInfo ? match.fileInfo.name : null"
+                        :firstMatch="i === 0"
+                        :lastMatch="i === matches.length - 1"
+                        :timestampRequired="matches.length > 1 ? true : false"
+                        @remove="removeMatch(i)"
+                        @update-character="updateCharacter($event.character, $event.index, i)"
+                        @move-up="swapMatches(i, i-1)"
+                        @move-down="swapMatches(i, i+1)"
+                        @add-file="readFile($event, i)"
+                        @remove-file="removeFile(i)"
+                        @set-timestamp="matches[i].video.timestamp = $event"
+                        @delete-timestamp="delete matches[i].video.timestamp" />
 
-                            <div class="match-divider" :key="j">
-                                <hr />
+                        <div class="match-divider" :key="j">
+                            <hr />
 
-                                <v-btn
-                                class="add-match"
-                                height="28px"
-                                rounded
-                                plain
-                                outlined
-                                @click="addBlankMatch(i+1)">
-                                    <v-icon
-                                    left
-                                    color="accent">
-                                        mdi-plus-thick
-                                    </v-icon>
-                                    Add Match Here
-                                </v-btn>
+                            <v-btn
+                            class="add-match"
+                            height="28px"
+                            color="button2"
+                            rounded
+                            @click="addBlankMatch(i+1)">
+                                <v-icon
+                                left
+                                color="accent">
+                                    mdi-plus-thick
+                                </v-icon>
+                                <template v-if="i < matches.length - 1">
+                                    Insert Match Here
+                                </template>
+                                
+                                <template v-else>
+                                    Add Match
+                                </template>
+                            </v-btn>
 
-                                <hr />
-                            </div>
-                        </template>
+                            <hr />
+                        </div>
                     </template>
                 </div>
+
                 
-                <div class="foot">
-                    <center v-show="matches.length <= 0 && parsed">
-                        No matches found!
-                    </center>
+                <div v-show="matches.length <= 0 && parsed">
+                    No matches found!
+                </div>
+                
+                <div class="buttons">
+
+                    <v-btn
+                    v-show="parsed && matches.length <= 0"
+                    height="50px"
+                    color="button2"
+                    rounded
+                    :ripple="false"
+                    @click="addBlankMatch()">
+                        <v-icon
+                        left
+                        color="accent">
+                            mdi-plus-thick
+                        </v-icon>
+                        Add Match
+                    </v-btn>
 
                     <v-btn
                     class="upload"
@@ -251,38 +278,6 @@
 import Preview from './Preview.vue'
 import StatusOverlay from './StatusOverlay.vue'
 // youtube test video url: https://www.youtube.com/watch?v=uciAaVk3xaE
-
-function initializeData() {
-    return {
-        valid: false,
-        loading: false,
-        url: null,
-        video: {},
-        vid: null,
-        currentDescription: null,
-        parsed: false,
-        invalidId: false,
-        group: {
-            title: null,
-            part: null,
-            date: null
-        },
-        datepicker: false,
-        date: null,
-        matches: [],
-        files: [],
-        timestamp: null,
-        error: false,
-        uploading: false,
-        finished: false,
-        warning: false,
-        errors: [],
-        fileData: null,
-        formData: null,
-        tempData: null,
-        currentDate: new Date().toISOString().split('T').toString(),
-    }
-}
 
 export default {
     components: {
@@ -384,7 +379,10 @@ export default {
                     this.currentDescription = this.video.description
                     this.group.date = this.video.date
                     this.parseVideoDescription(this.currentDescription)
-                    this.invalidId = false
+
+                    // only way to get required input fields
+                    // to highlight themselves????
+                    this.validateForm()
                 }
                 this.loading = false
                 this.error = false
@@ -446,6 +444,11 @@ export default {
             })
 
             this.parsed = true
+        },
+        resetTimestamps() {
+            this.currentDescription = this.video.description
+
+            this.parseVideoDescription(this.currentDescription)
         },
         /** upload youtube-only object */
         youtubeUpload() {
@@ -720,6 +723,8 @@ export default {
                 this.matches.splice(index, 0, match)
             else
                 this.matches.push(match)
+
+            this.validateForm()
             
         },
         updateCharacter(character, j, i) {
@@ -759,6 +764,12 @@ export default {
             })*/
             this.$emit('reload-form')
         },
+        validateForm() {
+            const refs = this.$refs
+            window.setTimeout(function () {
+                refs.form.validate()
+            }, 100)
+        }
     }
 }
 </script>

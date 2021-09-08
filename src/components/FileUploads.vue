@@ -146,8 +146,7 @@
                         class="add-match"
                         height="28px"
                         rounded
-                        plain
-                        outlined
+                        color="button2"
                         @click="selectFiles(i+1)">
                             <v-icon
                             left
@@ -170,7 +169,13 @@
                 color="button2"
                 rounded
                 :ripple="false"
+                v-show="matches.length === 0"
                 @click="selectFiles()">
+                    <v-icon
+                    left
+                    color="accent">
+                        mdi-plus-thick
+                    </v-icon>
                     Add Files
                 </v-btn>
 
@@ -252,6 +257,9 @@ export default {
             },
             currentDate: new Date().toISOString().split('T').toString()
         }
+    },
+    mounted() {
+        this.validateForm()
     },
     watch: {
       'date': function(date) {
@@ -546,6 +554,12 @@ export default {
         resetForm() {
             this.$emit('reload-form')
         },
+        validateForm() {
+            const refs = this.$refs
+            window.setTimeout(function () {
+                refs.form.validate()
+            }, 100)
+        }
         
     }
 }

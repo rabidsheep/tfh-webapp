@@ -13,6 +13,7 @@
                 :key="i"
                 :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"> 
                     <CharacterSelect
+                    :invalid="false"
                     :currentCharacter="player.character? player.character : `Any`"
                     :selectionEnabled="true"
                     :anyEnabled="true"

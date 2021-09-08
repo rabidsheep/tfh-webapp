@@ -25,6 +25,7 @@
 
 .add-match {
     width: max-content;
+    margin: 0px 10px;
 }
 
 #forms {
@@ -142,8 +143,7 @@
 
 .form .buttons {
     display: grid;
-    grid-template: 'a b';
-    column-gap: 20px;
+    row-gap: 20px;
 }
 
 #forms .step {

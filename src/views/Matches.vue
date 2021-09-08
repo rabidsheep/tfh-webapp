@@ -1,5 +1,7 @@
 <template>
-  <div id="index">
+  <div
+  id="index"
+  v-scroll="onScroll">
       <div
       class="loading__filters"
       v-if="loadingFilterContent">
@@ -12,7 +14,6 @@
 
     <div
     class="index__body"
-    v-scroll="onScroll"
     v-show="!loadingFilterContent">
       <!-- filters box -->
       <Filters
@@ -33,7 +34,7 @@
       @update-video="filters.deep.video = $event"
       @clear-filters="clearFilters()"
       @swap="swap()"
-      @reset-strictness="strict = false"
+      @reset-strictness="filters.strict = false"
       @loaded-filter-content="loadingFilterContent = false" />
 
       <div
@@ -50,13 +51,13 @@
       id="matches"
       v-show="!loadingMatches">
         <v-layout
-        v-show="resultsCount <= 0"
+        v-show="groups.length <= 0"
         align-center
         justify-center>
           No matches found!
         </v-layout>
 
-        <template v-if="resultsCount > 0">
+        <template v-if="groups.length > 0">
           <template v-for="(group, i, j) in groups">
             <div
             class="match-group"
@@ -99,6 +100,19 @@
         </div>
       </div>
     </div>
+
+    <v-slide-y-reverse-transition>
+      <v-btn
+      title="Go to Top"
+      class="scroll-up"
+      @click="$vuetify.goTo(0)"
+      small fab
+      fixed bottom right
+      color="accent"
+      v-show="showToTop">
+        ⮝
+      </v-btn>
+    </v-slide-y-reverse-transition>
   </div>
 </template>
 
@@ -248,9 +262,8 @@ export default {
       let p2 = JSON.stringify(this.filters.deep.players[1])
 
       // do not swap if sides are the same
-      if (p1 !== p2) {
+      if (p1 !== p2)
         this.filters.deep.players = [this.filters.deep.players[1], this.filters.deep.players[0]]
-      }
     },
     onScroll: function (event) {
       this.showToTop = event.currentTarget.scrollY >= 250

@@ -67,9 +67,9 @@
                         </v-icon>
                     </v-btn>
 
-                    <div v-else>
+                    <template v-else>
                         vs.
-                    </div>
+                    </template>
                 </div>
             </div>
             <!-- /player filters -->
@@ -374,10 +374,40 @@ export default {
     },
     data: () => {
         return {
-            ...initializeData(),
+            hidden: true,
+            playersFilter: [
+                {name: null, character: null},
+                {name: null, character: null}
+            ],
+            groupFilter: {
+                title: null,
+                part: null,
+                date: null,
+            },
+            channelFilter: {
+                id: null,
+                name: null,
+            },
+            videoFilter: {
+                id: null,
+                title: null,
+            },
+            strictFilter: false,
+            hasFileFilter: false,
+            hasVideoFilter: false,
+            groupIndex: null,
             playerList: [],
             groupList: [],
-            channelList: []
+            channelList: [],
+            partList: [],
+            dateList: [],
+            videoList: [],
+            playerSearch: [],
+            groupSearch: null,
+            partSearch: null,
+            dateSearch: null,
+            channelSearch: null,
+            videoSearch: null,
         }
     },
     watch: {
@@ -430,18 +460,13 @@ export default {
             .then((response) => {
                 if (response.ok) {
                     this.error = false
-
-                    this.groupList = response.body.groups
-                    this.playerList = response.body.players
-                    this.channelList = response.body.channels
+                    this.groupList = response.body?.groups
+                    this.playerList = response.body?.players
+                    this.channelList = response.body?.channels
 
                     //console.log(JSON.parse(JSON.stringify(this.channelList)))
                     //console.log(this.playerList)
                     //console.log(JSON.parse(JSON.stringify(this.groupList)))
-                } else {
-                    this.error = true
-                    this.errorMsg = `${response.status}: ${response.statusText}`
-                    console.log("Error retrieving group list.\n", this.errorMsg)
                 }
 
                 this.$emit('loaded-filter-content')
@@ -454,9 +479,8 @@ export default {
         },
         // update player characters
         selectCharacter: function (character, i) {
-            if (character !== this.players[i].character) {
+            if (character !== this.players[i].character)
                 this.$emit('update-character', {character: character, i: i})
-            }
         },
         // update player names
         selectPlayer: function (name, i) {
@@ -470,15 +494,11 @@ export default {
                     t._id === this.groupFilter.title
                 )
 
-                this.partList = this.groupList[this.groupIndex].sub.filter((n) => {
-                    if (n.part) {
-                        return true
-                    } else {
-                        return false
-                    }
-                }).map((n) => {
-                    return n
-                })
+                this.partList = this.groupList[this.groupIndex].sub.filter((s) => {
+                    if (s.part) return true
+                    else return false
+                    
+                }).map((s) => s)
             } else {
                 // else clear part and date
                 this.partList = []
@@ -493,10 +513,10 @@ export default {
         updateDates() {
             if (!this.groupFilter.part && this.groupFilter.title) {
                 // if no part is selected...
-                this.dateList = this.groupList[this.groupIndex].sub.map((n) => n.date)
+                this.dateList = this.groupList[this.groupIndex].sub.map((s) => s.date)
             } else if (this.groupFilter.part && this.groupFilter.title) {
                 // else if part is selected...
-                let index = this.partList.findIndex((n) => n.part === this.groupFilter.part)
+                let index = this.partList.findIndex((s) => s.part === this.groupFilter.part)
                 
                 this.dateList = [this.partList[index].date]
                 
@@ -512,9 +532,8 @@ export default {
         },
         updateChannel(channel) {
             //console.log(channel)
-            if (channel.id !== this.channel.id) {
+            if (channel.id !== this.channel.id)
                 this.$emit('update-channel', channel)
-            }
         },
         // clear filters
         clear() {
@@ -522,21 +541,17 @@ export default {
             let p1 = Object.values(this.playersFilter[0]).every( e => e === null )
             let p2 = Object.values(this.playersFilter[1]).every( e => e === null )
             let group = Object.values(this.groupFilter).every ( e => e === null )
+            let filterValuesExist = !p1 || !p2 || !group || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter
 
             // if anything has been changed, clear the filter (this prevents unnecessary calls to the server)
-            if (!p1 || !p2 || !group || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter) {
-                Object.assign(this.$data, { 
-                    ...initializeData(),
-                    loadingPlayers: this.loadingPlayers,
-                    loadingGroups: this.loadingGroups,
-                    playerList: this.playerList,
-                    groupList: this.groupList,
-                })
-            
-
+            if (filterValuesExist) {
+                console.log('Clearing filters')
                 this.$emit('clear-filters')
             } else if (this.strict) {
+                console.log('Resetting strictness')
                 this.$emit('reset-strictness')
+            } else {
+                console.log('No filters to reset')
             }
         },
         clearGroupFilters() {

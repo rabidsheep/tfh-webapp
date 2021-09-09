@@ -342,7 +342,7 @@ api.put('/users', (req, res) => {
     if (dev) {
         console.log('Creating user')
 
-        db
+        return db
         .collection('users')
         .updateOne(
             { uid: user.uid },
@@ -364,11 +364,7 @@ api.put('/users', (req, res) => {
                 { upsert: true }
             )
         })
-        .then(() => {
-            //client.close()
-
-            return res.status(200).send(`${user.email} saved`)
-        })
+        .then(() => res.status(200).send(`${user.email} saved`))
         .catch((error) => res.status(400).send(error.toString()))
     }
 })

@@ -92,61 +92,114 @@
                     class="step">
                         <h1>Edit Match Details</h1>
                         
-                        <div class="subtitle">
-                            <v-progress-circular
-                            class="progress"
-                            v-if="loadingMatches"
-                            indeterminate />
-
-                            <v-row
-                            class="group-info"
-                            v-if="group">
-                                <v-col
-                                class="group name pa-0"
-                                :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
-                                    <v-text-field
-                                    ref="group" 
-                                    label="Group Name"
-                                    v-model="group.title"
-                                    readonly />
-                                </v-col>
-
-                                <v-col
-                                class="group part"
-                                :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
-                                    <v-text-field
-                                    label="Part"
-                                    v-model="group.part"
-                                    readonly />
-                                </v-col>
-
-                                <v-col
-                                class="group date pa-0"
-                                :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
-                                    <v-text-field
-                                    ref="date"
-                                    label="Date"
-                                    v-model="group.date"
-                                    prepend-icon="mdi-calendar"
-                                    readonly />
-                                </v-col>
-
-                                <v-row class="url-input">
-                                    <v-text-field
-                                    v-if="$route.query.uploadForm === 'YouTube' || updated[0].type === 'Group'"
-                                    v-model="url"
-                                    label="YouTube URL"
-                                    prepend-icon="mdi-youtube"
-                                    :readonly="$route.query.uploadForm === 'YouTube'" />
-                                </v-row>
-                            </v-row>
-                        </div>
+                        <v-progress-circular
+                        class="progress"
+                        v-if="loadingMatches"
+                        indeterminate />
 
                         <v-form
                         v-model="valid"
                         ref="form"
-                        :id="`${$route.query.uploadForm}`"
+                        id="Edit"
                         v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
+                            <div
+                            class="group">
+                                <v-text-field
+                                class="title__input clearable"
+                                ref="group" 
+                                label="Group Title"
+                                v-model="group.title"
+                                hint="Required"
+                                placeholder="(ex: Rodeo Regional, Grand Stampede)"
+                                maxLength="32"
+                                clearable
+                                persistent-hint
+                                :rules="rules.group"
+                                required />
+
+                                <v-text-field
+                                class="part__input clearable"
+                                label="Part"
+                                v-model="group.part"
+                                hint="Optional"
+                                placeholder="(ex: #3, Finals, etc.)"
+                                maxLength="16"
+                                persistent-hint
+                                clearable />
+
+                                <v-menu
+                                label="Date"
+                                content-class="datepicker__menu"
+                                attach=".date__input .v-input__control"
+                                transition="scale-transition"
+                                min-width="auto"
+                                v-model="datepicker"
+                                :close-on-content-click="false">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-text-field
+                                        class="date__input clearable"
+                                        ref="date"
+                                        label="Date"
+                                        v-model="group.date"
+                                        v-bind="attrs"
+                                        v-on="on"
+                                        prepend-icon="mdi-calendar"
+                                        hint="Required"
+                                        persistent-hint
+                                        placeholder="MM-DD-YYYY"
+                                        clearable
+                                        :rules="rules.date"
+                                        required />
+                                    </template>
+
+                                    <v-date-picker
+                                    v-model="date"
+                                    no-title
+                                    scrollable
+                                    :max="currentDate"
+                                    @input="datepicker = false" />
+                                </v-menu>
+
+                                <div
+                                class="url__input">
+                                    <v-text-field
+                                    class="url clearable"
+                                    ref="url"
+                                    label="YouTube Link"
+                                    v-model="url"
+                                    prepend-icon="mdi-youtube"
+                                    hint="Optional"
+                                    persistent-hint
+                                    clearable
+                                    :required="$route.query.uploadForm === 'YouTube'"
+                                    :rules="$route.query.uploadForm === 'YouTube' ? rules.url.req : rules.url.noReq" />
+
+                                    <v-progress-circular
+                                    v-if="loading"
+                                    indeterminate />
+
+                                    <v-btn
+                                    v-if="$refs.url && !loading"
+                                    class="verify"
+                                    :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
+                                    height="50px"
+                                    :width="!changeButton ? '84px' : '50px'"
+                                    :fab="changeButton"
+                                    rounded
+                                    :ripple="false"
+                                    :disabled="!$refs.url.valid || !url"
+                                    @click="validateYoutubeID()">
+                                        <template v-if="!changeButton">
+                                            Verify
+                                        </template>
+
+                                        <v-icon v-else>
+                                        {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
+                                        </v-icon>
+                                    </v-btn>
+                                </div>
+                            </div>
+
                             <div class="match-list">
                                 <template v-for="(match, i, j) in updated">
                                     <Preview
@@ -260,6 +313,30 @@ export default {
             formData: null,
             warning: false,
             error: false,
+            changeButton: false,
+            hasVideo: false,
+            datepicker: false,
+            currentDate: new Date().toISOString().split('T').toString(),
+            date: null,
+            rules: {
+                group: [
+                    v => !!v || 'Required',
+                ],
+                date: [
+                    v => !!v || 'Required'
+                ],
+                url: {
+                    noReq: [
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ],
+                    req: [
+                        v => !!v || 'Required',
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ]
+                }
+            }
         }
     },
     mounted: function () {

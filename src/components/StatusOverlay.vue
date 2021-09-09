@@ -1,7 +1,7 @@
 <template>
     <v-overlay v-show="error || warning || uploading || finished">
         <v-container fluid fill-height>
-            <v-layout class="status" justify-center align-center>
+            <div class="status">
                 <div 
                 v-if="uploading"
                 class="status__uploading">
@@ -184,7 +184,7 @@
                         </v-btn>
                     </div>
                 </div>
-            </v-layout>
+            </div>
         </v-container>
     </v-overlay>
 </template>

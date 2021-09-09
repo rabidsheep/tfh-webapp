@@ -4,44 +4,21 @@
         <v-col
         cols="12"
         class="header">
-            <div
-            class="leader mr-3">
-                <button
-                aria-label="Remove Match"
-                :ripple="false"
-                class="remove"
-                @click.prevent="$emit('remove')">
-                    <RemoveButton />
-                </button>
-                
-                <div class="matchinfo">
-                    <b>{{ 'Match #' + (index+1) }}</b>
-                    
-                    <template v-if="fileDate && fileUpload">
-                        <br />
-                        File Date: {{ fileDate }}
-                    </template>
-                </div>
-            </div>
+            <button
+            aria-label="Remove Match"
+            :ripple="false"
+            class="remove"
+            @click.prevent="$emit('remove')">
+                <RemoveButton />
+            </button>
+            
+            <b class="match__num">{{ 'Match #' + (index+1) }}</b>                 
             
             <v-divider />
-            <!--<v-divider :vertical="$vuetify.breakpoint.smAndDown && fileUpload" />
 
-            <v-col
-            v-if="fileUpload"
-            class="name ml-3">
-                <v-text-field
-                readonly
-                class="filename"
-                v-model="fileName"
-                prepend-icon="mdi-file"
-                dense
-                label="File"
-                outlined
-                hide-details />
-            </v-col>-->
-
-            
+            <p class="file__date" v-if="fileDate && fileUpload">
+                File Date: {{ fileDate }}
+            </p>
         </v-col>
 
         <v-col
@@ -70,7 +47,7 @@
         class="data">
             <v-col
             class="players"
-            :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : 8">
+            :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : undefined">
                 <v-col
                 v-for="(player, i) in [p1, p2]"
                 :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
@@ -118,36 +95,8 @@
 
             <div
             class="add">
-                <!--<v-text-field
-                v-if="fileUpload"
-                readonly
-                ref="url"
-                label="YouTube Link"
-                placeholder="YouTube Link"
-                persistent-placeholder
-                v-model="url"
-                prepend-icon="mdi-youtube"
-                hint="Optional"
-                persistent-hint
-                :dense="!$vuetify.breakpoint.smOnly"
-                :rules="rules.url.noReq" />-->
-
                 <v-text-field
-                v-if="fileUpload"
-                class="file"
-                :title="fileName"
-                label="File"
-                disabled
-                readonly
-                v-model="fileName"
-                prepend-icon="mdi-paperclip"
-                hint="Optional"
-                persistent-hint
-                clearable />
-                
-                <v-text-field
-                v-else
-                class="file"
+                :class="youtubeUpload ? 'file clearable' : 'file'"
                 label="File"
                 :title="fileNameStr ? fileNameStr : 'No File'"
                 readonly
@@ -155,9 +104,10 @@
                 prepend-icon="mdi-paperclip"
                 hint="Optional"
                 persistent-hint
-                clearable
-                @click="selectFiles()"
-                @click:clear="$emit('remove-file')" />
+                :clearable="youtubeUpload"
+                :disabled="fileUpload"
+                @click="youtubeUpload ? selectFiles() : undefined"
+                @click:clear="youtubeUpload ? $emit('remove-file') : undefined" />
 
                 <input
                 v-show="false"
@@ -167,7 +117,7 @@
                 @change="$emit('add-file', $event.target.files[0])" />
 
                 <v-text-field
-                class="timestamp"
+                class="timestamp clearable mt-0"
                 ref="timestamp"
                 label="Timestamp"
                 v-model="timestamp"
@@ -175,7 +125,6 @@
                 hint="##h##m##s"
                 persistent-hint
                 placeholder="(ex: 01h02m03s)"
-                persistent-placeholder
                 clearable
                 :required="timestampRequired"
                 :disabled="fileUpload && !this.masterUrl ? true : undefined"
@@ -253,33 +202,34 @@ export default {
         }
     },
     mounted: function () {
+        this.fileNameStr = this.fileName
+
         if (this.video) {
             this.url = 'https://youtu.be/' + this.video.id
             this.timestamp = this.video.timestamp
         }
 
-        if (this.masterUrl) {
+        if (this.masterUrl)
             this.url = this.masterUrl
-        }
     },
     watch: {
         'resetData': function() {
             this.reset()
         },
-        'url': function(v) {  
-            if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
-                this.$emit('set-video-id', v.match(this.$regex.ytId))
-            } else if (!v) {
+        'url': function(url) {  
+            if (url && this.$regex.ytUrl.test(url) && this.$regex.ytIdLength.test(url)) {
+                this.$emit('set-video-id', url.match(this.$regex.ytId))
+            } else if (!url) {
                 this.$emit('remove-video')
             }
         },
         
-        'timestamp': function(v) {
-            if (v && v.match(this.$regex.strTimestamp)) {
-                    if (this.timestamp !== this.video.timestamp) {
-                        this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
+        'timestamp': function(timestamp) {
+            if (timestamp && timestamp.match(this.$regex.strTimestamp)) {
+                    if (!this.video?.timestamp || timestamp !== this.video.timestamp) {
+                        this.$emit('set-timestamp', timestamp)
                     }
-            } else if (!v) {
+            } else if (!timestamp) {
                 this.$emit('delete-timestamp')
             }
         },
@@ -290,6 +240,8 @@ export default {
 
         'masterUrl': function(url) {
             this.url = url
+
+            if (!url && this.timestamp) this.timestamp = null
         },
 
         'video.timestamp': function(time) {

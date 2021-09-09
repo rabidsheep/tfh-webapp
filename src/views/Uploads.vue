@@ -132,7 +132,7 @@
                         
                         <FileUploads
                         v-if="uploadType == 'files'"
-                        :key="filesKey"
+                        :key="fileKey"
                         :uid="uid"
                         @reload-form="fileKey = !fileKey" />
 
@@ -176,7 +176,7 @@ export default {
             allowLogin: false,
             loggedIn: false,
             youtubeKey: false,
-            filesKey: false,
+            fileKey: false,
         }
     },
     watch: {

@@ -15,96 +15,108 @@
         v-model="valid"
         class="form"
         ref="form">
-            <v-row
-            class="group-info"
-            v-show="groupMode">
-                <v-col
-                class="group title pa-0"
-                :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
-                    <v-text-field
-                    ref="group" 
-                    label="Group Title"
-                    v-model="group.title"
-                    hint="Required (ex: Rodeo Regional, Grand Stampede)"
-                    maxLength="32"
-                    clearable
-                    persistent-hint
-                    :rules="groupMode ? rules.group : undefined"
-                    :required="groupMode" />
-                </v-col>
+            <div
+            class="group">
+                <v-text-field
+                class="title__input clearable"
+                ref="group" 
+                label="Group Title"
+                v-model="group.title"
+                hint="Required"
+                placeholder="(ex: Rodeo Regional, Grand Stampede)"
+                maxLength="32"
+                clearable
+                persistent-hint
+                :rules="rules.group"
+                required />
 
-                <v-col
-                class="group part"
-                :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
-                    <v-text-field
-                    label="Part"
-                    v-model="group.part"
-                    hint="Optional"
-                    maxLength="16"
-                    persistent-hint
-                    clearable />
-                </v-col>
+                <v-text-field
+                class="part__input clearable"
+                label="Part"
+                v-model="group.part"
+                hint="Optional"
+                placeholder="(ex: #3, Finals, etc.)"
+                maxLength="16"
+                persistent-hint
+                clearable />
 
-                <v-col
-                class="group date pa-0"
-                :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
-                    <v-menu
-                    label="Date"
-                    content-class="datepicker__menu"
-                    attach=".date__input .v-input__control"
-                    transition="scale-transition"
-                    min-width="auto"
-                    v-model="datepicker"
-                    :close-on-content-click="false">
-                        <template v-slot:activator="{ on, attrs }">
-                            <v-text-field
-                            class="date__input"
-                            ref="date"
-                            label="Date"
-                            v-model="group.date"
-                            v-bind="attrs"
-                            v-on="on"
-                            prepend-icon="mdi-calendar"
-                            hint="Required"
-                            persistent-hint
-                            clearable
-                            :rules="groupMode ? rules.date : undefined"
-                            :required="groupMode" />
+                <v-menu
+                label="Date"
+                content-class="datepicker__menu"
+                attach=".date__input .v-input__control"
+                transition="scale-transition"
+                min-width="auto"
+                v-model="datepicker"
+                :close-on-content-click="false">
+                    <template v-slot:activator="{ on, attrs }">
+                        <v-text-field
+                        class="date__input clearable"
+                        ref="date"
+                        label="Date"
+                        v-model="group.date"
+                        v-bind="attrs"
+                        v-on="on"
+                        prepend-icon="mdi-calendar"
+                        hint="Required"
+                        persistent-hint
+                        placeholder="MM-DD-YYYY"
+                        clearable
+                        :rules="rules.date"
+                        required />
+                    </template>
+
+                    <v-date-picker
+                    v-model="date"
+                    no-title
+                    scrollable
+                    :max="currentDate"
+                    @input="datepicker = false" />
+                </v-menu>
+
+                <div
+                class="url__input">
+                <v-text-field
+                class="url clearable"
+                ref="url"
+                label="YouTube Link"
+                v-model="url"
+                prepend-icon="mdi-youtube"
+                hint="Optional"
+                persistent-hint
+                clearable
+                :rules="rules.url" />
+
+                <div
+                class="url__button">
+                    <v-progress-circular
+                    v-if="loading"
+                    indeterminate />
+
+                    <v-btn
+                    v-if="$refs.url && !loading"
+                    class="verify"
+                    :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
+                    height="50px"
+                    :width="!changeButton ? '84px' : '50px'"
+                    :fab="changeButton"
+                    rounded
+                    :ripple="false"
+                    :disabled="!$refs.url.valid || !url"
+                    @click="validateYoutubeID()">
+                        <template v-if="!changeButton">
+                            Verify
                         </template>
 
-                        <v-date-picker
-                        v-model="date"
-                        no-title
-                        scrollable
-                        :max="currentDate"
-                        @input="datepicker = false" />
-                    </v-menu>
-                </v-col>
+                        <v-icon v-else>
+                        {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
+                        </v-icon>
+                    </v-btn>
+                </div>
+            </div>
 
-                <v-col
-                cols="12"
-                class="pa-0"
-                justify="center"
-                align="center">
-                    <v-col
-                    :cols="$vuetify.breakpoint.smAndDown ? 12 : 6"
-                    class="pa-0 pt-5">
-                        <v-text-field
-                        ref="url"
-                        class="link"
-                        label="YouTube Link"
-                        v-model="url"
-                        prepend-icon="mdi-youtube"
-                        hint="Optional"
-                        persistent-hint
-                        dense
-                        clearable
-                        :rules="rules.url"
-                        :disabled="!groupMode" />
-                    </v-col>
-                </v-col>
-            </v-row>
+            </div>
 
+            
 
             <div
             v-if="matches.length > 0"
@@ -127,7 +139,7 @@
                     :firstMatch="i === 0"
                     :lastMatch="i === matches.length - 1"
                     :timestampRequired="false"
-                    :masterUrl="masterUrl"
+                    :masterUrl="masterUrl ? masterUrl : null"
                     @update-character="updateCharacter($event.character, $event.index, i)"
                     @remove="matches.splice(i, 1)"
                     @set-video-id="setVideoId($event, i)"
@@ -199,13 +211,14 @@
                 <!---->
 
                 <v-btn
+                v-show="matches.length > 0"
                 height="50px"
                 color="accent"
                 rounded
                 :ripple="false"
                 :disabled="!valid || matches.length <= 0 || uploading"
                 @click="submitFiles()">
-                Upload Files
+                Upload
                 </v-btn>
             </div>
         </v-form>
@@ -250,6 +263,12 @@ export default {
                 part: null,
                 date: null,
             },
+            video: {},
+            vid: null,
+            hasVideo: false,
+            invalidVideo: true,
+            changeButton: false,
+            loading: false,
             rules: {
                 group: [
                     v => !!v || 'Required',
@@ -274,11 +293,67 @@ export default {
       },
 
       'url': function(url) {
-          if (this.$refs.url.validate())
-              this.masterUrl = url
+            if (!url) {
+                this.hasVideo = false
+                this.invalidVideo = true
+                this.masterUrl = false
+            }
       }
     },
     methods: {
+        setAuthToken: function () {
+            return this.$firebase.auth().currentUser.getIdToken()
+                .then((token) => {
+                    console.log('Setting auth token')
+                    return this.$httpInterceptors.push((request) => {
+                        request.headers.set('Authorization', token)
+                    })
+                })
+                .catch((error) => console.log(error))
+        },
+        validateYoutubeID() {
+            this.loading = true
+            this.vid = this.url.match(this.$regex.ytId)[1]
+            this.video = {}
+            let youtubeRef = null
+
+            if (process.env.NODE_ENV === "production") {
+                youtubeRef = this.setAuthToken().then(() => {
+                    console.log('Retrieving Youtube data')
+                    return this.$youtubeData.get({ v: this.vid })
+                })
+            } else {
+                youtubeRef = this.$youtubeData.get({ v: this.vid })
+            }
+
+            youtubeRef.then((response) => {
+                this.loading = false
+                this.masterUrl = this.url
+                this.invalidVideo = false
+                this.hasVideo = true
+                this.changeButton = true
+                this.video = response.body
+                this.group.date = this.video.date
+
+                this.revertVerifyBtn()
+            })
+            .catch((error) => {
+                console.log(error)
+                this.loading = false
+                this.masterUrl = null
+                this.hasVideo = false
+                this.invalidVideo = true
+                this.changeButton = true
+
+                this.revertVerifyBtn()
+            })
+            
+        },
+        revertVerifyBtn() {
+            window.setInterval(() => {
+                this.changeButton = false
+            }, 3000)
+        },
         /** tell parent component to begin uploading files */
         submitFiles() {
             let time = new Date().toISOString().split('T')
@@ -298,6 +373,8 @@ export default {
                     order: order,
                     ...match
                 }
+
+                if (this.hasVideo) newMatch.video = this.video
 
                 order += 1
 
@@ -332,7 +409,7 @@ export default {
                 })
             } else {
                 Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
-                .then(() => this.$matches.save({matches: matches, getYoutubeData: true}))
+                .then(() => this.$matches.save({matches: matches, getYoutubeData: false}))
                 .then((response) => {
                     if (response.ok) {
                         console.log('Uploaded matches:')
@@ -506,19 +583,18 @@ export default {
         },
         setVideoId(id, i) {
             if (!this.matches[i].video) {
-                this.$set(this.matches[i], 'video', {})
-            }
-
-            if (this.matches[i].video.id !== id || !this.matches[i].video.id) {
+                console.log('setting video ID')
+                this.$set(this.matches[i], 'video', {id: id})
+            } else if (!this.matches[i].video.id || this.matches[i].video.id !== id) {
+                console.log('setting video ID')
                 this.$set(this.matches[i].video, 'id', id)
             }
 
-           //this.printObj(this.matches[i].video)
+           this.printObj(this.matches[i].video)
         },
         setTimestamp(timestamp, i) {
-            if (!this.matches[i].video?.timestamp || this.matches[i].video.timestamp !== timestamp) {
-                this.$set(this.matches[i].video, 'timestamp', timestamp)
-            }
+            console.log('setting timestamp')
+            this.$set(this.matches[i].video, 'timestamp', timestamp)
         },
         deleteVideo(i) {
             if (this.matches[i].video) {

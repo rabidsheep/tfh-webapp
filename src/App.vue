@@ -118,7 +118,7 @@ export default {
 }
 
 ::v-deep .theme--dark.v-icon.v-icon.v-icon--disabled {
-  color: #5e5e5e !important;
+  color: var(--v-buttonDisabled-base) !important;
 }
 
 ::v-deep .preview .v-input--dense > .v-input__control > .v-input__slot {
@@ -130,12 +130,7 @@ export default {
   padding: 24px 0px;
 }
 
-::v-deep .mdi {
-  display: flex !important;
-  
-}
-
-::v-deep .v-text-field__slot > input {
+::v-deep .v-input input {
     text-overflow: ellipsis;
     overflow: hidden;
     display: -webkit-box;

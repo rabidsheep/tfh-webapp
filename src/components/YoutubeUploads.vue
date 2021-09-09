@@ -17,9 +17,9 @@
         @close="resetForm()" />
 
         <v-row
-        class="url-input">
+        class="url__input">
             <v-text-field
-            class="url"
+            class="url clearable"
             ref="url"
             label="YouTube Link"
             v-model="url"
@@ -28,22 +28,35 @@
             clearable
             required
             :rules="rules.url" />
+            
+            <div
+            class="url__button">
+                <v-progress-circular
+                v-if="loading"
+                indeterminate />
 
-            <v-btn
-            v-if="$refs.url"
-            color="accent"
-            height="50px"
-            rounded
-            :ripple="false"
-            :disabled="!$refs.url.valid"
-            @click="validateYoutubeID()">
-                Go
-            </v-btn>
+                <v-btn
+                v-if="$refs.url && !loading"
+                class="verify"
+                :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
+                height="50px"
+                :width="!changeButton ? '84px' : '50px'"
+                :fab="changeButton"
+                rounded
+                :ripple="false"
+                :disabled="!$refs.url.valid || !url"
+                @click="!changeButton ? validateYoutubeID() : undefined">
+                    <template v-if="!changeButton">
+                        Go
+                    </template>
+
+                    <v-icon v-else>
+                    {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
+                    </v-icon>
+                </v-btn>
+            </div>
         </v-row>
 
-        <v-progress-circular
-        v-if="loading"
-        indeterminate />
         
         <template v-if="!loading">
             <template v-if="invalidId">
@@ -52,26 +65,46 @@
 
             <div
             v-if="Object.keys(video).length"
-            class="data"
+            class="video"
             column
             justify-center
             align-center>
                 <template v-if="Object.keys(video).length > 0">
                     <v-row
-                    class="date-title">
-                        <v-text-field
-                        class="title"
-                        label="Video Title"
-                        v-model="video.title"
-                        readonly
-                        disabled />
+                    class="data">
+                        <v-col
+                        :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
+                        :class="$vuetify.breakpoint.smAndDown ? `title pa-0` : `title pa-0 mr-2`">
+                            <v-text-field
+                            class="video__title"
+                            label="Video Title"
+                            v-model="video.title"
+                            readonly
+                            disabled />
+                        </v-col>
 
-                        <v-text-field
-                        class="date"
-                        label="Date Uploaded"
-                        v-model="video.date"
-                        readonly
-                        disabled />
+                        <v-col
+                        :class="$vuetify.breakpoint.smAndDown ? `channel pa-0 mr-2` : `channel pa-0 mx-2`"
+                        :cols="$vuetify.breakpoint.smAndDown ? undefined : 2">
+                            <v-text-field
+                            class="video__channel"
+                            label="Uploaded By"
+                            v-model="video.channel.name"
+                            readonly
+                            disabled />
+                        </v-col>
+
+                        <v-col
+                        class="date pa-0 ml-2"
+                        :cols="$vuetify.breakpoint.smAndDown ? undefined : 3">
+                            <v-text-field
+                            class="video__date"
+                            label="Date Uploaded"
+                            v-model="video.date"
+                            prepend-icon="mdi-calendar"
+                            readonly
+                            disabled />
+                        </v-col>
                     </v-row>
 
                     <div
@@ -119,13 +152,13 @@
                 class="group-info pa-0"
                 justify="center">
                     <v-col
-                    :cols="$vuetify.breakpoint.xsOnly ? 12 : undefined"
-                    :class="$vuetify.breakpoint.xsOnly? `title pa-0 mb-6` : `title pa-0 mr-2`">
+                    :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
+                    :class="$vuetify.breakpoint.smAndDown ? `title pa-0 mb-2` : `title pa-0 mr-2`">
                         <v-text-field
+                        class="title__input clearable"
                         ref="groupTitle"
                         label="Group Title"
                         placeholder="(ex: Rodeo Regional, Grand Stampede)"
-                        persistent-placeholder
                         v-model="group.title"
                         hint="Required"
                         persistent-hint
@@ -136,14 +169,14 @@
                     </v-col>
 
                     <v-col
-                    :class="$vuetify.breakpoint.xsOnly? `part pa-0 mr-2` : `part pa-0 mx-2`"
-                    :cols="$vuetify.breakpoint.xsOnly ? undefined : 2">
+                    :class="$vuetify.breakpoint.smAndDown ? `part pa-0 mr-2` : `part pa-0 mx-2`"
+                    :cols="$vuetify.breakpoint.smAndDown ? undefined : 2">
                         <v-text-field
+                        class="part__input clearable"
                         ref="groupPart"
                         label="Part"
                         v-model="group.part"
                         placeholder="(ex: #3, Finals, etc.)"
-                        persistent-placeholder
                         maxLength="16"
                         hint="Optional"
                         persistent-hint
@@ -151,7 +184,8 @@
                     </v-col>
 
                     <v-col
-                    class="date pa-0 ml-2">
+                    class="date pa-0 ml-2"
+                    :cols="$vuetify.breakpoint.smAndDown ? undefined : 3">
                         <v-menu
                         label="Date"
                         content-class="datepicker__menu"
@@ -162,11 +196,10 @@
                         :close-on-content-click="false">
                             <template v-slot:activator="{ on, attrs }">
                                 <v-text-field
-                                class="date__input"
+                                class="date__input clearable"
                                 ref="groupDate"
                                 label="Date"
                                 placeholder="MM-DD-YYYY"
-                                persistent-placeholder
                                 v-model="group.date"
                                 v-bind="attrs"
                                 v-on="on"
@@ -322,6 +355,8 @@ export default {
             fileData: null,
             formData: null,
             tempData: null,
+            hasVideo: false,
+            changeButton: false,
             currentDate: new Date().toISOString().split('T').toString(),
             rules: {
                 name: [
@@ -380,25 +415,40 @@ export default {
             }
 
             youtubeRef.then((response) => {
-                if (response.ok) {
-                    this.video = response.body
-                    this.currentDescription = this.video.description
-                    this.group.date = this.video.date
-                    this.parseVideoDescription(this.currentDescription)
+                this.hasVideo = true
+                this.changeButton = true
+                this.invalidId = false
+                this.video = response.body
+                this.currentDescription = this.video.description
+                this.group.date = this.video.date
 
-                    // only way to get required input fields
-                    // to highlight themselves????
-                    this.validateForm()
-                }
+                this.parseVideoDescription(this.currentDescription)
+
+                // only way to get required input fields
+                // to highlight themselves????
+                this.validateForm()
                 this.loading = false
                 this.error = false
+
+                
+                this.revertVerifyBtn()
             })
             .catch((error) => {
                 console.log(error)
+                this.hasVideo = false
                 this.invalidId = true
+                this.changeButton = true
                 this.loading = false
+
+                
+                this.revertVerifyBtn()
             })
             
+        },
+        revertVerifyBtn() {
+            window.setInterval(() => {
+                this.changeButton = false
+            }, 3000)
         },
         parseVideoDescription(desc) {
             this.matches = []

@@ -100,6 +100,7 @@
                             class="group">
                                 <div class="title">
                                     <v-combobox
+                                    class="group__filter clearable"
                                     clearable
                                     v-model="groupFilter.title"
                                     append-icon=""
@@ -110,8 +111,7 @@
                                         maxHeight: '200'
                                         }"
                                     dense
-                                    hint="ex: Grand Stampede, Combo Breaker 2019, etc."
-                                    persistent-hint
+                                    placeholder="(ex: Rodeo Regional, Grand Stampede)"
                                     label="Group Title"
                                     :hide-no-data="!groupSearch"
                                     :items="groupList"
@@ -135,6 +135,7 @@
                                 <div
                                 class="part">
                                     <v-combobox
+                                    class="part__filter clearable"
                                     clearable
                                     v-model="groupFilter.part"
                                     append-icon=""
@@ -145,8 +146,7 @@
                                         maxHeight: '200'
                                         }"
                                     dense
-                                    hint="ex: #1, Finale, etc."
-                                    persistent-hint
+                                    placeholder="(ex: #3, Finals, etc.)"
                                     label="Part"
                                     :hide-no-data="!partSearch"
                                     :items="partList"
@@ -172,7 +172,7 @@
                                 class="date">
                                     <v-combobox
                                     clearable
-                                    class="date"
+                                    class="date__filter clearable"
                                     v-model="groupFilter.date"
                                     prepend-icon="mdi-calendar"
                                     append-icon=""
@@ -183,8 +183,7 @@
                                         maxHeight: '200'
                                         }"
                                     dense
-                                    hint="MM-DD-YYYY"
-                                    persistent-hint
+                                    placeholder="MM-DD-YYYY"
                                     label="Date"
                                     :hide-no-data="!dateSearch"
                                     :items="dateList"

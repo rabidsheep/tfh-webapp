@@ -282,12 +282,12 @@
 
 /****/
 .preview .add .v-messages,
-.group-info .v-messages {
+.group .v-messages {
     max-width: max-content;
 }
 
 .preview .add .v-text-field__details,
-.group-info .v-text-field__details {
+.group .v-text-field__details {
     justify-content: end;
 }
 /****/
@@ -621,4 +621,8 @@ button.move:not(.disabled):hover .st0 {
 }
 .xsmall .add .v-input__icon--prepend i {   
     font-size: 32px;
+}
+
+#step__edit .progress {
+    justify-self: center;
 }

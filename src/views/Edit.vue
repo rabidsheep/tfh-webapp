@@ -92,15 +92,19 @@
                     class="step">
                         <h1>Edit Match Details</h1>
                         
-                        <v-progress-circular
-                        class="progress"
+                        <div
                         v-if="loadingMatches"
-                        indeterminate />
+                        class="progress">
+                            <v-progress-circular
+                            indeterminate />
+                            <br />
+                            Retrieving matches...
+                        </div>
 
                         <v-form
                         v-model="valid"
                         ref="form"
-                        id="Edit"
+                        id="edit"
                         v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
                             <div
                             class="group">
@@ -163,40 +167,45 @@
                                 <div
                                 class="url__input">
                                     <v-text-field
-                                    class="url clearable"
+                                    :class="$route.query.uploadForm === 'Files' ? 'url clearable' : 'url'"
                                     ref="url"
                                     label="YouTube Link"
                                     v-model="url"
                                     prepend-icon="mdi-youtube"
                                     hint="Optional"
                                     persistent-hint
-                                    clearable
+                                    :clearable="$route.query.uploadForm === 'Files'"
                                     :required="$route.query.uploadForm === 'YouTube'"
                                     :rules="$route.query.uploadForm === 'YouTube' ? rules.url.req : rules.url.noReq" />
 
-                                    <v-progress-circular
-                                    v-if="loading"
-                                    indeterminate />
 
-                                    <v-btn
-                                    v-if="$refs.url && !loading"
-                                    class="verify"
-                                    :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
-                                    height="50px"
-                                    :width="!changeButton ? '84px' : '50px'"
-                                    :fab="changeButton"
-                                    rounded
-                                    :ripple="false"
-                                    :disabled="!$refs.url.valid || !url"
-                                    @click="validateYoutubeID()">
-                                        <template v-if="!changeButton">
-                                            Verify
-                                        </template>
+                                    
+                                    <div
+                                    class="url__button">
+                                        <v-progress-circular
+                                        v-if="loadingVideo"
+                                        indeterminate />
 
-                                        <v-icon v-else>
-                                        {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
-                                        </v-icon>
-                                    </v-btn>
+                                        <v-btn
+                                        v-if="$refs.url && !loadingVideo"
+                                        class="verify"
+                                        :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
+                                        height="50px"
+                                        :width="!changeButton ? '84px' : '50px'"
+                                        :fab="changeButton"
+                                        rounded
+                                        :ripple="false"
+                                        :disabled="!$refs.url.valid || !url"
+                                        @click="validateYoutubeID()">
+                                            <template v-if="!changeButton">
+                                                Verify
+                                            </template>
+
+                                            <v-icon v-else>
+                                            {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
+                                            </v-icon>
+                                        </v-btn>
+                                    </div>
                                 </div>
                             </div>
 
@@ -214,15 +223,17 @@
                                     :p2="match.p2"
                                     :youtubeUpload="$route.query.uploadForm === 'YouTube'"
                                     :fileUpload="$route.query.uploadForm === 'Files'"
-                                    :timestampRequired="$route.query.uploadForm === 'YouTube' || original[0].type === 'Group'"
+                                    :timestampRequired="hasVideo"
+                                    :hasVideo="hasVideo"
+                                    :masterUrl="masterUrl ? masterUrl : null"
                                     :group="match.group ? match.group : null"
                                     :video="match.video ? match.video : null"
                                     :fileInfo="match.fileInfo ? match.fileInfo : null"
                                     :type="match.type"
                                     :resetData="resetData"
                                     @add-file="readFile($event, i)"
+                                    @set-video-id="setVideoId($event, i)"
                                     @set-timestamp="setTimestamp($event, i)"
-                                    @set-url="setUrl($event, i)"
                                     @delete-timestamp="deleteTimestamp(i)"
                                     @delete-video="deleteVideo(i)"
                                     @remove-file="removeFile(i)"
@@ -315,6 +326,9 @@ export default {
             error: false,
             changeButton: false,
             hasVideo: false,
+            masterUrl: null,
+            loadingVideo: false,
+            originalVideo: null,
             datepicker: false,
             currentDate: new Date().toISOString().split('T').toString(),
             date: null,
@@ -429,6 +443,17 @@ export default {
             }
         },
         
+        'date': function(date) {
+            this.group.date = this.formatDate(date)
+        },
+
+        'url': function(url) {
+            if (!url && this.$route.query.uploadForm !== 'YouTube') {
+                this.hasVideo = false
+                this.invalidVideo = true
+                this.masterUrl = false
+            }
+        }
     },
     methods: {
         signIn: function (providerName) {
@@ -455,18 +480,65 @@ export default {
             })
             .catch((error) => console.log(error))
         },
+        validateYoutubeID() {
+            this.loadingVideo = true
+            this.vid = this.url.match(this.$regex.ytId)[1]
+            this.video = {}
+            let youtubeRef = null
+
+            if (process.env.NODE_ENV === "production") {
+                youtubeRef = this.setAuthToken().then(() => {
+                    console.log('Retrieving Youtube data')
+                    return this.$youtubeData.get({ v: this.vid })
+                })
+            } else {
+                youtubeRef = this.$youtubeData.get({ v: this.vid })
+            }
+
+            youtubeRef.then((response) => {
+                this.loadingVideo = false
+                this.masterUrl = this.url
+                this.invalidVideo = false
+                this.hasVideo = true
+                this.changeButton = true
+                this.video = response.body
+
+                this.validateForm()
+                this.revertVerifyBtn()
+            })
+            .catch((error) => {
+                console.log(error)
+                this.loadingVideo = false
+                this.masterUrl = null
+                this.hasVideo = false
+                this.invalidVideo = true
+                this.changeButton = true
+                
+                this.validateForm()
+                this.revertVerifyBtn()
+            })
+            
+        },
+        revertVerifyBtn() {
+            window.setInterval(() => {
+                this.changeButton = false
+            }, 3000)
+        },
         getMatches(uploadId) {
             this.loadingMatches = true
 
             this.$matches.get({uploadId: uploadId})
             .then((response) => {
-                if (response.ok) {
-                    this.group = response.body.groups[0]._id.group
-                    this.original = response.body.groups[0].matches
-                    this.updated = JSON.parse(JSON.stringify(response.body.groups[0].matches))
-                    this.url = (this.original[0].video ? 'https://youtu.be/' + this.original[0].video.id : null)
-                    this.loadingMatches = false
-                }
+                this.originalVideo = response.body.groups[0]._id.video
+
+                this.group = response.body.groups[0]._id.group
+                this.hasVideo = this.originalVideo ? true : false
+                this.url = this.originalVideo ? 'https://youtu.be/' + this.originalVideo : null
+                this.masterUrl = this.url
+                this.original = response.body.groups[0].matches
+                this.updated = JSON.parse(JSON.stringify(response.body.groups[0].matches))
+                this.loadingMatches = false
+                
             })
             .catch((error) => {
                  console.log(error)
@@ -475,8 +547,16 @@ export default {
             })
         },
         resetMatches() {
+            if (this.originalVideo) {
+                this.url = 'https://youtu.be/' + this.originalVideo
+                this.hasVideo = true
+            } else {
+                this.url = null
+                this.hasVideo = false
+            }
+
+            this.masterUrl = this.url
             this.updated = JSON.parse(JSON.stringify(this.original))
-            this.resetData = !this.resetData
         },
         updateCharacter(character, i) {
             this.$set(this.updated.players[i], 'character', character)
@@ -582,13 +662,13 @@ export default {
                 delete this.updated[i].fileInfo
             })
         },
-        setUrl(url, i) {
+        setVideoId(id, i) {
             if (!this.updated[i].video) {
-                this.$set(this.updated[i], 'video', {})
-            }
-
-            if (this.updated[i].video.url !== url || !this.updated[i].video.url) {
-                this.$set(this.updated[i].video, 'id', url.match(this.$regex.ytId)[1])
+                console.log('setting video ID')
+                this.$set(this.updated[i], 'video', {id: id})
+            } else if (!this.updated[i].video.id || this.updated[i].video.id !== id) {
+                console.log('setting video ID')
+                this.$set(this.updated[i].video, 'id', id)
             }
         },
         setTimestamp(timestamp, i) {
@@ -783,7 +863,13 @@ export default {
             let tempMatch = this.updated[i]
             this.$set(this.updated, i, this.updated[j])
             this.$set(this.updated, j, tempMatch)
-        },
+        },        
+        validateForm() {
+            const refs = this.$refs
+            window.setTimeout(function () {
+                refs.form.validate()
+            }, 100)
+        }
     }
 }
 </script>

@@ -237,6 +237,7 @@
                         :firstMatch="i === 0"
                         :lastMatch="i === matches.length - 1"
                         :timestampRequired="matches.length > 1 ? true : false"
+                        :hasVideo="true"
                         @remove="removeMatch(i)"
                         @update-character="updateCharacter($event.character, $event.index, i)"
                         @move-up="swapMatches(i, i-1)"

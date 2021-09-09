@@ -127,7 +127,7 @@
                 placeholder="(ex: 01h02m03s)"
                 clearable
                 :required="timestampRequired"
-                :disabled="fileUpload && !this.masterUrl ? true : undefined"
+                :disabled="!hasVideo"
                 :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
             </div>
         </v-col>
@@ -163,7 +163,8 @@ export default {
         lastMatch: Boolean,
         resetData: Boolean,
         timestampRequired: Boolean,
-        masterUrl: [String, null]
+        masterUrl: [String, null],
+        hasVideo: Boolean,
     },
     data: () => {
         return {
@@ -218,9 +219,9 @@ export default {
         },
         'url': function(url) {  
             if (url && this.$regex.ytUrl.test(url) && this.$regex.ytIdLength.test(url)) {
-                this.$emit('set-video-id', url.match(this.$regex.ytId))
+                this.$emit('set-video-id', url.match(this.$regex.ytId)[1])
             } else if (!url) {
-                this.$emit('remove-video')
+                this.$emit('delete-video')
             }
         },
         

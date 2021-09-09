@@ -138,7 +138,8 @@
                     :fileDate="match.fileInfo.date"
                     :firstMatch="i === 0"
                     :lastMatch="i === matches.length - 1"
-                    :timestampRequired="false"
+                    :timestampRequired="hasVideo"
+                    :hasVideo="hasVideo"
                     :masterUrl="masterUrl ? masterUrl : null"
                     @update-character="updateCharacter($event.character, $event.index, i)"
                     @remove="matches.splice(i, 1)"
@@ -362,6 +363,11 @@ export default {
 
             this.uploading = true
             let matches = this.matches.map((match) => {
+                
+
+                files.push(match.file)
+                delete match.file
+
                 let newMatch = {
                     userId: this.uid,
                     uploadForm: 'Files',
@@ -374,12 +380,18 @@ export default {
                     ...match
                 }
 
-                if (this.hasVideo) newMatch.video = this.video
+                if (this.hasVideo) {
+                    newMatch.video = {
+                        id: match.video.id,
+                        title: this.video.title,
+                        date: this.video.date,
+                        timestamp: match.video.timestamp
+                    }
+                    
+                    newMatch.channel = this.video.channel
+                }
 
                 order += 1
-
-                files.push(match.file)
-                delete match.file
 
                 return newMatch
             })
@@ -574,6 +586,7 @@ export default {
 
             if (i >= endOfFiles) {
                 this.insertAtIndex = null
+                this.validateForm()
                 if (this.errors.length > 0)
                     this.error = true
             }
@@ -589,8 +602,6 @@ export default {
                 console.log('setting video ID')
                 this.$set(this.matches[i].video, 'id', id)
             }
-
-           this.printObj(this.matches[i].video)
         },
         setTimestamp(timestamp, i) {
             console.log('setting timestamp')

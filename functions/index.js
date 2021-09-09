@@ -15,10 +15,17 @@ api.use(cors)
 
 let dev = (process.env.FUNCTIONS_EMULATOR === 'true' ? true : false)
 let dbUrl = (dev ? configs.dev.mongodb : configs.prod.mongodb)
-const connectMongoDb = () => MongoClient.connect(dbUrl, { useUnifiedTopology: true })
+//const connectMongoDb = () => MongoClient.connect(dbUrl, { useUnifiedTopology: true })
 const youtubeKey = configs.youtube.key
 const itemsPerPage = 5
 
+
+var client = null
+MongoClient.connect(dbUrl, function(err, db) {
+    if (err) throw err
+    
+    return client = db
+})
 
 /************
 * API CALLS *
@@ -83,6 +90,8 @@ api.get('/matches', (req, res) => {
                     p2: '$p2',
                     uploadId: '$uploadId',
                     video: '$video',
+                    channel: '$channel',
+                    group: '$group',
                     fileInfo: '$fileInfo',
                     order: '$order',
                 }
@@ -90,41 +99,36 @@ api.get('/matches', (req, res) => {
         }},
     ]
 
-    return connectMongoDb()
-    .then((client) => {
         console.log('Connected @ %s', (new Date()).toLocaleString())
         console.log('Filtering with query:\n', query)
 
-        return Promise.all([
-            // for getting result count
-            // need to use length instead of count -- if no matches then count will be undefined
-            client
-            .db('tfhr')
-            .collection('matches')
-            .aggregate([
-                ...pipeline
-            ])
-            .toArray(),
-            // for getting matches to display on current page
-            client
-            .db('tfhr')
-            .collection('matches')
-            .aggregate([
-                ...pipeline,
-                { '$sort': { '_id.uploadDate': -1 } },
-                { '$skip': skip },
-                { '$limit': itemsPerPage }
-            ])
-            .toArray(),
-            client
+    return Promise.all([
+        // for getting result count
+        // need to use length instead of count -- if no matches then count will be undefined
+        client
+        .db('tfhr')
+        .collection('matches')
+        .aggregate([
+            ...pipeline
         ])
-    })
+        .toArray(),
+
+        // for getting matches to display on current page
+        client
+        .db('tfhr')
+        .collection('matches')
+        .aggregate([
+            ...pipeline,
+            { '$sort': { '_id.uploadDate': -1 } },
+            { '$skip': skip },
+            { '$limit': itemsPerPage }
+        ])
+        .toArray(),
+    ])
     .then((results) => {
         let count = results[0].length
         let groups = results[1]
-        let client = results[2]
         console.log(groups)
-        client.close()
         
         return res.status(200).send({
             count: count,
@@ -136,39 +140,22 @@ api.get('/matches', (req, res) => {
 
 /** upload matches to db */
 api.put('/matches', (req, res) => {
-    let getYoutubeData = req.body.getYoutubeData === 'true' ? true : false
     let uploadId = mongo.ObjectId().toString()
-    let group = req.body.matches[0].group ? req.body.matches[0].group : null
 
     let matches = req.body.matches.map((match) => {
-        if (!group) match.uploadId = mongo.ObjectId().toString()
-        else match.uploadId = uploadId
+        match.uploadId = uploadId
         
-        if (match.video && getYoutubeData) {
-
-            let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
-
-            return fetchYoutubeData(match, url)
-        } else {
-            return match
-        }
+        return match
     })
 
-    return connectMongoDb()
-    .then((client) => ({ client, matches }))
-    .then(({ client, matches}) => {
-        console.log(matches)
-        let db = client.db('tfhr')
-        return Promise.all([
-            db.collection('matches').insertMany(matches),
-            client
-        ])
-    })
+    console.log(matches)
+    
+    let db = client.db('tfhr')
+
+    return db.collection('matches')
+    .insertMany(matches)
     .then((results) => {
-        let client = results[1]
-        client.close()
-
-        let matchIds = (Object.values(results[0].insertedIds)).map(id => id.toString())
+        let matchIds = (Object.values(results.insertedIds)).map(id => id.toString())
 
         console.log('Matches uploaded:')
         for (id in matchIds) console.log(matchIds[id])
@@ -180,46 +167,37 @@ api.put('/matches', (req, res) => {
 
 /** update match info using edit page */
 api.put('/matches/update', (req, res) => {
-    let matches = req.body.matches.map((match) => {
-        if (match.video && match.video.id) {
-            let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${match.video.id}&key=${youtubeKey}`
-
-            return fetchYoutubeData(match, url)
-        } else {
-            return match
-        }
-    })
+    let matches = req.body.matches
 
     let deleted = req.body.deleted.map(id => mongo.ObjectId(id))
-    return connectMongoDb()
-    .then((client) => ({ client, matches }) )
-    .then((results) => {
-        let matches = results[0]
-        let client = results[1]
-        console.log('Connected.\nUpdating matches...')
 
-        let db = client.db('tfhr')
-        
+    console.log('Connected.\nUpdating matches...')
+
+    let db = client.db('tfhr')
+
+    db.collection('matches')
+    .deleteMany({ _id: { $in: deleted } })
+    .then(() => {
         for (i in matches) {
             db.collection('matches')
             .updateOne(
                 { _id: mongo.ObjectId(matches[i]._id) },
                 { $set: {
+                    group: matches[i].group,
                     p1: matches[i].p1,
                     p2: matches[i].p2,
                     video: matches[i].video,
                     channel: matches[i].channel,
-                    order: matches[i].order
+                    order: matches[i].order,
+                    
                 }},
             )
         }
 
-        db.collection('matches').deleteMany({ _id: { $in: deleted } })
-
-        return client
+        return null
     })
-    .then((client) => { 
-        client.close()
+    .then(() => { 
+        //client.close()
         return res.status(200).send()
     })
     .catch((error) => res.status(400).send(error.toString()))
@@ -228,24 +206,77 @@ api.put('/matches/update', (req, res) => {
 /** get list of groups */
 api.get('/filter/content', (req, res) => {
 
-    return connectMongoDb()
-    .then((client) => {
-        let db = client.db('tfhr').collection('matches')
+    let db = client.db('tfhr')
 
-        return Promise.all([
-            fetchGroups(db),
-            fetchPlayers(db),
-            fetchChannels(db),
-            client
-        ])
-     })
-     .then((results) => {
+    const groups = [
+        {'$match': { 'group': { '$ne': null } }},
+        {'$group': {
+            _id: '$group.title',
+            sub: {
+                
+                '$addToSet': {
+                    '$cond': {
+                        if: {
+                            '$ne': ['$group.part', null]
+                        },
+                        then: {
+                            part: '$group.part',
+                            date: '$group.date'
+                        },
+                        else: {
+                            date: '$group.date'
+                        }
+                    }
+                }
+                
+            }
+        }},
+        { '$sort': {
+            '_id': -1,
+            'sub.part': -1,
+            'sub.date': -1
+        }}
+    ]
+
+    const players = [
+        {'$group': {
+            _id: null,
+            'p1': {'$addToSet': '$p1.name'},
+            'p2': {'$addToSet': '$p2.name'} 
+        }},
+        {'$project': {
+            'players': {'$setUnion': ['$p1', '$p2']}
+        }}
+    ]
+    
+    const channels = [
+        {'$match': { 'channel': {'$ne': null} }},
+        {'$group': {
+            _id: null,
+            channels: {'$addToSet': '$channel'}
+        }
+    }]
+
+    return Promise.all([
+        db.collection('matches')
+        .aggregate([...groups])
+        .toArray(),
+
+        db.collection('matches')
+        .aggregate([...players])
+        .toArray(),
+
+        db.collection('matches')
+        .aggregate([...channels])
+        .toArray()
+    ])
+    .then((results) => {
         let groups = results[0]
         let players = results[1][0].players
         let channels = results[2][0].channels
-        let client = results[3]
-        client.close()
-        console.log('Returning group list.')
+
+        console.log('Returning filter content.')
+
         return res.status(200).send({
             groups: groups,
             players: players,
@@ -267,45 +298,32 @@ api.get('/users', (req, res) => {
         res.status(403).send('Unauthorized')
     }
 
-    if (dev) {
-        return connectMongoDb()
-        .then((client) => {
-            console.log('Retrieving user info')
+    let db = client.db('tfhr')
 
-            return Promise.all([
-                client.db('tfhr')
-                .collection('users')
-                .find(req.query)
-                .toArray(),
-                client
-            ])
-        })
-        .then((results) => {
-            let user = results[0]
-            let client = results[1]
+    if (dev) {
+        console.log('Retrieving user info')
+
+
+        return db.collection('users')
+        .find(req.query)
+        .toArray()
+        .then((user) => {
             console.log(user)
-            client.close()
+            //client.close()
             return res.status(200).send(user)
         })
         .catch((error) => res.status(400).send(error.toString()))
     } else {
         return admin.auth()
         .verifyIdToken(req.headers.authorization)
-        .then(() => connectMongoDb())
-        .then((client) => {
-            return Promise.all([
-                client.db('tfhr')
-                .collection('users')
-                .find(req.query)
-                .toArray(),
-                client
-            ])
+        .then(() => {
+            return db.collection('users')
+            .find(req.query)
+            .toArray()
         })
-        .then((results) => {
-            let user = results[0]
-            let client = results[1]
+        .then((user) => {
             console.log(user)
-            client.close()
+            //client.close()
             return res.status(200).send(user)
         })
         .catch((error) => res.status(400).send(error.toString()))
@@ -319,47 +337,35 @@ api.put('/users', (req, res) => {
     }
 
     let user = req.body
+    let db = client.db('tfhr')
 
     if (dev) {
-        return connectMongoDb()
-        .then((client) => {
-            console.log('Creating user')
+        console.log('Creating user')
 
-            client.db('tfhr')
-            .collection('users')
-            .updateOne(
-                { uid: user.uid },
-                { $set: { email: user.email } },
-                { upsert: true }
-            )
-
-            return client
-        })
-        .then((client) => {
-            client.close()
-
-            return res.status(200).send(`${user.email} saved`)
-        })
+        db
+        .collection('users')
+        .updateOne(
+            { uid: user.uid },
+            { $set: { email: user.email } },
+            { upsert: true }
+        )
+        .then(() => res.status(200).send(`${user.email} saved`))
         .catch((error) => res.status(400).send(error.toString()))
     } else {
         return admin.auth()
         .verifyIdToken(req.headers.authorization)
-        .then(() => connectMongoDb())
-        .then((client) => {
+        .then(() => {
             console.log('Creating user')
 
-            client.db('tfhr')
-            .collection('users')
+            return db.collection('users')
             .updateOne(
                 { uid: user.uid },
                 { $set: { email: user.email } },
                 { upsert: true }
             )
-
-            return client
         })
-        .then((client) => {
-            client.close()
+        .then(() => {
+            //client.close()
 
             return res.status(200).send(`${user.email} saved`)
         })
@@ -531,91 +537,4 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
     }
 
     return query
-}
-
-/** get list of groups */
-function fetchGroups(db) {
-    const pipeline = [
-        {'$match': { 'group': { '$ne': null } }},
-        {'$group': {
-            _id: '$group.title',
-            sub: {
-                
-                '$addToSet': {
-                    '$cond': {
-                        if: {
-                            '$ne': ['$group.part', null]
-                        },
-                        then: {
-                            part: '$group.part',
-                            date: '$group.date'
-                        },
-                        else: {
-                            date: '$group.date'
-                        }
-                    }
-                }
-                
-            }
-        }},
-        { '$sort': {
-            '_id': -1,
-            'sub.part': -1,
-            'sub.date': -1
-        }}
-    ]
-
-    return db.aggregate([...pipeline]).toArray()
-}
-
-/** get list of players */
-function fetchPlayers(db) {
-    const pipeline = [
-        {'$group': {
-            _id: null,
-            'p1': {'$addToSet': '$p1.name'},
-            'p2': {'$addToSet': '$p2.name'} 
-        }},
-        {'$project': {
-            'players': {'$setUnion': ['$p1', '$p2']}
-        }}
-    ]
-
-    return db.aggregate([...pipeline]).toArray()
-}
-
-/** get list of channels */
-function fetchChannels(db) {
-    const pipeline = [
-        {'$match': { 'channel': {'$ne': null} }},
-        {'$group': {
-            _id: null,
-            channels: {'$addToSet': '$channel'}
-        }
-    }]
-
-    return db.aggregate([...pipeline]).toArray()
-}
-
-function fetchYoutubeData(match, url) {
-    return axios.get(url)
-    .then((youtube) => {
-        if (youtube.data.items.length > 0) {
-            console.log("Successfully retrieved Youtube data")
-
-            match.video.title = youtube.data.items[0].snippet.title
-
-            match.channel = {
-                id: youtube.data.items[0].snippet.channelId,
-                name: youtube.data.items[0].snippet.channelTitle
-            }
-            
-        } else {
-            console.log("Failed to retrieve Youtube data")
-            delete match.video
-        }
-
-        return match
-    })
-    .catch((error) => res.status(400).send(error.toString()))
 }

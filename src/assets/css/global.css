@@ -256,6 +256,10 @@ picture.icon source, picture.icon img {
     width: 100%;
 }
 
+.status .heading {
+    text-align: center;
+}
+
 .status .character-icon,
 .match .character-icon,
 .status .character-icon > *,

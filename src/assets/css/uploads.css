@@ -15,10 +15,6 @@
     justify-self: center;
 }
 
-.v-messages.error--text {
-    max-width: max-content !important;
-}
-
 .player .v-text-field__details {
     justify-content: flex-end;
 }
@@ -225,16 +221,14 @@
     width: 80%;
 }
 
-#forms #youtube .desc {
+.xsmall #forms #youtube .video .data,
+.xsmall #forms #youtube .group-info {
+    justify-content: space-between;
     width: 90%;
 }
 
-#forms #youtube .desc > .v-textarea .v-messages {
-    max-width: max-content;
-}
-
-#forms #youtube .desc > .v-textarea .v-text-field__details {
-    justify-content: end;
+#forms #youtube .desc {
+    width: 90%;
 }
 
 /* desktop */
@@ -281,14 +275,9 @@
 
 
 /****/
-.preview .add .v-messages,
-.group .v-messages {
-    max-width: max-content;
-}
 
-.preview .add .v-text-field__details,
-.group .v-text-field__details {
-    justify-content: end;
+.v-messages__message {
+    text-align: right;
 }
 /****/
 
@@ -329,16 +318,8 @@
     display: flex;
     justify-items: center;
     align-items: center;
-    margin-bottom: 5px;
 }
 
-.small .preview .header {
-    margin-bottom: 10px;
-}
-
-.xsmall .preview .header {
-    margin-bottom: 20px;
-}
 
 .preview .header .match__num {
     font-size: 16px;

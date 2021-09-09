@@ -9,15 +9,14 @@
 }
 
 #matches .match-group {
-    display: flex;
+    display: grid;
     width: 100%;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
 }
 
 #matches .match-group > div {
     width: 95%;
+    justify-self: center;
 }
 
 

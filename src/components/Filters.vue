@@ -371,6 +371,9 @@ export default {
         strict: Boolean,
         hasFile: Boolean,
         hasVideo: Boolean,
+        groupList: [Array, null],
+        playerList: [Array, null],
+        channelList: [Array, null]
     },
     data: () => {
         return {
@@ -396,9 +399,6 @@ export default {
             hasFileFilter: false,
             hasVideoFilter: false,
             groupIndex: null,
-            playerList: [],
-            groupList: [],
-            channelList: [],
             partList: [],
             dateList: [],
             videoList: [],
@@ -450,33 +450,8 @@ export default {
             //console.log(JSON.parse(JSON.stringify(this.channelFilter)))
         }
     },
-    mounted: function() {
-        this.loadContent()
-    },
     methods: {
-        // retrieve content for dropdown lists
-        loadContent: function() {
-            this.$filterContent.get()
-            .then((response) => {
-                if (response.ok) {
-                    this.error = false
-                    this.groupList = response.body?.groups
-                    this.playerList = response.body?.players
-                    this.channelList = response.body?.channels
-
-                    //console.log(JSON.parse(JSON.stringify(this.channelList)))
-                    //console.log(this.playerList)
-                    //console.log(JSON.parse(JSON.stringify(this.groupList)))
-                }
-
-                this.$emit('loaded-filter-content')
-            })
-            .catch((error) => {
-                this.errorMsg = `${error.status}: ${error.statusText}`
-                console.log("Error retrieving filter content.\n", this.errorMsg)
-                this.$emit('loaded-filter-content')
-            })
-        },
+        
         // update player characters
         selectCharacter: function (character, i) {
             if (character !== this.players[i].character)

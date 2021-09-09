@@ -1,31 +1,38 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 const { configs } = require('./CloudConfig')
+let dev = (process.env.FUNCTIONS_EMULATOR === 'true' ? true : false)
 admin.initializeApp()
+
+/** establish mongodb connection */
+let dbUrl = (dev ? configs.dev.mongodb : configs.prod.mongodb)
+const mongo = require('mongodb')
+const MongoClient = mongo.MongoClient
+let client = null
+
+async function connectToDb() {
+    await MongoClient.connect(dbUrl, function(err, db) {
+        if (err) throw err
+
+        console.log("Global: Connecting to MongoDB.")
+
+        return client = db
+    })
+}
+
+connectToDb()
+
+/******************************/
 
 const express = require('express')
 const cors = require('cors')({ origin: true })
-const mongo = require('mongodb')
-const MongoClient = mongo.MongoClient
-
-
 const axios = require('axios')
 const api = express()
 api.use(cors)
 
-let dev = (process.env.FUNCTIONS_EMULATOR === 'true' ? true : false)
-let dbUrl = (dev ? configs.dev.mongodb : configs.prod.mongodb)
-//const connectMongoDb = () => MongoClient.connect(dbUrl, { useUnifiedTopology: true })
 const youtubeKey = configs.youtube.key
 const itemsPerPage = 5
 
-
-var client = null
-MongoClient.connect(dbUrl, function(err, db) {
-    if (err) throw err
-    
-    return client = db
-})
 
 /************
 * API CALLS *
@@ -38,25 +45,12 @@ api.get('/matches', (req, res) => {
 
     if (req.query.filters) {
         let players = req.query.filters.players
-        let strict = req.query.filters.strict === 'true' ? true : false
         let group = req.query.filters.group.title ? req.query.filters.group : null
-        let hasFile = req.query.filters.hasFile === 'true' ? true : false
-        let hasVideo = req.query.filters.hasVideo === 'true' ? true : false
-        let unfiltered = true
+        let strict = req.query.filters.strict === 'true'
+        let hasFile = req.query.filters.hasFile === 'true'
+        let hasVideo = req.query.filters.hasVideo === 'true'
+        let unfiltered = !players.some((player) => player.name || player.character)
         skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0
-
-
-        for (let i = 0; i < 2; i++) {
-            if (players[i].name) {
-                unfiltered = false
-                break
-            }
-
-            if (players[i].character) {
-                unfiltered = false
-                break
-            }
-        }
 
         query = formatQuery(players, strict, unfiltered, group, hasFile, hasVideo)
     } else {
@@ -99,14 +93,21 @@ api.get('/matches', (req, res) => {
         }},
     ]
 
-        console.log('Connected @ %s', (new Date()).toLocaleString())
-        console.log('Filtering with query:\n', query)
-
+    
+    if (client) {
+        var db = client.db('tfhr')
+        console.log("api.get('/matches'): Connected @ %s", new Date().toLocaleString())
+        console.log("api.get('/matches'): Filtering with query:\n", query)
+    } else {
+        console.log("api.get('/matches'): Failed")
+        if (!client) console.log("api.get('/matches'): No MongoDb connection found")
+        return res.status(400).send("api.get('/matches') failed")
+    }
+    
     return Promise.all([
         // for getting result count
         // need to use length instead of count -- if no matches then count will be undefined
-        client
-        .db('tfhr')
+        db
         .collection('matches')
         .aggregate([
             ...pipeline
@@ -114,8 +115,7 @@ api.get('/matches', (req, res) => {
         .toArray(),
 
         // for getting matches to display on current page
-        client
-        .db('tfhr')
+        db
         .collection('matches')
         .aggregate([
             ...pipeline,
@@ -128,7 +128,9 @@ api.get('/matches', (req, res) => {
     .then((results) => {
         let count = results[0].length
         let groups = results[1]
-        console.log(groups)
+        /*groups.forEach((group) =>
+            console.log(group._id.group.title + ', ' + group._id.group.date + ' || Upload ID: ' + group._id.uploadId))*/
+        console.log("api.get('/matches'): Returning " + count + " group(s).")
         
         return res.status(200).send({
             count: count,
@@ -150,14 +152,24 @@ api.put('/matches', (req, res) => {
 
     console.log(matches)
     
-    let db = client.db('tfhr')
+    
+    
+    if (client) {
+        var db = client.db('tfhr')
+        console.log("api.put('/matches'): Connected @", new Date().toLocaleString())
+    } else {
+        console.log("api.put('/matches'): Failed")
+        if (!client) console.log("api.put('/matches'): No MongoDb connection found.")
+        return res.status(400).send("api.put('/matches') failed")
+    }
+
 
     return db.collection('matches')
     .insertMany(matches)
     .then((results) => {
         let matchIds = (Object.values(results.insertedIds)).map(id => id.toString())
 
-        console.log('Matches uploaded:')
+        console.log("api.put('/matches'): Matches uploaded:")
         for (id in matchIds) console.log(matchIds[id])
         
         return res.status(200).send({matchIds: matchIds})
@@ -167,15 +179,21 @@ api.put('/matches', (req, res) => {
 
 /** update match info using edit page */
 api.put('/matches/update', (req, res) => {
+    
     let matches = req.body.matches
-
     let deleted = req.body.deleted.map(id => mongo.ObjectId(id))
 
-    console.log('Connected.\nUpdating matches...')
+    
+    if (client) {
+        var db = client.db('tfhr')
+        console.log("api.put('/matches/update'): Connected @", new Date().toLocaleString())
+    } else {
+        console.log("api.put('/matches/update'): Failed")
+        if (!client) console.log("api.put('/matches/update'): No MongoDb connection found")
+        return res.status(400).send("api.put('/matches/update') failed")
+    }
 
-    let db = client.db('tfhr')
-
-    db.collection('matches')
+    return db.collection('matches')
     .deleteMany({ _id: { $in: deleted } })
     .then(() => {
         for (i in matches) {
@@ -198,6 +216,7 @@ api.put('/matches/update', (req, res) => {
     })
     .then(() => { 
         //client.close()
+        console.log("api.put('/matches/update'): Matches updated")
         return res.status(200).send()
     })
     .catch((error) => res.status(400).send(error.toString()))
@@ -205,8 +224,15 @@ api.put('/matches/update', (req, res) => {
 
 /** get list of groups */
 api.get('/filter/content', (req, res) => {
-
-    let db = client.db('tfhr')
+    
+    if (client) {
+        var db = client.db('tfhr')
+        console.log("api.put('/filter/content'): Connected @", new Date().toLocaleString())
+    } else {
+        console.log("api.get('/filter/content'): Failed")
+        if (!client) console.log("api.get('/filter/content'): No MongoDb connection found.")
+        return res.status(400).send("api.get('/filter/content') failed")
+    }
 
     const groups = [
         {'$match': { 'group': { '$ne': null } }},
@@ -275,7 +301,7 @@ api.get('/filter/content', (req, res) => {
         let players = results[1][0].players
         let channels = results[2][0].channels
 
-        console.log('Returning filter content.')
+        console.log("api.get('/filter/content'): Returning filter content.")
 
         return res.status(200).send({
             groups: groups,
@@ -291,19 +317,24 @@ api.get('/filter/content', (req, res) => {
  * verifyIdToken not currently working in dev environment???
 */
 api.get('/users', (req, res) => {
-    //console.log(admin.auth())
-    console.log('Verifying User')
+
+    console.log("api.get('users'): Verifying User")
     if (!req.headers.authorization && !dev) {
-        console.log('Unauthorized')
+        console.log("api.get('users'): Unauthorized")
         res.status(403).send('Unauthorized')
     }
 
-    let db = client.db('tfhr')
+    
+    if (client) {
+        var db = client.db('tfhr')
+        console.log("api.get('/users'): Connected @", new Date().toLocaleString())
+    } else {
+        console.log("api.get('/users'): Failed")
+        if (!client) console.log("api.get('/users'): No MongoDb connection found.")
+        return res.status(400).send("api.get('users') failed")
+    }
 
     if (dev) {
-        console.log('Retrieving user info')
-
-
         return db.collection('users')
         .find(req.query)
         .toArray()
@@ -322,8 +353,7 @@ api.get('/users', (req, res) => {
             .toArray()
         })
         .then((user) => {
-            console.log(user)
-            //client.close()
+            console.log("api.get('/users'):\n", user)
             return res.status(200).send(user)
         })
         .catch((error) => res.status(400).send(error.toString()))
@@ -337,11 +367,18 @@ api.put('/users', (req, res) => {
     }
 
     let user = req.body
-    let db = client.db('tfhr')
+
+    if (client) {
+        var db = client.db('tfhr')
+        console.log("api.put('/users'): Connected @", new Date().toLocaleString())
+    } else {
+        console.log("api.put('/users'): Failed")
+        if (!client) console.log("api.put('/users'): No MongoDb connection found.")
+        return res.status(400).send("api.put('users') failed")
+    }
+
 
     if (dev) {
-        console.log('Creating user')
-
         return db
         .collection('users')
         .updateOne(
@@ -355,7 +392,7 @@ api.put('/users', (req, res) => {
         return admin.auth()
         .verifyIdToken(req.headers.authorization)
         .then(() => {
-            console.log('Creating user')
+            console.log("api.put('/users'): Creating user")
 
             return db.collection('users')
             .updateOne(
@@ -371,29 +408,28 @@ api.put('/users', (req, res) => {
 
 /** retrieve youtube video info */
 api.get('/youtube-data', (req, res) => {
-
     if (!req.headers.authorization && !dev) {
       res.status(403).send('Unauthorized')
     }
 
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.v}&key=${youtubeKey}`
     
-    let client = null
+    let axiosClient = null
 
     if (dev) {
-        client = axios.get(url)
+        axiosClient = axios.get(url)
     } else {
-        client = admin.auth()
+        axiosClient = admin.auth()
         .verifyIdToken(req.headers.authorization)
         .then(() => {
-            console.log("ID Token Verified")
+            console.log("api.get('/youtube-data'): ID Token Verified")
             return axios.get(url)
         })
     }
 
-    return client.then((youtube) => {
+    return axiosClient.then((youtube) => {
         if (youtube.data.items.length > 0) {
-            console.log("Successfully retrieved Youtube data")
+            console.log("api.get('/youtube-data'): Successfully retrieved Youtube data")
 
             return res.status(200).send({
                 id: req.query.v,
@@ -406,15 +442,13 @@ api.get('/youtube-data', (req, res) => {
                 }
             })
         } else {
-            console.log("Failed to retrieve Youtube data")
+            console.log("api.get('/youtube-data'): Failed to retrieve Youtube data")
 
             return res.status(400).send('Invalid video')
         }
     })
     .catch((error) => res.status(400).send(error.toString()))
 })
-
-
 
 exports.api = functions.https.onRequest(api)
 
@@ -520,7 +554,7 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
 
     if (hasFile) {
         query = {
-            file: {'$ne': null},
+            fileInfo: {'$ne': null},
             ...query
         }
     }

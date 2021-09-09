@@ -29,6 +29,8 @@ Vue.prototype.$providers = {
   google: new firebase.auth.GoogleAuthProvider()
 }
 
+let serverRes = Vue.resource(`${uri}/`, {}, { get: { method: 'GET' } })
+
 let matchesMethods = {
   get: { method: 'GET' },
   save: { method: 'PUT' },
@@ -108,6 +110,10 @@ Vue.use({
 
     Object.defineProperty(Vue.prototype, '$httpInterceptors', {
       get () { return Vue.http.interceptors }
+    })
+    
+    Object.defineProperty(Vue.prototype, '$server', {
+      get () { return serverRes }
     })
   }
 })

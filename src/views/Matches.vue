@@ -24,6 +24,9 @@
       :hasFile="filters.deep.hasFile"
       :hasVideo="filters.deep.hasVideo"
       :strict="filters.strict"
+      :playerList="playerList"
+      :groupList="groupList"
+      :channelList="channelList"
       @update-name="filters.deep.players[$event.i].name = $event.name"
       @update-character="filters.deep.players[$event.i].character = $event.character"
       @update-strictness="filters.strict = $event"
@@ -34,8 +37,7 @@
       @update-video="filters.deep.video = $event"
       @clear-filters="clearFilters()"
       @swap="swap()"
-      @reset-strictness="filters.strict = false"
-      @loaded-filter-content="loadingFilterContent = false" />
+      @reset-strictness="filters.strict = false" />
 
       <div
       class="loading__matches"
@@ -110,7 +112,9 @@
       fixed bottom right
       color="accent"
       v-show="showToTop">
-        ⮝
+        <v-icon>
+          mdi-arrow-top-bold
+        </v-icon>
       </v-btn>
     </v-slide-y-reverse-transition>
   </div>
@@ -162,6 +166,9 @@ export default {
       },
       page: 1,
       groups: [],
+      groupList: [],
+      playerList: [],
+      channelList: [],
       resultsCount: null,
       lastVisible: null,
       error: false,
@@ -174,7 +181,10 @@ export default {
     }
   },
   mounted() {
-    this.getMatches(this.filters, 1)
+    
+  },
+  created() {
+    return Promise.all([this.loadContent(), this.getMatches(this.filters, 1)])
   },
   watch: {
     'filters.deep': {
@@ -199,7 +209,7 @@ export default {
     getMatches: function (filters, page) {
       this.loadingMatches = true
 
-      this.$matches.get({
+      return this.$matches.get({
         filters: {
           strict: filters.strict,
           ...filters.deep
@@ -223,6 +233,29 @@ export default {
           this.stop = false
       })
     },
+    // retrieve content for dropdown lists
+    loadContent: function() {
+        return this.$filterContent.get()
+        .then((response) => {
+            if (response.ok) {
+                this.error = false
+                this.groupList = response.body?.groups
+                this.playerList = response.body?.players
+                this.channelList = response.body?.channels
+
+                //console.log(JSON.parse(JSON.stringify(this.channelList)))
+                //console.log(this.playerList)
+                //console.log(JSON.parse(JSON.stringify(this.groupList)))
+            }
+
+            this.loadingFilterContent = false
+        })
+        .catch((error) => {
+            this.errorMsg = `${error.status}: ${error.statusText}`
+            console.log("Error retrieving filter content.\n", this.errorMsg)
+            this.loadingFilterContent = false
+        })
+      },
     clearFilters() {
       this.stop = true
 

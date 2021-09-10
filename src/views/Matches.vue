@@ -181,10 +181,7 @@ export default {
     }
   },
   mounted() {
-    
-  },
-  created() {
-    return Promise.all([this.loadContent(), this.getMatches(this.filters, 1)])
+    return this.loadContent().then(() => this.getMatches(this.filters, 1))
   },
   watch: {
     'filters.deep': {

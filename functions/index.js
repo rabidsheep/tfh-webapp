@@ -1,29 +1,14 @@
 const functions = require('firebase-functions')
 const admin = require('firebase-admin')
 const { configs } = require('./CloudConfig')
-let dev = (process.env.FUNCTIONS_EMULATOR === 'true' ? true : false)
+let dev = process.env.FUNCTIONS_EMULATOR === 'true'
 admin.initializeApp()
 
 /** establish mongodb connection */
-let dbUrl = (dev ? configs.dev.mongodb : configs.prod.mongodb)
-const mongo = require('mongodb')
-const MongoClient = mongo.MongoClient
-let client = null
 
-async function connectToDb() {
-    await MongoClient.connect(dbUrl, function(err, db) {
-        if (err) throw err
-
-        console.log("Global: Connecting to MongoDB.")
-
-        return client = db
-    })
-}
-
-connectToDb()
 
 /******************************/
-
+const mongo = require('mongodb')
 const express = require('express')
 const cors = require('cors')({ origin: true })
 const axios = require('axios')
@@ -33,6 +18,7 @@ api.use(cors)
 const youtubeKey = configs.youtube.key
 const itemsPerPage = 5
 
+const mongoDb = require('./db')
 
 /************
 * API CALLS *
@@ -93,38 +79,40 @@ api.get('/matches', (req, res) => {
         }},
     ]
 
-    
-    if (client) {
-        var db = client.db('tfhr')
+    /*if (client) {
+        var client.db('tfhr') = client.client.db('tfhr')('tfhr')
         console.log("api.get('/matches'): Connected @ %s", new Date().toLocaleString())
         console.log("api.get('/matches'): Filtering with query:\n", query)
     } else {
         console.log("api.get('/matches'): Failed")
         if (!client) console.log("api.get('/matches'): No MongoDb connection found")
         return res.status(400).send("api.get('/matches') failed")
-    }
+    }*/
     
-    return Promise.all([
-        // for getting result count
-        // need to use length instead of count -- if no matches then count will be undefined
-        db
-        .collection('matches')
-        .aggregate([
-            ...pipeline
-        ])
-        .toArray(),
 
-        // for getting matches to display on current page
-        db
-        .collection('matches')
-        .aggregate([
-            ...pipeline,
-            { '$sort': { '_id.uploadDate': -1 } },
-            { '$skip': skip },
-            { '$limit': itemsPerPage }
+    return mongoDb().then((client) => {
+        return Promise.all([
+            // for getting result count
+            // need to use length instead of count -- if no matches then count will be undefined
+            client.db('tfhr')
+            .collection('matches')
+            .aggregate([
+                ...pipeline
+            ])
+            .toArray(),
+
+            // for getting matches to display on current page
+            client.db('tfhr')
+            .collection('matches')
+            .aggregate([
+                ...pipeline,
+                { '$sort': { '_id.uploadDate': -1 } },
+                { '$skip': skip },
+                { '$limit': itemsPerPage }
+            ])
+            .toArray(),
         ])
-        .toArray(),
-    ])
+    })
     .then((results) => {
         let count = results[0].length
         let groups = results[1]
@@ -140,7 +128,7 @@ api.get('/matches', (req, res) => {
     .catch((error) => res.status(400).send(error.toString()))
 })
 
-/** upload matches to db */
+/** upload matches to client.db('tfhr') */
 api.put('/matches', (req, res) => {
     let uploadId = mongo.ObjectId().toString()
 
@@ -154,18 +142,17 @@ api.put('/matches', (req, res) => {
     
     
     
-    if (client) {
-        var db = client.db('tfhr')
+    /*if (client) {
+        var client.db('tfhr') = client.client.db('tfhr')('tfhr')
         console.log("api.put('/matches'): Connected @", new Date().toLocaleString())
     } else {
         console.log("api.put('/matches'): Failed")
         if (!client) console.log("api.put('/matches'): No MongoDb connection found.")
         return res.status(400).send("api.put('/matches') failed")
-    }
+    }*/
 
-
-    return db.collection('matches')
-    .insertMany(matches)
+    mongoDb()
+    .then((client) => client.db('tfhr').collection('matches').insertMany(matches))
     .then((results) => {
         let matchIds = (Object.values(results.insertedIds)).map(id => id.toString())
 
@@ -184,20 +171,25 @@ api.put('/matches/update', (req, res) => {
     let deleted = req.body.deleted.map(id => mongo.ObjectId(id))
 
     
-    if (client) {
-        var db = client.db('tfhr')
+    /*if (client) {
+        var client.db('tfhr') = client.client.db('tfhr')('tfhr')
         console.log("api.put('/matches/update'): Connected @", new Date().toLocaleString())
     } else {
         console.log("api.put('/matches/update'): Failed")
         if (!client) console.log("api.put('/matches/update'): No MongoDb connection found")
         return res.status(400).send("api.put('/matches/update') failed")
-    }
+    }*/
 
-    return db.collection('matches')
-    .deleteMany({ _id: { $in: deleted } })
-    .then(() => {
+    return mongoDb().then((client) => {
+        client.db('tfhr')
+        .collection('matches')
+        .deleteMany({ _id: { $in: deleted }})
+
+        return client.db('tfhr')
+    })
+    .then((client) => {
         for (i in matches) {
-            db.collection('matches')
+            client.db('tfhr').collection('matches')
             .updateOne(
                 { _id: mongo.ObjectId(matches[i]._id) },
                 { $set: {
@@ -225,14 +217,14 @@ api.put('/matches/update', (req, res) => {
 /** get list of groups */
 api.get('/filter/content', (req, res) => {
     
-    if (client) {
-        var db = client.db('tfhr')
+    /*if (client) {
+        var client.db('tfhr') = client.client.db('tfhr')('tfhr')
         console.log("api.put('/filter/content'): Connected @", new Date().toLocaleString())
     } else {
         console.log("api.get('/filter/content'): Failed")
         if (!client) console.log("api.get('/filter/content'): No MongoDb connection found.")
         return res.status(400).send("api.get('/filter/content') failed")
-    }
+    }*/
 
     const groups = [
         {'$match': { 'group': { '$ne': null } }},
@@ -283,19 +275,25 @@ api.get('/filter/content', (req, res) => {
         }
     }]
 
-    return Promise.all([
-        db.collection('matches')
-        .aggregate([...groups])
-        .toArray(),
-
-        db.collection('matches')
-        .aggregate([...players])
-        .toArray(),
-
-        db.collection('matches')
-        .aggregate([...channels])
-        .toArray()
-    ])
+    return mongoDb()
+    .then((client) => {
+        return Promise.all([
+            client.db('tfhr')
+            .collection('matches')
+            .aggregate([...groups])
+            .toArray(),
+    
+            client.db('tfhr')
+            .collection('matches')
+            .aggregate([...players])
+            .toArray(),
+    
+            client.db('tfhr')
+            .collection('matches')
+            .aggregate([...channels])
+            .toArray()
+        ])
+    })
     .then((results) => {
         let groups = results[0]
         let players = results[1][0].players
@@ -325,19 +323,23 @@ api.get('/users', (req, res) => {
     }
 
     
-    if (client) {
-        var db = client.db('tfhr')
+    /*if (client) {
+        var client.db('tfhr') = client.client.db('tfhr')('tfhr')
         console.log("api.get('/users'): Connected @", new Date().toLocaleString())
     } else {
         console.log("api.get('/users'): Failed")
         if (!client) console.log("api.get('/users'): No MongoDb connection found.")
         return res.status(400).send("api.get('users') failed")
-    }
+    }*/
 
     if (dev) {
-        return db.collection('users')
-        .find(req.query)
-        .toArray()
+        return mongoDb()
+        .then((client) => 
+            client.db('tfhr')
+            .collection('users')
+            .find(req.query)
+            .toArray()
+        )
         .then((user) => {
             console.log(user)
             //client.close()
@@ -347,11 +349,13 @@ api.get('/users', (req, res) => {
     } else {
         return admin.auth()
         .verifyIdToken(req.headers.authorization)
-        .then(() => {
-            return db.collection('users')
+        .then(() => mongoDb())
+        .then((client) =>
+            client.db('tfhr')
+            .collection('users')
             .find(req.query)
             .toArray()
-        })
+        )
         .then((user) => {
             console.log("api.get('/users'):\n", user)
             return res.status(200).send(user)
@@ -360,7 +364,7 @@ api.get('/users', (req, res) => {
     }
 })
 
-/** save user info to user table in db */
+/** save user info to user table in client.db('tfhr') */
 api.put('/users', (req, res) => {
     if (!req.headers.authorization && !dev) {
         res.status(403).send('Unauthorized')
@@ -368,33 +372,38 @@ api.put('/users', (req, res) => {
 
     let user = req.body
 
-    if (client) {
-        var db = client.db('tfhr')
+    /*if (client) {
+        var client.db('tfhr') = client.client.db('tfhr')('tfhr')
         console.log("api.put('/users'): Connected @", new Date().toLocaleString())
     } else {
         console.log("api.put('/users'): Failed")
         if (!client) console.log("api.put('/users'): No MongoDb connection found.")
         return res.status(400).send("api.put('users') failed")
-    }
+    }*/
 
 
     if (dev) {
-        return db
-        .collection('users')
-        .updateOne(
-            { uid: user.uid },
-            { $set: { email: user.email } },
-            { upsert: true }
+        return mongoDb()
+        .then((client) => 
+            client.db('tfhr')
+            .collection('users')
+            .updateOne(
+                { uid: user.uid },
+                { $set: { email: user.email } },
+                { upsert: true }
+            )
         )
         .then(() => res.status(200).send(`${user.email} saved`))
         .catch((error) => res.status(400).send(error.toString()))
     } else {
         return admin.auth()
         .verifyIdToken(req.headers.authorization)
-        .then(() => {
+        .then(() => mongoDb())
+        .then((client) => {
             console.log("api.put('/users'): Creating user")
 
-            return db.collection('users')
+            return client.db('tfhr')
+            .collection('users')
             .updateOne(
                 { uid: user.uid },
                 { $set: { email: user.email } },

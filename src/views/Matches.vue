@@ -113,7 +113,7 @@
       color="accent"
       v-show="showToTop">
         <v-icon>
-          mdi-arrow-top-bold
+          mdi-arrow-up-bold
         </v-icon>
       </v-btn>
     </v-slide-y-reverse-transition>

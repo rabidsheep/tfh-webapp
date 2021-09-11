@@ -196,7 +196,11 @@ export default {
 
                     let loginRef = null
 
-                    if (process.env.NODE_ENV == "production") {
+                    if (this.$dev) {
+                        console.log("Dev Environment")
+
+                        loginRef = this.$users.get({ uid: user.uid })
+                    } else {
                         console.log("Production Environment")
 
                         loginRef = this.setAuthToken()
@@ -204,11 +208,6 @@ export default {
                             console.log('Checking user')
                             return this.$users.get({ uid: user.uid })
                         })
-
-                    } else {
-                        console.log("Dev Environment")
-
-                        loginRef = this.$users.get({ uid: user.uid })
                     }
 
                     loginRef.then((response) => {

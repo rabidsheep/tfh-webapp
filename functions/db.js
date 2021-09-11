@@ -1,7 +1,5 @@
 
-const { configs } = require('./CloudConfig')
-let dev = process.env.FUNCTIONS_EMULATOR === 'true'
-let url = (dev ? configs.dev.mongodb : configs.prod.mongodb)
+const { mongodb } = require('./CloudConfig')
 const MongoClient = require('mongodb').MongoClient
 var client
 
@@ -11,7 +9,7 @@ module.exports = async () => {
         console.log("Already connected to MongoDB")
       } else try {
         console.log("No MongoDB connection found; connecting")
-        client = await MongoClient.connect(url, {useNewUrlParser: true})
+        client = await MongoClient.connect(mongodb.uri, mongodb.options)
       } catch(error) {
         throw error
       }

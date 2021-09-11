@@ -381,43 +381,41 @@ export default {
         }
     },
     mounted() {
-        if (process.env.NODE_ENV === 'development')
-            this.url = 'https://www.youtube.com/watch?v=73vR-i3N4CY'
+        if (this.$dev)
+            this.url = 'https://www.youtube.com/watch?v=73vR-i3N4CY';
     },
     watch: {
         'date': function(date) {
-            this.group.date = this.formatDate(date)
+            this.group.date = this.formatDate(date);
         },
     },
     methods: {
         setAuthToken: function () {
             return this.$firebase.auth().currentUser.getIdToken()
-                .then((token) => {
-                    console.log('Setting auth token')
-                    return this.$httpInterceptors.push((request) => {
+                .then((token) =>
+                    this.$httpInterceptors.push((request) => 
                         request.headers.set('Authorization', token)
-                    })
-                })
-                .catch((error) => console.log(error))
+                    )
+                )
+                .catch((error) => console.log(error));
         },
         validateYoutubeID() {
-            this.loading = true
-            this.vid = this.url.match(this.$regex.ytId)[1]
-            this.video = {}
-            let youtubeRef = null
+            this.loading = true;
+            this.vid = this.url.match(this.$regex.ytId)[1];
+            this.video = {};
+            let youtubeRef;
 
-            if (process.env.NODE_ENV === "production") {
-                youtubeRef = this.setAuthToken().then(() => {
-                    console.log('Retrieving Youtube data')
-                    return this.$youtubeData.get({ v: this.vid })
-                })
+            if (this.$dev) {
+                youtubeRef = this.$youtubeData.get({ id: this.vid })
             } else {
-                youtubeRef = this.$youtubeData.get({ v: this.vid })
+                youtubeRef = this.setAuthToken(() => console.log('Retrieving Youtube data'))
+                .then(() => this.$youtubeData.get({ id: this.vid }))
             }
 
             youtubeRef.then((response) => {
                 this.hasVideo = true
-                this.changeButton = true
+                this.changeVerifyBtn()
+
                 this.invalidId = false
                 this.video = response.body
                 this.currentDescription = this.video.description
@@ -430,23 +428,20 @@ export default {
                 this.validateForm()
                 this.loading = false
                 this.error = false
-
-                
-                this.revertVerifyBtn()
             })
             .catch((error) => {
                 console.log(error)
                 this.hasVideo = false
-                this.invalidId = true
-                this.changeButton = true
-                this.loading = false
+                this.changeVerifyBtn()
 
-                
-                this.revertVerifyBtn()
+                this.invalidId = true
+                this.loading = false
             })
             
         },
-        revertVerifyBtn() {
+        changeVerifyBtn() {
+            this.changeButton = true
+
             window.setInterval(() => {
                 this.changeButton = false
             }, 3000)
@@ -504,122 +499,84 @@ export default {
         },
         resetTimestamps() {
             this.currentDescription = this.video.description
-
             this.parseVideoDescription(this.currentDescription)
         },
         /** upload youtube-only object */
         youtubeUpload() {
             this.uploading = true
-            let time = new Date().toISOString().split('T')
             let files = []
-            let order = 0
+            let uploadRef;
             
             // add files to file array
-            this.matches.map((match) => {
+            this.matches.forEach((match) => {
                 if (match.file) {
                     files.push(match.file)
                     delete match.file
                 }
             })
 
-            if (process.env.NODE_ENV === 'development' || files.length <= 0) {
+            if (this.$dev || files.length <= 0) {
                 // dev environment OR no files added to matches
-
-                let matches = this.matches.map((match) => {
-
-                    //this.printObj(match)
-                    match = {
-                        userId: this.uid,
-                        uploadForm: 'YouTube',
-                        type: 'Group',
-                        matchDate: this.group.date,
-                        uploadDate: time[0],
-                        uploadTime: time[1],
-                        group: this.group,
-                        channel: this.video.channel,
-                        order: order,
-                        ...match
-                    }
-
-                    order += 1
-
-                    return match
-                })
-
-                this.$matches.save({matches: matches, getYoutubeData: false})
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds)
-                            console.log('ID:', response.body.matchIds[i])
-                    }
-
-                    this.uploading = false
-                    this.finished = true
-                })
-                .catch((error) => {
-                    console.log(error)
-                    console.log('Failed to upload')
-                    this.setErrors('upload')
-                    this.uploading = false
-                    this.error = true
-                })
+                uploadRef = Promise.all(this.formatMatchesForUpload())
+                .then((matches) => this.$matches.save({matches}))
             } else {
                 // production mode & files added to matches
-                Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
-                .then(() => {
-                        return this.matches.map((match) => {
-                            match = {
-                                userId: this.uid,
-                                uploadForm: 'YouTube',
-                                type: 'Group',
-                                matchDate: this.group.date,
-                                uploadDate: time[0],
-                                uploadTime: time[1],
-                                group: this.group,
-                                channel: this.video.channel,
-                                order: order,
-                                ...match
-                            }
-
-                            order += 1
-                            return match
-                        })
-                    }
-                )
-                .then((matches) => this.$matches.save({matches: matches, getYoutubeData: false}))
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds)
-                            console.log('ID:', response.body.matchIds[i])
-                    }
-
-                    this.uploading = false
-                    this.finished = true
-                })
-                .catch((error) => {
-                    console.log(error)
-                    console.log('Failed to upload')
-                    this.setErrors('upload')
-                    this.uploading = false
-                    this.error = true
-                })
+                uploadRef = Promise.all(this.uploadFilesAsPromise(files))
+                .then(() => Promise.all(this.formatMatchesForUpload()))
+                .then((matches) => this.$matches.save({matches}))
             }
-        },
-        /** ensure files are uploaded before match docs are pushed to database */
-        uploadFilesAsPromise(file) {
-            let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
-
-            return this.$firebase.storage()
-            .ref(`replays/${file.name}`)
-            .put(file)
-            .then((snapshot) => snapshot.ref.getDownloadURL())
-            .then((url) => this.matches[i].fileInfo.url = url)
+            
+            uploadRef.then((response) => {
+                console.log('Uploaded matches:')
+                response.body.matchIds.forEach((id) => console.log('ID:', id))
+                this.uploading = false
+                this.finished = true
+            })
             .catch((error) => {
                 console.log(error)
-                console.log("Removing file info from match #" + (i+1))
-                delete this.matches[i].fileInfo
+                console.log('Failed to upload')
+                this.setErrors('upload')
+                this.uploading = false
+                this.error = true
+            })
+        },
+        /** ensure files are uploaded before match docs are pushed to database */
+        uploadFilesAsPromise(files) {
+            return files.map((file) => {
+                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
+
+                return this.$firebase.storage()
+                .ref(`replays/${file.name}`)
+                .put(file)
+                .then((snapshot) => snapshot.ref.getDownloadURL())
+                .then((url) => this.matches[i].fileInfo.url = url)
+                .catch((error) => {
+                    console.log(error)
+                    console.log("Removing file info from match #" + (i+1))
+                    delete this.matches[i].fileInfo
+                })
+            })
+        },
+        formatMatchesForUpload() {
+            let time = new Date().toISOString().split('T')
+            let order = 0;
+
+            return this.matches.map((match) => {
+                match = {
+                    userId: this.uid,
+                    uploadForm: 'YouTube',
+                    type: 'Group',
+                    matchDate: this.group.date,
+                    uploadDate: time[0],
+                    uploadTime: time[1],
+                    group: this.group,
+                    channel: this.video.channel,
+                    order: order,
+                    ...match
+                }
+
+                order += 1
+                return match
             })
         },
         /** generates reader for each file */
@@ -785,7 +742,8 @@ export default {
             
         },
         updateCharacter(character, j, i) {
-            this.$set(this.matches[i][`p${j + 1}`], 'character', character)
+            
+            this.$set(this.matches[i][`p${j}`], 'character', character)
         },
         /** sets errors array for display once files finish being read */
         setErrors(type, file) {
@@ -814,11 +772,6 @@ export default {
             this.warning = false
         },
         resetForm() {
-            /*this.$refs.url.resetValidation()
-            Object.assign(this.$data, { 
-                rules: this.rules,
-                ...initializeData(),
-            })*/
             this.$emit('reload-form')
         },
         validateForm() {

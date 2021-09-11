@@ -14,6 +14,8 @@ Vue.prototype.$regex = {
   strTimestamp: /^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/g,
 }
 
+Vue.prototype.$dev = process.env.NODE_ENV === "development"
+
 Vue.use(VueResource)
 
 let uri = null

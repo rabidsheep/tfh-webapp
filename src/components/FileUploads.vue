@@ -318,53 +318,51 @@ export default {
             this.video = {}
             let youtubeRef = null
 
-            if (process.env.NODE_ENV === "production") {
-                youtubeRef = this.setAuthToken().then(() => {
+            if (this.$dev) {
+                youtubeRef = this.$youtubeData.get({ id: this.vid })
+            } else {youtubeRef = this.setAuthToken().then(() => {
                     console.log('Retrieving Youtube data')
-                    return this.$youtubeData.get({ v: this.vid })
+                    return this.$youtubeData.get({ id: this.vid })
                 })
-            } else {
-                youtubeRef = this.$youtubeData.get({ v: this.vid })
             }
 
             youtubeRef.then((response) => {
+                this.hasVideo = true
+                this.changeVerifyBtn()
                 this.loading = false
                 this.masterUrl = this.url
                 this.invalidVideo = false
-                this.hasVideo = true
-                this.changeButton = true
                 this.video = response.body
                 this.group.date = this.video.date
 
-                this.revertVerifyBtn()
             })
             .catch((error) => {
                 console.log(error)
+                this.hasVideo = false
+                this.revertVerifyBtn()
                 this.loading = false
                 this.masterUrl = null
-                this.hasVideo = false
                 this.invalidVideo = true
-                this.changeButton = true
 
-                this.revertVerifyBtn()
             })
             
         },
-        revertVerifyBtn() {
+        changeVerifyBtn() {
+            this.changeButton = true
+
             window.setInterval(() => {
                 this.changeButton = false
             }, 3000)
         },
         /** tell parent component to begin uploading files */
         submitFiles() {
-            let time = new Date().toISOString().split('T')
-            let files = []
-            let order = 0
+            let time = new Date().toISOString().split('T');
+            let files = [];
+            let order = 0;
+            let uploadRef;
 
-            this.uploading = true
+            this.uploading = true;
             let matches = this.matches.map((match) => {
-                
-
                 files.push(match.file)
                 delete match.file
 
@@ -398,71 +396,46 @@ export default {
 
             //this.printObj(this.matches)
 
-            if (process.env.NODE_ENV === 'development') {
-                this.$matches.save({matches: matches, getYoutubeData: true})
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
-                            console.log('ID:', response.body.matchIds[i])
-                        }
-                    } else {
-                        this.setErrors('upload')
-                        console.log('Failed to upload matches')
-                    }
-
-                    this.uploading = false
-                    this.finished = true
-                })
-                .catch((error) => {
-                    console.log(error)
-                    this.uploading = false
-                    this.finished = true
-                })
+            if (this.$dev) {
+                uploadRef = this.$matches.save({matches})
             } else {
-                Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
-                .then(() => this.$matches.save({matches: matches, getYoutubeData: false}))
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Uploaded matches:')
-                        for (const i in response.body.matchIds) {
-                            console.log('ID:', response.body.matchIds[i])
-                        }
-                    } else {
-                        this.setErrors('upload')
-                        console.log('Failed to upload matches')
-                    }
-
-                    this.uploading = false
-                    this.finished = true
-                })
-                .catch((error) => {
-                    console.log(error)
-                    this.uploading = false
-                    this.finished = true
-                })
+                uploadRef = Promise.all(this.uploadFilesAsPromise(files))
+                .then(() => this.$matches.save({matches: matches}))
             }
-        },
-        uploadFilesAsPromise(file) {
-            let storageRef = this.$firebase.storage()
-            .ref(`replays/${file.name}`)
-            .put(file)
 
-            return storageRef
-            .then((snapshot) => {
-                return snapshot.ref.getDownloadURL()
-            })
-            .then((url) => {
-                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
-                return this.matches[i].fileInfo.url = url
+            uploadRef.then((response) => {
+                console.log('Uploaded matches:')
+                response.body.matchIds.forEach((id) => console.log('ID:', id) )
+
+                this.uploading = false
+                this.finished = true
             })
             .catch((error) => {
                 console.log(error)
-                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
-                console.log("Removing match #" + (i+1) + " from upload list.")
-                this.matches.splice(i, 1)
+                
+                this.setErrors('upload')
+                this.uploading = false
+                this.finished = true
             })
         },
+        /** ensure files are uploaded before match docs are pushed to database */
+        uploadFilesAsPromise(files) {
+            return files.map((file) => {
+                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
+
+                return this.$firebase.storage()
+                .ref(`replays/${file.name}`)
+                .put(file)
+                .then((snapshot) => snapshot.ref.getDownloadURL())
+                .then((url) => this.matches[i].fileInfo.url = url)
+                .catch((error) => {
+                    console.log(error)
+                    console.log("Removing match #" + (i+1) + " from upload list.")
+                    this.matches.splice(i, 1)
+                })
+            })
+        },
+
         /* makes visible upload button act like html file upload button */
         selectFiles(index) {
             this.isSelecting = true

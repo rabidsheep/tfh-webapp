@@ -45,6 +45,11 @@
     align-items: center;
 }
 
+#matches .header .data {
+    display: grid;
+    max-width: 100%;
+}
+
 #matches .header .edit { grid-area: edit; }
 #matches .header .v-divider { grid-area: divider; }
 #matches .header .data { grid-area: data; }

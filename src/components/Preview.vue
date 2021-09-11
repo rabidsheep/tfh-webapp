@@ -60,7 +60,7 @@
                     :index="i"
                     :selectionEnabled="true"
                     :anyEnabled="false"
-                    @character-select="$emit('update-character', { character: $event, index: i})"/>
+                    @character-select="$emit('update-character', { character: $event, index: i+1 })"/>
                                     
                     <v-text-field
                     :label="`Player ${i + 1}`"
@@ -259,9 +259,6 @@ export default {
                 this.isSelecting = false
             }, { once: true })
             this.$refs.uploadFileBtn.click()
-        },
-       updateCharacter(character, i) {
-            this.$set(this.updated.players[i], 'character', character)
         },
         reset() {
             this.url = this.video?.url

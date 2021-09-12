@@ -17,7 +17,7 @@ export default new Router({
     {
       path: '/upload',
       name: 'upload',
-      component: Uploads
+      component: Uploads,
     },
     {
       path: '/edit',

@@ -36,7 +36,7 @@
       <v-layout column align-center justify-center>
         <div id="router-view"
         :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
-          <router-view :key="mainKey" />
+          <router-view :key="$route.fullPath" />
         </div>
       </v-layout>
 
@@ -87,6 +87,8 @@ export default {
     forceRerenderMain(e) {
       if (this.$route.path === '/' && !e.ctrlKey) {
         this.mainKey = !this.mainKey
+      } else if (this.$route.path !== '/') {
+        this.$route.push('/')
       }
     },
   }

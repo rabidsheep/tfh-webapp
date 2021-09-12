@@ -11,7 +11,7 @@ body {
     font-size: 24px !important;
 }
 
-.icon {
+.character-icon {
     transition: 1s;
     transition-property: filter;
 }
@@ -20,7 +20,7 @@ p {
     margin-bottom: 0px !important;
 }
 
-.icon.invalid {
+.character-icon.invalid {
     filter: 
         drop-shadow(0px 1px 3px var(--v-error-darken1)) 
         drop-shadow(0px -1px 3px var(--v-error-darken1))
@@ -147,11 +147,11 @@ a {
     justify-self: center;
 }
 
-picture.icon {
+picture.character-icon {
     height: 56px;
 }
 
-picture.icon source, picture.icon img {
+picture.character-icon source, picture.character-icon img {
     height: 56px;
 }
 
@@ -176,8 +176,8 @@ picture.icon source, picture.icon img {
 }
 
 /* character select menu icons */
-.character-menu .icon {
-    margin-right: 10px;
+.character-menu .character-icon {
+    margin-right: 15px;
 }
 
 .character-menu .v-list-item {
@@ -187,21 +187,21 @@ picture.icon source, picture.icon img {
 }
 
 /* player icons */
-.player .icon {
+.player .character-icon {
     width: max-content !important;
 }
 
-.p1 .icon {
-    margin-left: 10px;
+.p1 .character-icon {
+    margin-left: 15px;
 }
 
-.p2 .icon {
-    margin-right: 10px;
+.p2 .character-icon {
+    margin-right: 15px;
 }
 
-.small .p1 .icon {
+.small .p1 .character-icon {
     margin-left: 0px;
-    margin-right: 10px;
+    margin-right: 15px;
 }
 
 /** forms **/

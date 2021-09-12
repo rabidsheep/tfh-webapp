@@ -3,7 +3,7 @@
 /* general */
 #matches {
     display: grid;
-    grid-gap: 25px;
+    grid-gap: 20px;
     grid-template-columns: 1fr;
     width: 100%;
 }
@@ -21,7 +21,8 @@
 
 
 #matches > hr {
-    border-color: #a6a6a6
+    border-color: #a6a6a6;
+    margin-bottom: 10px;
 }
 
 
@@ -104,6 +105,7 @@
 .match .col {
     padding: 0px;
 }
+
 .match {
     padding: 15px 0px;
 }
@@ -115,18 +117,8 @@
 #matches .group {
     flex-wrap: wrap;
 }
-
-.match-group > .match {
-    padding-top: 15px;
-}
-
-.match-group > .match:last-child {
-    padding-bottom: 0px;
-}
-
 .match-group > .match:not(:last-child) {
     border-bottom: 1px dashed gray;
-    padding-bottom: 15px;
 }
 
 .match:hover {
@@ -224,15 +216,6 @@
 }
 
 
-.match .p1 .character-icon {
-    margin-left: 15px;
-}
-
-.match .p2 .character-icon {
-    margin-right: 15px;
-}
-
-
 .wide .match .players .name {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -254,18 +237,9 @@
     justify-content: space-between;
 }
 
-.small .match .character-icon {
-    margin-right: 15px;
-    margin-left: 0px;
-}
-
 .small .match .p2,
 .small .match .video {
     padding-top: 10px;
-}
-
-.small .match .player .character {
-    padding-right: 10px;
 }
 
 .small .match .link > *,

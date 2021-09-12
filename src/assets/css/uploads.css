@@ -42,7 +42,7 @@
     margin: auto !important;
     flex-wrap: wrap;
     justify-content: center;
-    width: 90%;
+    width: 100%;
 }
 
 #forms .group-info .group.part {
@@ -218,17 +218,18 @@
 #forms #youtube .video .data,
 #forms #youtube .group-info {
     justify-content: space-between;
-    width: 80%;
 }
 
-.xsmall #forms #youtube .video .data,
-.xsmall #forms #youtube .group-info {
-    justify-content: space-between;
-    width: 90%;
-}
-
+#forms #youtube .video .data,
+#forms #youtube .group-info,
 #forms #youtube .desc {
-    width: 90%;
+    width: 85%;
+}
+
+.small #forms #youtube .video .data,
+.small #forms #youtube .group-info,
+.small #forms #youtube .desc {
+    width: 100%;
 }
 
 /* desktop */

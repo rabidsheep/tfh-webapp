@@ -114,13 +114,13 @@
                             </v-btn>
                             
                             <div
-                            v-if="updated._id.group"
+                            v-if="updated.info.group"
                             class="group">
                                 <v-text-field
                                 class="title__input clearable"
                                 ref="group" 
                                 label="Group Title"
-                                v-model="updated._id.group.title"
+                                v-model="updated.info.group.title"
                                 hint="Required"
                                 placeholder="(ex: Rodeo Regional, Grand Stampede)"
                                 maxLength="32"
@@ -132,7 +132,7 @@
                                 <v-text-field
                                 class="part__input clearable"
                                 label="Part"
-                                v-model="updated._id.group.part"
+                                v-model="updated.info.group.part"
                                 hint="Optional"
                                 placeholder="(ex: #3, Finals, etc.)"
                                 maxLength="16"
@@ -152,7 +152,7 @@
                                         class="date__input clearable"
                                         ref="date"
                                         label="Date"
-                                        v-model="updated._id.group.date"
+                                        v-model="updated.info.group.date"
                                         v-bind="attrs"
                                         v-on="on"
                                         prepend-icon="mdi-calendar"
@@ -224,21 +224,15 @@
                                     :index="i"
                                     :firstMatch="i === 0"
                                     :lastMatch="i === updated.length - 1"
-                                    :uploadForm="$route.query.uploadForm"
+                                    :youtubeUpload="$route.query.uploadForm === 'YouTube'"
+                                    :fileUpload="$route.query.uploadForm === 'Files'"
                                     :fileDate="match.fileInfo ? match.fileInfo.date : null"
                                     :fileName="match.fileInfo ? match.fileInfo.name : null"
                                     :p1="match.p1"
                                     :p2="match.p2"
-                                    :youtubeUpload="$route.query.uploadForm === 'YouTube'"
-                                    :fileUpload="$route.query.uploadForm === 'Files'"
-                                    :timestampRequired="hasVideo"
                                     :hasVideo="hasVideo"
-                                    :masterUrl="masterUrl ? masterUrl : null"
-                                    :group="match.group ? match.group : null"
-                                    :video="match.video ? match.video : null"
-                                    :fileInfo="match.fileInfo ? match.fileInfo : null"
-                                    :type="match.type"
-                                    :resetData="resetData"
+                                    :resetTimestamp="resetTimestamp"
+                                    :currentTimestamp="match.video ? match.video.timestamp : null"
                                     @add-file="readFile($event, i)"
                                     @set-video-id="setVideoId($event, i)"
                                     @set-timestamp="setTimestamp($event, i)"
@@ -293,6 +287,8 @@
 <script>
 import Preview from '.././components/Preview.vue'
 import StatusOverlay from '../components/StatusOverlay.vue'
+import uploadMixin from '../mixins/uploadMixin'
+import authMixin from '../mixins/authMixin'
 import 'firebase/storage'
 
 
@@ -302,45 +298,22 @@ export default {
         Preview,
         StatusOverlay
     },
-    props: {
-    },
+    mixins: [uploadMixin, authMixin],
     data: () => {
         return {
-            query: null,
-            uid: null,
-            hidden: true,
-            loading: false,
             step: 1,
-            original: [],
-            updated: [],
+            original: {},
+            originalStringified: {},
+            updated: {},
             deleted: [],
-            valid: false,
-            uploading: false,
-            finished: false,
             changesFound: false,
             resetData: false,
-            isAdmin: false,
-            isRegistered: true,
-            loggingIn: false,
             loadingMatches: false,
             failedMatchGet: false,
-            allowLogin: false,
             uploadId: null,
-            url: null,
-            group: null,
-            errors: [],
-            fileData: null,
-            formData: null,
-            warning: false,
-            error: false,
-            changeButton: false,
-            hasVideo: false,
-            masterUrl: null,
             loadingVideo: false,
             originalVideo: null,
-            datepicker: false,
-            currentDate: new Date().toISOString().split('T').toString(),
-            date: null,
+            resetTimestamp: false,
             rules: {
                 group: [
                     v => !!v || 'Required',
@@ -363,131 +336,54 @@ export default {
         }
     },
     mounted: function () {
-        if (this.$route.query.uploadId && this.$route.query.uploadForm) {
-            // auth state watcher
-            this.$firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
-                    this.uid = null
-                    this.step = 1
-                    
-                    this.allowLogin = true
-                    console.log('User not found')
-                    return
-                } else {
-                    this.loggingIn = true
-                    this.uid = user.uid
-
-                    let loginRef = null
-
-                    if (this.$dev) {
-                        console.log("Dev Environment")
-
-                        loginRef = this.$users.get({ uid: user.uid })
-                    } else {
-                        console.log("Production Environment")
-
-                        loginRef = this.setAuthToken()
-                        .then(() => {
-                            console.log('Checking user')
-                            return this.$users.get({ uid: user.uid })
-                        })
-                    }
-
-                    loginRef.then((response) => {
-                        let userData = response.body[0]
-
-                        if (userData) {
-                            console.log("Retrieved user data")
-                            this.isAdmin = userData.admin
-                        } else {
-                            console.log("Creating new user")
-
-                            this.isRegistered = false
-
-                            let newUser = {
-                                uid: user.uid,
-                                email: user.email,
-                                admin: false
-                            }
-
-                            return this.$users.save(newUser)
-                            .then(() => {
-                                console.log('User created') 
-                            })
-                        }
-                    })
-                    .then(() => {
-                        this.loading = false
-                        this.loadingMatches = true
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 2
-                        
-                        this.getMatches(this.$route.query.uploadId)
-                    })
-                    .catch((error) => {
-
-                        this.loading = false
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 1
-                        this.allowLogin = true
-                        console.log(error)
-                    })
-                }
-            })
-        }
+        if (this.$route.query.uploadId && this.$route.query.uploadForm)
+            this.watchAuthState();
     },
     watch: {
         'updated': {
             deep: true,
             handler() {
                 /* only allow submission if user changed anything */
-                if (JSON.stringify(this.updated) !== JSON.stringify(this.original)) {
-                    this.changesFound = true
+                if (JSON.stringify(this.updated) !== this.originalStringified) {
+                    this.changesFound = true;
                 } else {
-                    this.changesFound = false
-                }
+                    this.changesFound = false;
+                };
             }
         },
         
         'date': function(date) {
-            this.updated._id.group.date = this.formatDate(date)
+            this.updated.info.group.date = this.formatDate(date);
         },
 
         'url': function(url) {
             if (!url && this.$route.query.uploadForm !== 'YouTube') {
-                this.hasVideo = false
-                this.invalidVideo = true
-                this.masterUrl = false
-            }
+                this.hasVideo = false;
+                this.invalidVideo = true;
+            };
         }
     },
     methods: {
-        signIn: function (providerName) {
-            this.loading = true
-            this.allowLogin = false
+        getMatches(uploadId) {
+            this.loadingMatches = true;
 
-            this.$firebase.auth()
-            .signInWithPopup(this.$providers[providerName])
-            .then(() => {
-                this.loading = false
+            this.$edit.get({uploadId})
+            .then((response) => {
+                this.original = response.body;
+                this.originalStringified = JSON.stringify(this.original)
+                this.updated = JSON.parse(this.originalStringified);
+                this.originalVideo = this.original.info.video.id;
+                this.hasVideo = this.originalVideo ? true : false;
+                this.url = this.originalVideo ? 'https://youtu.be/' + this.originalVideo : null;
+                this.loadingMatches = false;
             })
             .catch((error) => {
-                console.log(error)
-                this.allowLogin = true
-                this.loading = false
-            })
+                 console.log(error);
+                 this.loadingMatches = false;
+                 this.failedMatchGet = true;
+            });
         },
-        setAuthToken: function () {
-            return this.$firebase.auth().currentUser.getIdToken()
-                .then((token) => {
-                return this.$httpInterceptors.push((request) => {
-                    request.headers.set('Authorization', token)
-                })
-            })
-            .catch((error) => console.log(error))
-        },
+
         validateYoutubeID() {
             this.loadingVideo = true;
             this.vid = this.url.match(this.$regex.ytId)[1];
@@ -509,10 +405,12 @@ export default {
                 this.changeVerifyBtn();
 
                 this.loadingVideo = false;
-                this.masterUrl = this.url;
                 this.invalidVideo = false;
-                this.video = response.body;
-
+                this.updated.info.video = {
+                    id: response.body.video.id,
+                    title: response.body.video.title
+                }
+                this.updated.info.channel = response.body.channel
                 this.validateForm();
             })
             .catch((error) => {
@@ -521,67 +419,29 @@ export default {
                 this.changeVerifyBtn();
 
                 this.loadingVideo = false;
-                this.masterUrl = null;
                 this.invalidVideo = true;
                 
                 this.validateForm();
             });
-            
         },
-        changeVerifyBtn() {
-            this.changeButton = true;
 
-            window.setInterval(() => {
-                this.changeButton = false;
-            }, 3000);
-        },
-        getMatches(uploadId) {
-            this.loadingMatches = true;
-
-            this.$matches.get({uploadId: uploadId})
-            .then((response) => {
-                /*this.originalVideo = response.body.groups[0]._id.video
-
-                this.group = response.body.groups[0]._id.group
-                this.hasVideo = this.originalVideo ? true : false
-                this.url = this.originalVideo ? 'https://youtu.be/' + this.originalVideo : null
-                this.masterUrl = this.url
-                this.original = response.body.groups[0].matches
-                this.updated = JSON.parse(JSON.stringify(response.body.groups[0].matches))
-                this.loadingMatches = false*/
-                this.original = response.body.groups[0];
-                this.updated = JSON.parse(JSON.stringify(response.body.groups[0]));
-                this.originalVideo = this.original.video;
-                this.hasVideo = this.originalVideo ? true : false;
-                this.url = this.originalVideo ? 'https://youtu.be/' + this.originalVideo : null;
-                this.masterUrl = this.url;
-                this.loadingMatches = false;
-                
-            })
-            .catch((error) => {
-                 console.log(error);
-                 this.loadingMatches = false;
-                 this.failedMatchGet = true;
-            });
-        },
         resetMatches() {
+            this.updated = JSON.parse(this.originalStringified);
+            this.resetTimestamp = !this.resetTimestamp
+
             if (this.originalVideo) {
                 this.url = 'https://youtu.be/' + this.originalVideo;
                 this.hasVideo = true;
             } else {
                 this.url = null;
                 this.hasVideo = false;
-            }
+            };
 
-            this.masterUrl = this.url;
-            this.updated = JSON.parse(JSON.stringify(this.original));
         },
-        updateCharacter(match, character, i) {
-            this.$set(this.updated.matches[match][`p${i}`], 'character', character)
-        },
+
         updateMatches() {
             this.uploading = true;
-            let deleted = this.deleted
+            let deleted = this.deleted;
             let files = [];
             let uploadRef;
 
@@ -590,16 +450,16 @@ export default {
                     files.push(match.file);
                     delete match.file;
                 };
-            })
+            });
 
             if (this.$dev || files.length <= 0) {
-                uploadRef = Promise.all(this.formatMatchesForUpload);
+                uploadRef = Promise.all(this.formatMatchesForUpload());
             } else {
                 uploadRef = Promise.all(this.uploadFilesAsPromise(files))
                 .then(() => Promise.all(this.formatMatchesForUpload()));
-            }
+            };
 
-            uploadRef.then(() => this.$update.save({ matches, deleted}))
+            uploadRef.then((matches) => this.$edit.save({ matches, deleted }))
             .then((response) => {
                 console.log('Updated matches');
                 this.uploading = false;
@@ -611,12 +471,13 @@ export default {
                 this.setErrors('upload');
                 this.uploading = false;
                 this.error = true;
-            })
+            });
 
         },
+
         uploadFilesAsPromise(files) {
             return files.map((file) => {
-                let i = this.updated.matchesfindIndex((match) =>match.fileInfo.name === file.name);
+                let i = this.updated.matchesfindIndex((match) => match.fileInfo.name === file.name);
                 let j = this.original.matches.findIndex((match) => match._id === this.updated.matches[i]._id);
 
                 return this.$firebase.storage()
@@ -632,49 +493,45 @@ export default {
                     } else {
                         console.log("Removing file info from match #" + (i+1));
                         delete this.updated.matches[i].fileInfo;
-                    }
-                })
-            })
+                    };
+                });
+            });
         },
+
         formatMatchesForUpload() {
             let order = 0;
 
-            return this.updated.matches.map((match) => {
+            return this.updated.matches.filter((match) => {
                 let i = this.original.matches.findIndex(original => original._id === match._id);
-
+                match.group = this.updated.info.group;
+                match.video = {
+                    ...this.updated.info.video,
+                    timestamp: match.video.timestamp,
+                }
+                match.channel = this.updated.info.channel;
                 match.order = order;
+
                 order += 1;
 
                 if (JSON.stringify(match) !== JSON.stringify(this.original.matches[i]))
-                    return match;
-            });
+                    return true;
+                else
+                    return false;
+            })
+            .map((match) => match);
         },
-        setVideoId(id, i) {
-            if (!this.updated.matches[i].video) {
-                console.log('setting video ID');
-                this.$set(this.updated.matches[i], 'video', {id: id});
-            } else if (!this.updated.matches[i].video.id || this.updated.matches[i].video.id !== id) {
-                console.log('setting video ID');
-                this.$set(this.updated.matches[i].video, 'id', id);
-            }
-        },
+
         setTimestamp(timestamp, i) {
-            if (this.updated.matches[i].video && !this.updated.matches[i].video.timestamp || this.updated.matches[i].video.timestamp !== timestamp) {
-                this.$set(this.updated.matches[i].video, 'timestamp', timestamp);
-            }
+            console.log('setting timestamp')
+            this.$set(this.updated.matches[i], 'video', {timestamp});
         },
-        deleteVideo(i) {
-            if (this.updated.matches[i].video) {
-                console.log('deleting video');
-                this.$delete(this.updated.matches[i], 'video');
-            }
-        },
+
+
         deleteTimestamp(i) {
-            if (this.updated.matches[i].video && this.updated.matches[i].video.timestamp) {
-                console.log('deleting timestamp');
-                this.$delete(this.updated.matches[i].video, 'timestamp');
-            }
+            console.log('deleting timestamp');
+            this.$delete(this.updated.matches[i], 'video');
         },
+
         /** generates reader for each file */
         readFile(file, i) {
             (function (that, file, i) {
@@ -691,7 +548,6 @@ export default {
                         var hexReader = new FileReader();
                         
                         hexReader.onload = function(e) {
-                            
                             let hex = that.buf2hex(e.target.result);
                             let hexTime = hex?.match(/.{1,2}/g)?.reverse().join('');
                             let timestamp = new Date(parseInt(hexTime, 16) * 1000)?.toISOString()?.split('T');
@@ -701,8 +557,8 @@ export default {
                                 reject("Could not retrieve file timestamp from " + file.name);
                             } else {
                                 resolve(timestamp[0]);
-                            }
-                        }
+                            };
+                        };
 
                         hexReader.readAsArrayBuffer(file);
                     }
@@ -712,29 +568,23 @@ export default {
 
                     textReader.onload = function(e) {
                         that.parseFileData(e.target.result, file, timestamp, i);
-                    }
+                    };
 
                     textReader.readAsText(file);
                 })
                 .then(() => {
-                    if (that.errors.length > 0) that.error = true;
+                    if (that.errors.length > 0)
+                        ;that.error = true;
                 })
                 .catch((error) => {
-                    console.log(error)
+                    console.log(error);
 
-                    if (that.errors.length > 0) that.error = true;
-                })
-            })(this, file, i)
+                    if (that.errors.length > 0)
+                        that.error = true;
+                });
+            })(this, file, i);
         },
-        /** converts array buffer to string */
-        buf2hex(buffer) {
-            let buf = [...new Uint8Array(buffer)];
 
-            if (buf.length < 154) return null;
-
-            let timestamp = buf.slice(150, 154);
-            return timestamp.map(x => x.toString(16).padStart(2, '0')).join('');
-        },
         /**
          * parses file data
          * p1 hex @ offset 8-72
@@ -756,11 +606,11 @@ export default {
                 let players = {
                     p1: {
                         name: playerNames[0],
-                        character: (this.$characters.find(c => c.devName == characterNames[0])).name
+                        character: (this.$characters.find(c => c.alias[0] == characterNames[0])).name
                     },
                     p2: {
                         name: playerNames[1],
-                        character: (this.$characters.find(c => c.devName == characterNames[1])).name
+                        character: (this.$characters.find(c => c.alias[0] == characterNames[1])).name
                     }
                 };
 
@@ -787,11 +637,11 @@ export default {
                     this.warning = true;
                 } else {
                     this.addFile(this.tempData);
-                }
-            }
+                };
+            };
         },
-        addFile(data) {
 
+        addFile(data) {
             this.$set(this.updated[data.index], 'file', data.file);
             this.$set(this.updated[data.index], 'fileInfo', data.fileInfo);
             
@@ -800,6 +650,7 @@ export default {
 
             console.log("File added to match #" + (data.index + 1));
         },
+        
         removeFile(i) {
             console.log("Deleting file from match #" + (i + 1));
             
@@ -808,52 +659,30 @@ export default {
             delete this.updated.matches[i].file;
             delete this.updated.matches[i].fileInfo;
         },
+
         reload() {
             this.$router.go(this.$router.currentRoute);
         },
+
         closeWarning() {
             this.formData = null;
             this.fileData = null;
             this.tempData = null;
             this.warning = false;
         },
-         /**
-         * clears errors array
-         */
-        clearErrors() {
-           this.error = false;
-           this.errors = [];
-        },
-        /** sets errors array for display once files finish being read */
-        setErrors(type, file) {
-            let index = this.errors.findIndex(e => e.type == type);
 
-            if (index === -1) {
-                if (!file)
-                    this.errors.push({type: type});
-                else
-                    this.errors.push({type: type, files: [file]});
-            } else if (file) {
-                this.errors[index].files.push(file);
-            }
-        },
         removeMatch(i) {
             console.log("Deleting match #", (i+1));
             
             this.deleted.push(this.updated.matches[i]._id);
             this.updated.matches.splice(i, 1);
         },
+
         swapMatches(i, j) {
             let tempMatch = this.updated.matches[i];
             this.$set(this.updated.matches, i, this.updated.matches[j]);
             this.$set(this.updated.matches, j, tempMatch);
-        },        
-        validateForm() {
-            const refs = this.$refs;
-            window.setTimeout(function () {
-                refs.form.validate()
-            }, 100)
-        }
+        },
     }
 }
 </script>

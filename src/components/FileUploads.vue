@@ -129,23 +129,18 @@
                     :key="i"
                     :index="i"
                     :fileUpload="true"
-                    :groupMode="groupMode"
                     :p1="match.p1"
                     :p2="match.p2"
                     :uploading="uploading"
-                    :video="match.video ? match.video : null"
                     :fileName="match.fileInfo.name"
                     :fileDate="match.fileInfo.date"
                     :firstMatch="i === 0"
                     :lastMatch="i === matches.length - 1"
-                    :timestampRequired="hasVideo"
                     :hasVideo="hasVideo"
-                    :masterUrl="masterUrl ? masterUrl : null"
+                    :currentTimestamp="match.video ? match.video.timestamp : null"
                     @update-character="updateCharacter($event.character, $event.index, i)"
                     @remove="matches.splice(i, 1)"
-                    @set-video-id="setVideoId($event, i)"
                     @set-timestamp="setTimestamp($event, i)"
-                    @delete-video="deleteVideo(i)"
                     @delete-timestamp="deleteTimestamp(i)"
                     @move-up="swapMatches(i, i-1)"
                     @move-down="swapMatches(i, i+1)"
@@ -229,6 +224,8 @@
 <script>
 import StatusOverlay from './StatusOverlay.vue'
 import Preview from './Preview.vue'
+import uploadMixin from '../mixins/uploadMixin'
+import authMixin from '../mixins/authMixin'
 import 'firebase/storage'
 
 export default {
@@ -237,39 +234,18 @@ export default {
         Preview,
     },
     name: 'FileUploads',
+    mixins: [uploadMixin, authMixin],
     props: {
-        uid: String,
+        userId: String,
     },
     data: () => {
         return {
-            form: 0,
-            hidden: true,
-            datepicker: false,
-            date: null,
-            valid: false,
             isSelecting: false,
             insertAtIndex: null,
             matches: [],
             //uploadLimit: 8,
-            error: false,
-            uploading: false,
-            finished: false,
-            errors: [],
-            url: null,
-            masterUrl: null,
             uploadType: 'Group',
-            groupMode: true,
-            group: {
-                title: null,
-                part: null,
-                date: null,
-            },
-            video: {},
-            vid: null,
-            hasVideo: false,
             invalidVideo: true,
-            changeButton: false,
-            loading: false,
             rules: {
                 group: [
                     v => !!v || 'Required',
@@ -286,142 +262,128 @@ export default {
         }
     },
     mounted() {
-        this.validateForm()
+        this.validateForm();
     },
     watch: {
       'date': function(date) {
-          this.group.date = this.formatDate(date)
+          this.group.date = this.formatDate(date);
       },
 
       'url': function(url) {
             if (!url) {
-                this.hasVideo = false
-                this.invalidVideo = true
-                this.masterUrl = false
-            }
+                this.hasVideo = false;
+                this.invalidVideo = true;
+                this.video = {};
+                this.channel = {};
+            };
       }
     },
     methods: {
-        setAuthToken: function () {
-            return this.$firebase.auth().currentUser.getIdToken()
-                .then((token) => {
-                    console.log('Setting auth token')
-                    return this.$httpInterceptors.push((request) => {
-                        request.headers.set('Authorization', token)
-                    })
-                })
-                .catch((error) => console.log(error))
-        },
         validateYoutubeID() {
-            this.loading = true
-            this.vid = this.url.match(this.$regex.ytId)[1]
-            this.video = {}
-            let youtubeRef = null
+            this.loading = true;
+            this.vid = this.url.match(this.$regex.ytId)[1];
+            this.video = {};
+            let youtubeRef = null;
 
             if (this.$dev) {
-                youtubeRef = this.$youtubeData.get({ id: this.vid })
-            } else {youtubeRef = this.setAuthToken().then(() => {
-                    console.log('Retrieving Youtube data')
-                    return this.$youtubeData.get({ id: this.vid })
-                })
-            }
+                youtubeRef = this.$youtubeData.get({ id: this.vid });
+            } else {
+                youtubeRef = this.setAuthToken().then(() => {
+                    console.log('Retrieving Youtube data');
+                    return this.$youtubeData.get({ id: this.vid });
+                });
+            };
 
             youtubeRef.then((response) => {
-                this.hasVideo = true
-                this.changeVerifyBtn()
-                this.loading = false
-                this.masterUrl = this.url
-                this.invalidVideo = false
-                this.video = response.body
-                this.group.date = this.video.date
+                this.hasVideo = true;
+                this.changeVerifyBtn();
+                this.video = response.body.video;
+                this.channel = response.body.channel;
+                this.group.date = this.video.date;
+                this.invalidVideo = false;
+                this.loading = false;
 
             })
             .catch((error) => {
-                console.log(error)
-                this.hasVideo = false
-                this.revertVerifyBtn()
-                this.loading = false
-                this.masterUrl = null
-                this.invalidVideo = true
-
-            })
-            
+                console.log(error);
+                this.hasVideo = false;
+                this.changeVerifyBtn();
+                this.invalidVideo = true;
+                this.loading = false;
+            });
         },
-        changeVerifyBtn() {
-            this.changeButton = true
 
-            window.setInterval(() => {
-                this.changeButton = false
-            }, 3000)
-        },
         /** tell parent component to begin uploading files */
         submitFiles() {
             let time = new Date().toISOString().split('T');
             let files = [];
             let order = 0;
             let uploadRef;
+            let general = {
+                userId: this.userId,
+                uploadForm: 'Files',
+                type: 'Group',
+                group: this.group,
+                matchDate: this.group.date,
+                uploadDate: time[0],
+                uploadTime: time[1],
+            }
 
             this.uploading = true;
             let matches = this.matches.map((match) => {
-                files.push(match.file)
-                delete match.file
+                files.push(match.file);
+                delete match.file;
 
-                let newMatch = {
-                    userId: this.uid,
-                    uploadForm: 'Files',
-                    type: 'Group',
-                    group: this.group,
-                    matchDate: this.group.date,
-                    uploadDate: time[0],
-                    uploadTime: time[1],
-                    order: order,
-                    ...match
-                }
+                match = {
+                    ...general,
+                    ...match,
+                    order: order
+                };
 
                 if (this.hasVideo) {
-                    newMatch.video = {
-                        id: match.video.id,
+                    match.video = {
+                        id: this.video.id,
                         title: this.video.title,
-                        date: this.video.date,
                         timestamp: match.video.timestamp
-                    }
+                    };
                     
-                    newMatch.channel = this.video.channel
-                }
+                    match.channel = this.channel;
+                };
 
-                order += 1
+                order += 1;
 
-                return newMatch
-            })
+                return match;
+            });
 
             //this.printObj(this.matches)
 
             if (this.$dev) {
-                uploadRef = this.$matches.save({matches})
+                uploadRef = this.$matches.save({matches});
             } else {
                 uploadRef = Promise.all(this.uploadFilesAsPromise(files))
-                .then(() => this.$matches.save({matches: matches}))
-            }
+                .then(() => this.$matches.save({matches: matches}));
+            };
 
             uploadRef.then((response) => {
-                console.log('Uploaded matches:')
-                response.body.matchIds.forEach((id) => console.log('ID:', id) )
+                console.log('Uploaded matches:');
+                response.body.matchIds.forEach((id) => console.log('ID:', id) );
 
-                this.uploading = false
-                this.finished = true
+                this.uploading = false;
+                this.finished = true;
             })
             .catch((error) => {
-                console.log(error)
+                console.log(error);
                 
-                this.setErrors('upload')
-                this.uploading = false
-                this.finished = true
-            })
+                this.setErrors('upload');
+                this.uploading = false;
+                this.finished = true;
+            });
         },
+
         /** ensure files are uploaded before match docs are pushed to database */
         uploadFilesAsPromise(files) {
             return files.map((file) => {
-                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name)
+                let i = this.matches.findIndex((match) => match.fileInfo.name === file.name);
 
                 return this.$firebase.storage()
                 .ref(`replays/${file.name}`)
@@ -429,89 +391,26 @@ export default {
                 .then((snapshot) => snapshot.ref.getDownloadURL())
                 .then((url) => this.matches[i].fileInfo.url = url)
                 .catch((error) => {
-                    console.log(error)
-                    console.log("Removing match #" + (i+1) + " from upload list.")
-                    this.matches.splice(i, 1)
-                })
-            })
+                    console.log(error);
+                    console.log("Removing match #" + (i+1) + " from upload list.");
+                    this.matches.splice(i, 1);
+                });
+            });
         },
 
         /* makes visible upload button act like html file upload button */
         selectFiles(index) {
-            this.isSelecting = true
+            this.isSelecting = true;
 
-            if (index) this.insertAtIndex = index
+            if (index) this.insertAtIndex = index;
 
             window.addEventListener('focus', () => {
-                this.isSelecting = false
+                this.isSelecting = false;
             }, { once: true })
 
-            this.$refs.uploadFilesBtn.click()
+            this.$refs.uploadFilesBtn.click();
         },
-        /** generates reader for each file */
-        readFiles(files, i) {
-            (function (that, files, i) {
-                var file = files[i];
 
-                new Promise(function(resolve, reject) {
-                    // check file extension and duplicate issues first
-                    if (file.name.substring(file.name.length - 5, file.name.length) !== '.tfhr') {
-                        that.setErrors('extension', file.name)
-                        reject("File" + file.name + " does not end in a valid TFHR file extension.")
-                    } else if (that.matches.find(m => m.file.name === file.name)) {
-                        that.setErrors('duplicate', file.name)
-                        reject("File " + file.name + " already exists.")
-                    } else {
-                        // read hex code of file to retrieve timestamp
-                        var hexReader = new FileReader()
-
-                        hexReader.onload = function(e) {
-                            let hex = that.buf2hex(e.target.result)
-                            let hexTime = hex?.match(/.{1,2}/g)?.reverse().join('')
-                            let timestamp = new Date(parseInt(hexTime, 16) * 1000)?.toISOString()?.split('T')
-
-                            if (!timestamp) {
-                                that.setErrors('parse', file.name)
-                                reject("Could not retrieve file timestamp from " + file.name)
-                            } else {
-                                resolve(timestamp[0])
-                            }
-                        }
-
-                        hexReader.readAsArrayBuffer(file)
-                    }
-                }).then((timestamp) => {
-                    // read file as text for rest of data
-                    var textReader = new FileReader()
-
-                    textReader.onload = function(e) {
-                        that.parseFileData(e.target.result, file, timestamp, i, files.length - 1)
-                    }
-
-                    textReader.readAsText(file)
-                })
-                .then(() => {
-                    if (i < files.length - 1)
-                        that.readFiles(files, i + 1)
-                })
-                .catch((error) => {
-                    console.log(error)
-                    if (i < files.length - 1)
-                        that.readFiles(files, i + 1)
-                    else
-                        if (that.errors.length > 0) that.error = true
-                })
-            })(this, files, i)
-        },
-        /** converts array buffer to string */
-        buf2hex(buffer) {
-            let buf = [...new Uint8Array(buffer)]
-
-            if (buf.length < 154) return null
-
-            let timestamp = buf.slice(150, 154)
-            return timestamp.map(x => x.toString(16).padStart(2, '0')).join('')
-        },
         /**
          * parses file data
          * p1 hex @ offset 8-72
@@ -522,22 +421,22 @@ export default {
          */
         parseFileData(fileText, file, timestamp, i, endOfFiles) {
             // error if file uses non-.tfhr extension
-            let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2)
-            let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
+            let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2);
+            let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
 
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
-                console.log("Parsing error with file", file.name)
-                this.setErrors('parse', file.name)
+                console.log("Parsing error with file", file.name);
+                this.setErrors('parse', file.name);
             } else {
                 let match = {
                     p1: {
                         name: playerNames[0],
-                        character: (this.$characters.find(c => c.devName == characterNames[0])).name
+                        character: (this.$characters.find(c => c.alias[0] == characterNames[0])).name
                     },
                     p2: {
                         name: playerNames[1],
-                        character: (this.$characters.find(c => c.devName == characterNames[1])).name
+                        character: (this.$characters.find(c => c.alias[0] == characterNames[1])).name
                     },
                     file: file,
                     fileInfo: {
@@ -546,88 +445,48 @@ export default {
                         version: fileText.charCodeAt(146),
                         date: this.formatDate(timestamp),
                     },
-                }
+                };
 
-                if (this.matches.length === 0) this.date = timestamp
+                if (this.matches.length === 0)
+                    this.date = timestamp;
 
                 if (this.insertAtIndex) {
-                    this.matches.splice(this.insertAtIndex, 0, match)
-                    this.insertAtIndex += 1
-                } else
-                    this.matches.push(match)
-            }
+                    this.matches.splice(this.insertAtIndex, 0, match);
+                    this.insertAtIndex += 1;
+                } else {
+                    this.matches.push(match);
+                };
+            };
 
             if (i >= endOfFiles) {
-                this.insertAtIndex = null
-                this.validateForm()
+                this.insertAtIndex = null;
+                this.validateForm();
                 if (this.errors.length > 0)
-                    this.error = true
-            }
+                    this.error = true;
+            };
         },
-        updateCharacter(character, j, i) {
-            this.$set(this.matches[i][`p${j+1}`], 'character', character)
-        },
-        setVideoId(id, i) {
-            if (!this.matches[i].video) {
-                console.log('setting video ID')
-                this.$set(this.matches[i], 'video', {id: id})
-            } else if (!this.matches[i].video.id || this.matches[i].video.id !== id) {
-                console.log('setting video ID')
-                this.$set(this.matches[i].video, 'id', id)
-            }
-        },
+
         setTimestamp(timestamp, i) {
-            console.log('setting timestamp')
-            this.$set(this.matches[i].video, 'timestamp', timestamp)
+            console.log('setting timestamp');
+            this.$set(this.matches[i], 'video', {timestamp});
         },
-        deleteVideo(i) {
-            if (this.matches[i].video) {
-                console.log('deleting video')
-                this.$delete(this.matches[i], 'video')
-            }
-        },
+
         deleteTimestamp(i) {
             if (this.matches[i].video?.timestamp) {
-                console.log('deleting timestamp')
-                this.$delete(this.matches[i].video, 'timestamp')
-            }
+                console.log('deleting timestamp');
+                this.$delete(this.matches[i], 'video');
+            };
         },
+
         swapMatches(i, j) {
-            let tempMatch = this.matches[i]
-            this.$set(this.matches, i, this.matches[j])
-            this.$set(this.matches, j, tempMatch)
+            let tempMatch = this.matches[i];
+            this.$set(this.matches, i, this.matches[j]);
+            this.$set(this.matches, j, tempMatch);
         },
-        /** sets errors array for display once files finish being read */
-        setErrors(type, file) {
-            let index = this.errors.findIndex(e => e.type == type)
-            if (index === -1) {
-                if (!file) {
-                    console.log("Adding error type to array")
-                    this.errors.push({type: type})
-                } else {
-                    console.log("Adding error type + file name to array")
-                    this.errors.push({type: type, files: [file]})
-                }
-            } else if (file) {
-                console.log("Adding file name to " + type + " file array")
-                this.errors[index].files.push(file)
-            }
-        },
-        /** clears errors array */
-        clearErrors() {
-           this.errors = []
-           this.error = false
-        },
+
         resetForm() {
-            this.$emit('reload-form')
+            this.$emit('reload-form');
         },
-        validateForm() {
-            const refs = this.$refs
-            window.setTimeout(function () {
-                refs.form.validate()
-            }, 100)
-        }
-        
     }
 }
 </script>

@@ -6,7 +6,7 @@
         <!-- char select button -->
         <template v-slot:activator="{ on, attrs }">
             <picture
-            :class="invalid ? 'icon invalid' : 'icon'"
+            :class="invalid ? 'character-icon invalid' : 'character-icon'"
             v-bind="attrs"
             v-on="on"
             :title="currentCharacter">
@@ -34,7 +34,7 @@
                 v-if="!anyEnabled && character.value"
                 :key="i"
                 @click="selectCharacter(character)">
-                    <picture class="icon" :title="character.name" >
+                    <picture class="character-icon" :title="character.name" >
                         <source
                         type="image/webp"
                         :srcset="require(`../assets/img/sel/${character.img}.webp`)" />
@@ -51,7 +51,7 @@
                 v-else-if="anyEnabled"
                 :key="j"
                 @click="selectCharacter(character)">
-                    <picture class="icon" :title="character.name" >
+                    <picture class="character-icon" :title="character.name" >
                         <source
                         type="image/webp"
                         :srcset="require(`../assets/img/sel/${character.img}.webp`)" />
@@ -81,12 +81,10 @@ export default {
   methods: {
         /* passes selected character up to parent */ 
         selectCharacter: function (selected) {
-            
-            if (selected.img === this.currentCharacter) {
-                return null
-            } else {
-                this.$emit('character-select', selected.value)
-            }
+            if (selected.img === this.currentCharacter)
+                return null;
+            else 
+                this.$emit('character-select', selected.value);
         },
     }
 }

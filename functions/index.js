@@ -126,8 +126,61 @@ api.put('/matches', (req, res) => {
     .catch((error) => res.status(400).send(error.toString()));
 })
 
+api.get('/edit', (req, res) => {
+    let query = { 'uploadId': req.query.uploadId };
+
+    const editAggregate = [
+        { $match: query },
+        { $sort: { order: 1 } },
+        { $group: {
+            '_id': '$uploadId',
+            'info': {
+                $first: {
+                    'group': '$group',
+                    'uploadForm': '$uploadForm',
+                    'video': {
+                        'id': '$video.id',
+                        'title': '$video.title',
+                    },
+                    'channel': '$channel',
+                }
+            },
+            'matches': {
+                $push: {
+                    '_id': '$_id',
+                    'userId': '$userId',
+                    'p1': '$p1',
+                    'p2': '$p2',
+                    'video': '$video',
+                    'channel': '$channel',
+                    'group': '$group',
+                    'fileInfo': '$fileInfo',
+                    'order': '$order',
+                }
+            },
+        }},
+    ]
+
+    return mongoDb()
+    .then((client) =>
+        client.db('tfhr')
+        .collection('matches')
+        .aggregate(editAggregate)
+        .toArray()
+    )
+    .then((results) => {
+        console.log(results[0])
+        let group = results[0]
+        console.log("api.get('/edit'): Returning group ID", query.uploadId);
+        
+        return res.status(200).send(group);
+    })
+    .catch((error) => res.status(400).send(error.toString()));
+})
+
 /** update match info using edit page */
-api.put('/matches/update', (req, res) => {
+api.put('/edit', (req, res) => {
+    console.log(req.body)
     let matches = req.body.matches;
     let deleted = req.body.deleted.map(id => ObjectId(id));
 
@@ -136,6 +189,7 @@ api.put('/matches/update', (req, res) => {
         Promise.all([
             // update matches
             matches.forEach((match) => {
+                console.log(match)
                     let data = [
                         { _id: ObjectId(match._id) },
                         { $set: {
@@ -143,6 +197,7 @@ api.put('/matches/update', (req, res) => {
                             p2: match.p2,
                             video: match.video,
                             channel: match.channel,
+                            group: match.group,
                             fileInfo: match.fileInfo,
                             order: match.order
                         } }
@@ -161,7 +216,7 @@ api.put('/matches/update', (req, res) => {
         ])
     )
     .then(() => {
-        console.log("api.put('/matches/update'): Matches updated");
+        console.log("api.put('/edit'): Matches updated");
         return res.status(200).send();
     })
     .catch((error) => res.status(400).send(error.toString()));
@@ -329,17 +384,18 @@ api.get('/youtube-data', (req, res) => {
         if (youtube.data.items.length > 0) {
             console.log("api.get('/youtube-data'): Successfully retrieved Youtube data");
             let data = youtube.data.items[0].snippet;
-
-            return res.status(200).send({
-                id: req.query.videoId,
+            let video = {
+                id: req.query.id,
                 title: data.title,
                 date: formatDate(data.publishedAt.split('T')[0]),
                 description: data.description,
-                channel: {
-                    id: data.channelId,
-                    name: data.channelTitle
-                }
-            });
+            }
+            let channel = {
+                id: data.channelId,
+                name: data.channelTitle
+            }
+
+            return res.status(200).send({video, channel});
         } else {
             console.log("api.get('/youtube-data'): Failed to retrieve Youtube data");
 

@@ -242,20 +242,6 @@
     padding-top: 7px;
 }
 
-#filters .p1 .icon {
-    margin-left: 10px;
-    margin-right: 0px;
-}
-
 .small #filters .p1 {
     flex-direction: row;
-}
-
-.small #filters .icon {
-    margin-left: 0px;
-    margin-right: 10px;
-}
-
-.small #filters .p2 {
-    margin-left: 0px;
 }

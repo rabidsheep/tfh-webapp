@@ -126,9 +126,9 @@
                 persistent-hint
                 placeholder="(ex: 01h02m03s)"
                 clearable
-                :required="timestampRequired"
+                :required="hasVideo"
                 :disabled="!hasVideo"
-                :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
+                :rules="hasVideo ? rules.timestamp.req : rules.timestamp.noReq" />
             </div>
         </v-col>
         </v-col>
@@ -142,7 +142,7 @@ import DownButton from '.././assets/img/svg/down'
 import UpButton from '.././assets/img/svg/up'
 
 export default {
-    name: 'EditPreview',
+    name: 'Preview',
     components: {
         CharacterSelect,
         RemoveButton,
@@ -153,18 +153,16 @@ export default {
         index: Number,
         youtubeUpload: [Boolean, null],
         fileUpload: [Boolean, null],
-        groupMode: Boolean,
         p1: Object,
         p2: Object,
-        video: [Object, null],
         fileName: [String, null],
         fileDate: [String, null],
         firstMatch: Boolean,
         lastMatch: Boolean,
         resetData: Boolean,
-        timestampRequired: Boolean,
-        masterUrl: [String, null],
         hasVideo: Boolean,
+        resetTimestamp: Boolean,
+        currentTimestamp: [String, null]
     },
     data: () => {
         return {
@@ -203,66 +201,51 @@ export default {
         }
     },
     mounted: function () {
-        this.fileNameStr = this.fileName
+        this.fileNameStr = this.fileName;
 
-        if (this.video) {
-            this.url = 'https://youtu.be/' + this.video.id
-            this.timestamp = this.video.timestamp
-        }
+        if (this.currentTimestamp)
+            this.timestamp = this.currentTimestamp;
 
-        if (this.masterUrl)
-            this.url = this.masterUrl
     },
     watch: {
         'resetData': function() {
             this.reset()
         },
-        'url': function(url) {  
-            if (url && this.$regex.ytUrl.test(url) && this.$regex.ytIdLength.test(url)) {
-                this.$emit('set-video-id', url.match(this.$regex.ytId)[1])
-            } else if (!url) {
-                this.$emit('delete-video')
-            }
-        },
         
         'timestamp': function(timestamp) {
             if (timestamp && timestamp.match(this.$regex.strTimestamp)) {
-                    if (!this.video?.timestamp || timestamp !== this.video.timestamp) {
-                        this.$emit('set-timestamp', timestamp)
-                    }
+                    if (!this.currentTimestamp || timestamp !== this.currentTimestamp) {
+                        this.$emit('set-timestamp', timestamp);
+                    };
             } else if (!timestamp) {
-                this.$emit('delete-timestamp')
+                this.$emit('delete-timestamp');
             }
         },
 
         'fileName': function(name) {
-            this.fileNameStr = name
+            this.fileNameStr = name;
         },
-
-        'masterUrl': function(url) {
-            this.url = url
-
-            if (!url && this.timestamp) this.timestamp = null
-        },
-
-        'video.timestamp': function(time) {
-            if (time !== this.timestamp) {
-                this.timestamp = time
+        
+        'hasVideo': function(hasVideo) {
+            if (!hasVideo) {
+                this.timestamp = null;
             }
+        },
+
+        'resetTimestamp': function() {
+            this.timestamp = this.currentTimestamp
         }
     },
     methods: {
         /* makes visible upload button act like html file upload button */
         selectFiles() {
-            this.isSelecting = true
+            this.isSelecting = true;
+
             window.addEventListener('focus', () => {
-                this.isSelecting = false
+                this.isSelecting = false;
             }, { once: true })
-            this.$refs.uploadFileBtn.click()
-        },
-        reset() {
-            this.url = this.video?.url
-            this.timestamp = this.video?.timestamp
+
+            this.$refs.uploadFileBtn.click();
         },
     }
 }

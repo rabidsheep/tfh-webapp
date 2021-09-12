@@ -31,7 +31,6 @@
                     id="step__sign-in"
                     class="step">
                         <h1>Sign In</h1>
-
                         
                         <br />
 
@@ -133,13 +132,13 @@
                         <FileUploads
                         v-if="uploadType == 'files'"
                         :key="fileKey"
-                        :uid="uid"
+                        :userId="uid"
                         @reload-form="fileKey = !fileKey" />
 
                         <YoutubeUploads
                         v-else-if="uploadType === 'youtube'"
                         :key="youtubeKey"
-                        :uid="uid"
+                        :userId="uid"
                         @reload-form="youtubeKey = !youtubeKey" />
                     </div>
                 </div>
@@ -151,6 +150,7 @@
 <script>
 import FileUploads from '../components/FileUploads.vue'
 import YoutubeUploads from '../components/YoutubeUploads.vue'
+import authMixin from '../mixins/authMixin'
 import 'firebase/auth'
 
 export default {
@@ -158,13 +158,11 @@ export default {
         FileUploads,
         YoutubeUploads,
     },
+    mixins: [authMixin],
     name: 'Uploads',
-    props: {
-    },
     data: () => {
         return {
             uid: null,
-            hidden: true,
             step: 1,
             uploadType: null,
             loading: false,
@@ -182,108 +180,15 @@ export default {
     watch: {
     },
     mounted() {
-            this.$firebase.auth().onAuthStateChanged((user) => {
-                if (!user) {
-                    this.uid = null
-                    this.step = 1
-                    
-                    this.allowLogin = true
-                    console.log('User not found')
-                    return null
-                } else {
-                    this.loggingIn = true
-                    this.uid = user.uid
-
-                    let loginRef = null
-
-                    if (this.$dev) {
-                        console.log("Dev Environment")
-
-                        loginRef = this.$users.get({ uid: user.uid })
-                    } else {
-                        console.log("Production Environment")
-
-                        loginRef = this.setAuthToken()
-                        .then(() => {
-                            console.log('Checking user')
-                            return this.$users.get({ uid: user.uid })
-                        })
-                    }
-
-                    loginRef.then((response) => {
-                        let userData = response.body[0]
-
-                        if (userData) {
-                            console.log("Retrieved user data")
-                            this.isAdmin = userData.admin
-                            return null
-                        } else {
-                            console.log("Creating new user")
-
-                            this.isRegistered = false
-
-                            let newUser = {
-                                uid: user.uid,
-                                email: user.email,
-                                admin: false
-                            }
-
-                            return this.$users.save(newUser)
-                            .then(() => {
-                                console.log('User created') 
-                            })
-                        }
-                    })
-                    .then(() => {
-                        this.loading = false
-                        this.loadingMatches = true
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 2
-                    })
-                    .catch((error) => {
-
-                        this.loading = false
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 1
-                        this.allowLogin = true
-                        console.log(error)
-                    })
-                }
-            })
+        this.watchAuthState();
     },
     methods: {
-        signIn: function (providerName) {
-            this.loading = true
-            this.allowLogin = false
-
-            this.$firebase.auth()
-            .signInWithPopup(this.$providers[providerName])
-            .then(() => {
-                this.loading = false
-            })
-            .catch((error) => {
-                console.log(error)
-                this.allowLogin = true
-                this.loading = false
-            })
-        },
-        setAuthToken: function () {
-            return this.$firebase.auth().currentUser.getIdToken()
-                .then((token) => {
-                    console.log('Setting auth token')
-                    return this.$httpInterceptors.push((request) => {
-                        request.headers.set('Authorization', token)
-                    })
-                })
-                .catch((error) => console.log(error))
-        },
         /** determines what upload form to use */
         setUploadType(type) {
             this.uploadType = type
             this.step = 3
         },
+
         /** return to upload type selection step */
         goBack() {
             this.step = 2

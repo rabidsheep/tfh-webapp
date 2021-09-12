@@ -89,13 +89,13 @@
         <!-- pagination -->
         <div
         class="pages"
-        v-if="!loadingMatches && !(resultsCount <= this.$config.itemsPerPage)">
+        v-if="!loadingMatches && resultsCount > this.$itemsPerPage">
           <v-pagination
           color="accent"
           v-model="page"
-          :length="resultsCount % this.$config.itemsPerPage === 0 ?
-                    Math.floor(resultsCount / this.$config.itemsPerPage) :
-                    Math.floor(resultsCount / this.$config.itemsPerPage) + 1"
+          :length="resultsCount % this.$itemsPerPage === 0 ?
+                    Math.floor(resultsCount / this.$itemsPerPage) :
+                    Math.floor(resultsCount / this.$itemsPerPage) + 1"
           :total-visible="$vuetify.breakpoint.smAndUp ? 7 : 5"
           @input="getMatches(filters, page)"
           circle />
@@ -133,8 +133,6 @@ export default {
     MatchRow,
     MatchHeader,
     Filters,
-  },
-  props: {
   },
   data: () => {
     return {
@@ -181,29 +179,30 @@ export default {
     }
   },
   mounted() {
-    return this.loadContent().then(() => this.getMatches(this.filters, 1))
+    return this.loadContent().then(() => this.getMatches(this.filters, 1));
   },
   watch: {
     'filters.deep': {
       handler: function() {
-          this.page = 1
-          this.getMatches(this.filters, 1)
+          this.page = 1;
+          this.getMatches(this.filters, 1);
       },
       deep: true
     },
+
     'filters.strict': function() {
-      let p1 = JSON.stringify(this.filters.deep.players[0])
-      let p2 = JSON.stringify(this.filters.deep.players[1])
+      let p1 = JSON.stringify(this.filters.deep.players[0]);
+      let p2 = JSON.stringify(this.filters.deep.players[1]);
 
       // do not update matches if sides are the same OR filters were just cleared
       if (!this.stop && p1 !== p2) {
-        this.page = 1
-        this.getMatches(this.filters, 1)
+        this.page = 1;
+        this.getMatches(this.filters, 1);
       }
     }
   },
   methods: {
-    getMatches: function (filters, page) {
+    getMatches(filters, page) {
       this.loadingMatches = true
 
       return this.$matches.get({
@@ -214,47 +213,46 @@ export default {
         page: page
       })
       .then((response) => {
-        this.groups = response.body?.groups
-        //console.log(JSON.parse(JSON.stringify(this.groups)))
-        this.resultsCount = response.body?.count
-        //console.log(this.resultsCount)
+        this.groups = response.body?.groups;
+        //console.log(JSON.parse(JSON.stringify(this.groups)));
+        this.resultsCount = response.body?.count;
+        //console.log(this.resultsCount);
 
-        this.loadingMatches = false
-        this.stop = false
+        this.loadingMatches = false;
+        this.stop = false;
       })
       .catch((error) => {
-          this.errorMsg = `${error.status}: ${error.statusText}`
-          console.log("Error retrieving matches.\n", this.errorMsg)
+          this.errorMsg = `${error.status}: ${error.statusText}`;
+          console.log("Error retrieving matches.\n", this.errorMsg);
 
-          this.loadingMatches = false
-          this.stop = false
+          this.loadingMatches = false;
+          this.stop = false;
       })
     },
+
     // retrieve content for dropdown lists
-    loadContent: function() {
+    loadContent() {
         return this.$filterContent.get()
         .then((response) => {
-            if (response.ok) {
-                this.error = false
-                this.groupList = response.body?.groups
-                this.playerList = response.body?.players
-                this.channelList = response.body?.channels
+            this.error = false;
+            this.groupList = response.body?.groups;
+            this.playerList = response.body?.players;
+            this.channelList = response.body?.channels;
 
-                //console.log(JSON.parse(JSON.stringify(this.channelList)))
-                //console.log(this.playerList)
-                //console.log(JSON.parse(JSON.stringify(this.groupList)))
-            }
-
-            this.loadingFilterContent = false
+            //console.log(JSON.parse(JSON.stringify(this.channelList)));
+            //console.log(this.playerList);
+            //console.log(JSON.parse(JSON.stringify(this.groupList)));
+            this.loadingFilterContent = false;
         })
         .catch((error) => {
-            this.errorMsg = `${error.status}: ${error.statusText}`
-            console.log("Error retrieving filter content.\n", this.errorMsg)
-            this.loadingFilterContent = false
+            this.errorMsg = `${error.status}: ${error.statusText}`;
+            console.log("Error retrieving filter content.\n", this.errorMsg);
+            this.loadingFilterContent = false;
         })
       },
+
     clearFilters() {
-      this.stop = true
+      this.stop = true;
 
       this.filters = {
         deep: {
@@ -275,50 +273,49 @@ export default {
           hasVideo: false,
         },
         strict: false,
-      }
+      };
     },
+
     updateCharacter(character, i) {
-      if (this.filters.deep.players[i].character !== character) {
-        this.filters.deep.players[i].character = character
-      }
+      if (this.filters.deep.players[i].character !== character)
+        this.filters.deep.players[i].character = character;
     },
+
     updateName(name, i) {
-      if (this.filters.deep.players[i].name !== name) {
-        this.filters.deep.players[i].name = name
-      }
+      if (this.filters.deep.players[i].name !== name)
+        this.filters.deep.players[i].name = name;
     },
+
     swap() {
-      let p1 = JSON.stringify(this.filters.deep.players[0])
-      let p2 = JSON.stringify(this.filters.deep.players[1])
+      let p1 = JSON.stringify(this.filters.deep.players[0]);
+      let p2 = JSON.stringify(this.filters.deep.players[1]);
 
       // do not swap if sides are the same
       if (p1 !== p2)
-        this.filters.deep.players = [this.filters.deep.players[1], this.filters.deep.players[0]]
+        this.filters.deep.players = [this.filters.deep.players[1], this.filters.deep.players[0]];
     },
+
     onScroll: function (event) {
-      this.showToTop = event.currentTarget.scrollY >= 250
+      this.showToTop = event.currentTarget.scrollY >= 250;
     },
+
     generateZipFile(matches, group) {
-      let jszip = new JSZip()
+      let jszip = new JSZip();
+      let zipName = `${group.date}_${group.title.replace(/\s/g, '_').replace(/[-[\]'{}()*+?.,\\^$|]/g, '')}.zip`;
 
       Promise.all([
         matches.filter((match) => {
-          if (match.fileInfo) return true
-          else return false
+          if (match.fileInfo)
+            return true;
+          else
+            return false;
         })
-        .map((match) => {
-          return jszip.file(match.fileInfo.name,
-          this.downloadFileAsPromise(match.fileInfo.url))
-        })
+        .map((match) => jszip.file(match.fileInfo.name, this.downloadFileAsPromise(match.fileInfo.url)))
       ])
-      .then(() => {
-        jszip.generateAsync({type: 'blob'})
-        .then(function(content) {
-          saveAs(content, `${group.date}_${group.title.replace(/\s/g, '_').replace(/[-[\]'{}()*+?.,\\^$|]/g, '')}.zip`)
-        })
-      })
-
+      .then(() => jszip.generateAsync({type: 'blob'}))
+      .then((content) => saveAs(content, zipName));
     },
+
     downloadFileAsPromise(url) {
       return new Promise(function(resolve, reject) {
         var xhr = new XMLHttpRequest();
@@ -326,13 +323,13 @@ export default {
         xhr.responseType = "arraybuffer";
         xhr.onreadystatechange = function(evt) {
           if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
+            if (xhr.status === 200)
               resolve(xhr.response);
-            } else {
+            else
               reject(new Error("Error for " + url + ": " + xhr.status));
-            }
           }
         };
+
         xhr.send();
       });
     }

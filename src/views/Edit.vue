@@ -532,7 +532,8 @@ export default {
             this.$delete(this.updated.matches[i], 'video');
         },
 
-        /** generates reader for each file */
+        
+        /** generates reader for file */
         readFile(file, i) {
             (function (that, file, i) {
                 new Promise(function(resolve, reject) {
@@ -540,7 +541,7 @@ export default {
                     if (file.name.substring(file.name.length - 5, file.name.length) !== '.tfhr') {
                         that.setErrors('extension', file.name);
                         reject("File" + file.name + " does not end in a valid TFHR file extension.");
-                    } else if (that.updated.find(m => m.file?.name === file.name)) {
+                    } else if (that.updated.matches.find(m => m.fileInfo?.name === file.name)) {
                         that.setErrors('duplicate', file.name);
                         reject("File " + file.name + " already exists.");
                     } else {
@@ -574,7 +575,7 @@ export default {
                 })
                 .then(() => {
                     if (that.errors.length > 0)
-                        ;that.error = true;
+                        that.error = true;
                 })
                 .catch((error) => {
                     console.log(error);
@@ -642,8 +643,8 @@ export default {
         },
 
         addFile(data) {
-            this.$set(this.updated[data.index], 'file', data.file);
-            this.$set(this.updated[data.index], 'fileInfo', data.fileInfo);
+            this.$set(this.updated.matches[data.index], 'file', data.file);
+            this.$set(this.updated.matches[data.index], 'fileInfo', data.fileInfo);
             
             if (this.warning = true)
                 this.closeWarning();

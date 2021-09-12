@@ -362,7 +362,8 @@ picture.character-icon source, picture.character-icon img {
 }
 
 
-.status .character-icon {
+.status .p1 .character-icon {
+    margin-left: 0px;
     margin-right: 15px;
 }
 

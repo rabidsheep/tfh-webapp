@@ -509,11 +509,19 @@ export default {
             return this.updated.matches.filter((match) => {
                 let i = this.original.matches.findIndex(original => original._id === match._id);
                 match.group = this.updated.info.group;
-                match.video = {
-                    ...this.updated.info.video,
-                    timestamp: match.video.timestamp,
+
+                if (this.updated.info.video?.id) {
+                    match.video = {
+                        ...this.updated.info.video,
+                        timestamp: match.video?.timestamp,
+                    };
+                    
+                    match.channel = this.updated.info.channel;
+                } else if (this.fileUpload && match.video) {
+                    delete match.video;
+                    delete match.channel;
                 }
-                match.channel = this.updated.info.channel;
+
                 match.order = order;
 
                 order += 1;

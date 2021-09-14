@@ -225,7 +225,7 @@
                                     :key="i"
                                     :index="i"
                                     :firstMatch="i === 0"
-                                    :lastMatch="i === updated.length - 1"
+                                    :lastMatch="i === updated.matches.length - 1"
                                     :youtubeUpload="youtubeUpload"
                                     :fileUpload="fileUpload"
                                     :fileDate="match.fileInfo ? match.fileInfo.date : null"

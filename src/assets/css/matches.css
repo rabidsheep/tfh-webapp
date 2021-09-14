@@ -3,51 +3,35 @@
 /* general */
 #matches {
     display: grid;
-    grid-gap: 30px;
+    grid-gap: 20px;
     grid-template-columns: 1fr;
     width: 100%;
 }
 
 #matches .match-group {
-    display: flex;
+    display: grid;
     width: 100%;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
 }
 
-#matches .match-group > .row {
+#matches .match-group > div {
     width: 95%;
+    justify-self: center;
 }
 
-
-#matches > .match:not(:last-child) {
-    border-bottom: 2px solid;
-}
-
-#matches .header .col {
-    display: flex;
-    padding: 0px;
-}
-
-#matches .header p {
-    margin: 0px;
-    margin-top: 1px;
-}
-
-#matches .header .btn {
-    align-items: center;
-    max-width: min-content;
-}
-
-#matches .header .data {
-    flex-wrap: wrap;
-    display: flex;
-}
 
 #matches > hr {
-    border-color: #a6a6a6
+    border-color: #a6a6a6;
+    margin-bottom: 10px;
 }
+
+
+.matches__loading {
+    justify-self: center;
+}
+
+
+/* matchheader.vue */
 
 #matches .header {
     padding-bottom: 10px;
@@ -55,17 +39,52 @@
     border-bottom-style: solid;
 }
 
+#matches .header {
+    display: grid;
+    grid-template:
+        'edit divider data download' auto / 0fr 0fr auto 0fr;
+    align-items: center;
+}
+
+#matches .header .data {
+    display: grid;
+    max-width: 100%;
+}
+
+#matches .header .edit { grid-area: edit; }
+#matches .header .v-divider { grid-area: divider; }
+#matches .header .data { grid-area: data; }
+#matches .header .download-all__button { grid-area: download; }
+
+#matches .header p {
+    margin: 0px;
+    margin-top: 1px;
+}
+
+#matches .header .data {
+    word-wrap: anywhere;
+}
+
+#matches .header .group {
+    font-size: 15px;
+}
+
+#matches .header .upload {
+    font-size: 12px;
+}
+
+#matches .header .download-all__button.off svg {
+    height: 36px;
+    width: 36px;
+}
+
 #matches .header, #matches .header .v-divider {
     border-color: hsla(0,0%,100%,.2)
 }
 
-.matches__loading {
-    justify-self: center;
-}
-
-/* mobile */
-.small #matches .match-group {
-    padding: 5px 0px;
+#matches .header .download-all__button {
+    padding-right: 10px;
+    fill: var(--v-buttonDisabled-base);
 }
 
 /** matchrow.vue **/
@@ -86,24 +105,9 @@
 .match .col {
     padding: 0px;
 }
+
 .match {
     padding: 15px 0px;
-}
-
-#matches .header .p-divider {
-    margin: 0px 4px !important;
-    margin-top: -0.09px !important;
-}
-
-#matches .header .download-all {
-    max-width: max-content;
-    height: min-content;
-    padding-right: 10px;
-}
-
-#matches .header .download-all svg {
-    height: 36px;
-    fill: var(--v-buttonDisabled-base)
 }
 
 #matches .header .data {
@@ -113,8 +117,7 @@
 #matches .group {
     flex-wrap: wrap;
 }
-
-.match-group > div:not(:last-of-type):not(.header) {
+.match-group > .match:not(:last-child) {
     border-bottom: 1px dashed gray;
 }
 
@@ -125,7 +128,6 @@
 .match .character-icon {
     cursor: pointer;
 }
-
 
 .match .players,
 .match .links {
@@ -181,33 +183,11 @@
     fill: var(--v-buttonDisabled-base)
 }
 
-.match .slash > path {
-    -webkit-filter: drop-shadow( 1px 1px 1px var(--v-background-base));
-    filter: drop-shadow(2px -1px 0px var(--v-background-base))
-}
-
-.match:hover .slash > path {
-    -webkit-filter: drop-shadow( 1px 1px 1px var(--v-matchRowHover-base));
-    filter: drop-shadow(2px -1px 0px var(--v-matchRowHover-base))
-}
-
-.match .disabled .v-icon {
-    color: #5e5e5e !important;
-}
-
 .match .players .player,
 .match .players .vs {
     align-items: center;
 }
 
-.match .comment .v-icon:focus::after {
-    background: transparent;
-}
-
-.match .comment.msg {
-    border-radius: 10px;
-    margin-top: 5px;
-}
 
 .match .p1 {
     flex-direction: row-reverse;
@@ -236,15 +216,6 @@
 }
 
 
-.match .p1 .character-icon {
-    margin-left: 15px;
-}
-
-.match .p2 .character-icon {
-    margin-right: 15px;
-}
-
-
 .wide .match .players .name {
     overflow: hidden;
     text-overflow: ellipsis;
@@ -266,18 +237,9 @@
     justify-content: space-between;
 }
 
-.small .match .character-icon {
-    margin-right: 15px;
-    margin-left: 0px;
-}
-
 .small .match .p2,
 .small .match .video {
     padding-top: 10px;
-}
-
-.small .match .player .character {
-    padding-right: 10px;
 }
 
 .small .match .link > *,
@@ -313,12 +275,4 @@
 
 .xsmall .match {
     flex-wrap: nowrap;
-}
-
-.match-group .header .date {
-    font-size: 15px;
-}
-
-.match-group .header .group-info {
-    font-size: 15px;
 }

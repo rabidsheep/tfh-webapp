@@ -2,27 +2,47 @@
 
 /* general */
 
+.match-divider {
+    display: grid;
+    grid-template: 'a b c' auto / auto 0fr auto ;
+}
+
+.match-divider hr {
+    align-self: center;
+}
+
+.match-divider .v-btn {
+    justify-self: center;
+}
+
+.player .v-text-field__details {
+    justify-content: flex-end;
+}
+
+.add-match {
+    width: max-content;
+    margin: 0px 10px;
+}
+
 #forms {
     width: 100%;
     padding: 0px;
 }
 
-#forms .url-input {
+/*#forms .url__input {
     display: flex;
     justify-content: center;
-    width: 100%;
+    align-items: center;
+    width: 90%;
     flex-wrap: nowrap;
-}
+}*/
 
-#forms .url-input > .v-btn {
-    margin-left: 20px;
-}
 
 #forms .group-info {
     margin: auto !important;
     flex-wrap: wrap;
     justify-content: center;
-    width: 90%;
+    width: 100%;
 }
 
 #forms .group-info .group.part {
@@ -62,6 +82,7 @@
     display: grid;
     row-gap: 20px;
     justify-items: center;
+    justify-content: center;
 }
 
 #step__upload #youtube {
@@ -109,28 +130,19 @@
 }
 
 .match-list {
+    padding: 15px 0px;
     display: grid;
     row-gap: 20px;
 }
 
+
 .form .buttons {
     display: grid;
-    grid-template: 'a b';
-    column-gap: 20px;
+    row-gap: 20px;
 }
 
 #forms .step {
     padding: 24px;
-}
-
-#forms #step__upload.step{
-    padding-bottom: 14px !important;
-}
-
-#forms .step .v-btn:not(.back):not(.remove) {
-    max-width: min-content;
-    flex-wrap: wrap;
-    height: 50px;
 }
 
 .step > * {
@@ -168,15 +180,8 @@
     padding: 0px 10px;
 }
 
-.wide #forms .url-input .v-input {
-    max-width: 50%;
-}
 
 /* mobile */
-
-.small #forms .url-input .v-input {
-    max-width: 70%;
-}
 
 .small #forms .group-info .group.part {
     padding-left: 0px !important;
@@ -202,29 +207,29 @@
 }
 
 /** youtubeuploads.vue **/
-#forms #youtube .data {
-    width: 95%;
-}
-
-#forms #youtube .data .date-title,
-#forms #youtube data  {
-    justify-content: space-between;
-}
-
-#forms #youtube .data .date-title {
+#forms #youtube .video {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
     width: 100%;
 }
 
-#forms #youtube .date-title > div {
-    max-width: 40%;
+#forms #youtube .video .data,
+#forms #youtube .group-info {
+    justify-content: space-between;
 }
 
-#forms #youtube .desc > .v-textarea .v-messages {
-    max-width: max-content;
+#forms #youtube .video .data,
+#forms #youtube .group-info,
+#forms #youtube .desc {
+    width: 85%;
 }
 
-#forms #youtube .desc > .v-textarea .v-text-field__details {
-    justify-content: end;
+.small #forms #youtube .video .data,
+.small #forms #youtube .group-info,
+.small #forms #youtube .desc {
+    width: 100%;
 }
 
 /* desktop */
@@ -264,35 +269,16 @@
     min-height: max-content;   
 }
 
-
 #forms #files .group-info .v-input__append-inner {
     position: absolute;
     right: 0px;
 }
 
-#forms #files .group-info .link input {
-    max-width: 90%;
-}
-
-
-#forms #files .group-info .title input {
-    max-width: 85%;
-}
-
-.xsmall .preview .matchinfo {
-    max-width: 100px;
-}
-
 
 /****/
-.preview .add .v-messages,
-.group-info .v-messages {
-    max-width: max-content;
-}
 
-.preview .add .v-text-field__details,
-.group-info .v-text-field__details {
-    justify-content: end;
+.v-messages__message {
+    text-align: right;
 }
 /****/
 
@@ -333,46 +319,46 @@
     display: flex;
     justify-items: center;
     align-items: center;
-    margin-bottom: 10px;
 }
 
-.preview .header .matchinfo {
-    font-size: 18px;
+
+.preview .header .match__num {
+    font-size: 16px;
     text-align: left;
+    margin-right: 15px;
 }
 
-.preview .timestamp {
-    padding-left: 0px;
+.preview .header .file__date {
+    font-size: 13px;
+    margin-left: 15px;
+}
+
+.xsmall .header .match__num {
+    font-size: 17px;
 }
 
 .preview .header .leader,
 .preview .header .remove {
     margin-right: 15px;
 }
- 
-.preview:last-child {
-    padding-bottom: 0px;
-}
 
 .preview .add {
-    margin-left: 15px;
+    display: grid;
+    width: 100%;
 }
 
-.preview .add {
-    flex-wrap: wrap;
+.wide .preview .add {
+    max-width: 230px;
+}
+
+.wide .preview .players,
+.small:not(.xsmall) .preview .players {
+    margin: 0px 20px;
 }
 
 .preview .col {
     padding: 0px;
     display: flex;
-}
-
-.preview .wrapper {
-    width: 100%;
-}
-
-.options .v-input--radio-group__input {
-    justify-content: center !important;
 }
 
 .preview .player {
@@ -393,14 +379,9 @@
     order: 3;
 }
 
-
 .preview .players {
  display: flex;
  flex-wrap: wrap;
-}
-
-.preview .youtubelink {
-    display: flex;
 }
 
 .preview .header > div {
@@ -409,28 +390,10 @@
     align-items: center;
 }
 
-.preview .youtube {
-    flex-wrap: wrap;
-}
-
-
-/* desktop */
-.wide .preview .data {
-    margin-top: 5px;
-    margin-bottom: 5px;
-}
-
-
-.wide .preview .players {
-    margin-bottom: 10px;
-}
-
 /* mobile */
 .small .preview .data {
     flex-wrap: wrap;
-    margin-bottom: 10px;
 }
-
 
 .small:not(.xsmall) .preview .add {
     max-width: 200px;
@@ -442,32 +405,18 @@
     margin-left: 0px !important;
 }
 
-.xsmall .preview .add {
-    margin-left: 0px;
-}
-
 .xsmall .preview .players {
     margin-bottom: 5px;
 }
 
 .xsmall .preview .p2,
-.xsmall .preview .add .file,
 .xsmall .preview .add .link,
 .xsmall .preview .add .timestamp {
     margin-top: 15px;
 }
 
-.xsmall .players {
-    margin-bottom: 0px !important;
-}
-
-
 .xsmall .preview .add {
-    margin: 5px 0px;
-}
-
-.preview .header button {
-    display: flex;
+    margin: 0px;
 }
 
 /** svg buttons **/
@@ -477,7 +426,8 @@
         0 4px 5px 0 rgba(0,0,0,.14),
         0 1px 10px 0 rgba(0,0,0,.12);
 }
-.preview button svg {
+.preview button svg,
+.preview button {
     height: 30px;
     width: 30px;
     border-radius: 100%;
@@ -487,7 +437,8 @@
     border-radius: 100%;
 }
 
-.xsmall .preview button svg {
+.xsmall .preview button svg,
+.xsmall .preview button {
     height: 38px;
     width: 38px;
 }
@@ -522,29 +473,28 @@ button.move:not(.disabled):hover .st0 {
 
 .preview .swap {
     max-width: min-content;
-    flex-wrap: wrap;
-    margin-right: 15px;
+    display: grid;
+    grid-template: 'up' 'down';
+    row-gap: 30px;
 }
 
-.xsmall .preview .swap {
-    align-content: center;
+.preview .swap .up {
+    align-self: end;
+}
+
+.preview .swap .down {
+    align-self: start;
 }
 
 .xsmall .preview .swap {
     margin-right: 25px;
-}
-
-.xsmall .preview .up {
-    margin-bottom: 25px;
-}
-
-.xsmall .preview .down {
-    margin-top: 25px;
+    row-gap: 70px;
 }
 
 .upload-url {
     width: 240px;
 }
+
 .v-form {
     align-items: center;
 }
@@ -566,3 +516,95 @@ button.move:not(.disabled):hover .st0 {
 #step__edit h1 { grid-area: title; }
 #step__edit .subtitle { grid-area: subtitle; }
 #step__edit form { grid-area: form; }
+
+.date__input .v-input__control {
+    position: relative;
+}
+
+.datepicker__menu {
+    top: 33px !important;
+    max-width: max-content !important;
+    left: -2px !important
+}
+
+.url__input .url {
+    margin-right: 20px;
+}
+
+.url__input .verify {
+    transition: 0.5s;
+}
+
+.url__input .url__button {
+    width: 84px;
+    height: 50px;
+}
+
+.url__input .v-progress-circular {
+    height: 50px !important;
+}
+
+.url__input .v-progress-circular > svg {
+    width: 32px !important;
+    height: 32px !important;
+}
+
+/*****/
+
+#forms div:not(#youtube) .group {
+    display: grid;
+    grid-template:
+        'title part date'
+        'url url url' auto / 300px 150px 150px;
+    column-gap: 20px;
+}
+
+.small #forms div:not(#youtube) .group {
+    grid-template:
+    'title title'
+    'part date'
+    'url url' auto / 1fr 1fr;
+}
+
+#forms .group .title__input { grid-area: title; }
+#forms .group .part__input { grid-area: part; }
+#forms .group .date__input { grid-area: date; }
+#forms div:not(#youtube) .group .url__input {
+    grid-area: url;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.wide #forms div:not(#youtube) .group .url {
+    max-width: 50%;
+}
+
+#youtube .url__input {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.wide #youtube .url {
+    max-width: 45%;
+}
+
+.small #youtube .url {
+    max-width: 60%;
+}
+
+.xsmall .add .v-input__icon--prepend {
+    width: 48px;
+    height: 32px;
+}
+.xsmall .add .v-input__icon--prepend i {   
+    font-size: 32px;
+}
+
+#step__edit .progress {
+    justify-self: center;
+}

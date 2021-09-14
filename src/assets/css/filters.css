@@ -113,6 +113,11 @@
     #filters .mid {
         grid-area: vs;
         align-self: center;
+        height: 40px;
+        width: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     #filters .p2 {
         grid-area: p2;
@@ -237,20 +242,20 @@
     padding-top: 7px;
 }
 
-#filters .p1 .icon {
-    margin-left: 10px;
-    margin-right: 0px;
-}
-
 .small #filters .p1 {
     flex-direction: row;
 }
 
-.small #filters .icon {
-    margin-left: 0px;
-    margin-right: 10px;
+#filters .videos {
+    display: grid;
+    column-gap: 10px;
+    grid-template: 'channel video'
 }
 
-.small #filters .p2 {
-    margin-left: 0px;
+.xsmall #filters .videos {
+    display: grid;
+    row-gap: 10px;
+    grid-template: 'channel' 'video'
 }
+#filters .videos .channel { grid-area: channel; }
+#filters .videos .video { grid-area: video; }

@@ -35,7 +35,7 @@
         <v-col
         v-show="!$vuetify.breakpoint.smAndDown"
         class="vs">
-        vs
+        vs.
         </v-col>
       </v-col>
 
@@ -76,7 +76,7 @@
           <v-tooltip
           v-model="show"
           top
-          :disabled="!fileInfo || !fileInfo.version || $version === fileInfo.version"
+          :disabled="!fileInfo || !fileInfo.version || $replayVersion === fileInfo.version"
           color="accent">
             <template v-slot:activator="{on, attrs}">
               <div

@@ -35,7 +35,7 @@
                 </v-stepper-header>
                 
                 <!-- sign in -->
-                <v-stepper-content step="1">
+                <div v-show="step === 1">
                    <div
                     id="step__sign-in"
                     class="step">
@@ -84,100 +84,169 @@
                             </template>
                         </div>
                     </div>
-                </v-stepper-content>
+                </div>
 
-                <v-stepper-content step="2">
+                <div v-show="step === 2">
                     <div
                     id="step__edit"
                     class="step">
                         <h1>Edit Match Details</h1>
                         
-                        <div class="subtitle">
+                        <div
+                        v-if="loadingMatches"
+                        class="progress">
                             <v-progress-circular
-                            class="progress"
-                            v-if="loadingMatches"
                             indeterminate />
-
-                            <v-row
-                            class="group-info"
-                            v-if="group">
-                                <v-col
-                                class="group name pa-0"
-                                :cols="$vuetify.breakpoint.smAndDown ? 12 : 4">
-                                    <v-text-field
-                                    ref="group" 
-                                    label="Group Name"
-                                    v-model="group.title"
-                                    readonly />
-                                </v-col>
-
-                                <v-col
-                                class="group part"
-                                :cols="$vuetify.breakpoint.smAndDown ? 3 : undefined">
-                                    <v-text-field
-                                    label="Part"
-                                    v-model="group.part"
-                                    readonly />
-                                </v-col>
-
-                                <v-col
-                                class="group date pa-0"
-                                :cols="$vuetify.breakpoint.smAndDown ? undefined : 4">
-                                    <v-text-field
-                                    ref="date"
-                                    label="Date"
-                                    v-model="group.date"
-                                    prepend-icon="mdi-calendar"
-                                    readonly />
-                                </v-col>
-
-                                <v-row class="url-input">
-                                    <v-text-field
-                                    v-if="$route.query.uploadForm === 'YouTube' || updated[0].type === 'Group'"
-                                    v-model="url"
-                                    label="YouTube URL"
-                                    prepend-icon="mdi-youtube"
-                                    :readonly="$route.query.uploadForm === 'YouTube'" />
-                                </v-row>
-                            </v-row>
+                            <br />
+                            Retrieving matches...
                         </div>
 
                         <v-form
                         v-model="valid"
                         ref="form"
-                        :id="`${$route.query.uploadForm}`"
+                        id="edit"
                         v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
+                            <v-btn
+                            v-if="isAdmin"
+                            color="accent"
+                            @click="deleteSet()">
+                                Delete Set
+                            </v-btn>
+                            
+                            <div
+                            v-if="updated.info.group"
+                            class="group">
+                                <v-text-field
+                                class="title__input clearable"
+                                ref="group" 
+                                label="Group Title"
+                                v-model="updated.info.group.title"
+                                hint="Required"
+                                placeholder="(ex: Rodeo Regional, Grand Stampede)"
+                                maxLength="32"
+                                clearable
+                                persistent-hint
+                                :rules="rules.group"
+                                required />
+
+                                <v-text-field
+                                class="part__input clearable"
+                                label="Part"
+                                v-model="updated.info.group.part"
+                                hint="Optional"
+                                placeholder="(ex: #3, Finals, etc.)"
+                                maxLength="16"
+                                persistent-hint
+                                clearable />
+
+                                <v-menu
+                                label="Date"
+                                content-class="datepicker__menu"
+                                attach=".date__input .v-input__control"
+                                transition="scale-transition"
+                                min-width="auto"
+                                v-model="datepicker"
+                                :close-on-content-click="false">
+                                    <template v-slot:activator="{ on, attrs }">
+                                        <v-text-field
+                                        class="date__input clearable"
+                                        ref="date"
+                                        label="Date"
+                                        v-model="updated.info.group.date"
+                                        v-bind="attrs"
+                                        v-on="on"
+                                        prepend-icon="mdi-calendar"
+                                        hint="Required"
+                                        persistent-hint
+                                        placeholder="MM-DD-YYYY"
+                                        clearable
+                                        :rules="rules.date"
+                                        required />
+                                    </template>
+
+                                    <v-date-picker
+                                    v-model="date"
+                                    no-title
+                                    scrollable
+                                    :max="currentDate"
+                                    @input="datepicker = false" />
+                                </v-menu>
+
+                                <div
+                                class="url__input">
+                                    <v-text-field
+                                    :class="fileUpload ? 'url clearable' : 'url'"
+                                    ref="url"
+                                    label="YouTube Link"
+                                    v-model="url"
+                                    prepend-icon="mdi-youtube"
+                                    :hint="youtubeUpload ? 'Required' : 'Optional'"
+                                    persistent-hint
+                                    :clearable="fileUpload"
+                                    :required="youtubeUpload"
+                                    :rules="youtubeUpload ? rules.url.req : rules.url.noReq"
+                                    @blur="youtubeUpload ? urlOnBlur(url) : undefined"
+                                    @click:clear="fileUpload ? clearVideoInfo() : undefined" />
+
+
+                                    
+                                    <div
+                                    class="url__button">
+                                        <v-progress-circular
+                                        v-if="loadingVideo"
+                                        indeterminate />
+
+                                        <v-btn
+                                        v-if="$refs.url && !loadingVideo"
+                                        class="verify"
+                                        :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
+                                        height="50px"
+                                        :width="!changeButton ? '84px' : '50px'"
+                                        :fab="changeButton"
+                                        rounded
+                                        :ripple="false"
+                                        :disabled="!$refs.url.valid || !url"
+                                        @click="validateYoutubeID()">
+                                            <template v-if="!changeButton">
+                                                Verify
+                                            </template>
+
+                                            <v-icon v-else>
+                                            {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
+                                            </v-icon>
+                                        </v-btn>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="match-list">
-                                <template v-for="(match, i, j) in updated">
+                                <template v-for="(match, i, j) in updated.matches">
                                     <Preview
                                     :key="i"
                                     :index="i"
                                     :firstMatch="i === 0"
                                     :lastMatch="i === updated.length - 1"
-                                    :uploadForm="$route.query.uploadForm"
+                                    :youtubeUpload="youtubeUpload"
+                                    :fileUpload="fileUpload"
                                     :fileDate="match.fileInfo ? match.fileInfo.date : null"
                                     :fileName="match.fileInfo ? match.fileInfo.name : null"
                                     :p1="match.p1"
                                     :p2="match.p2"
-                                    :youtubeUpload="$route.query.uploadForm === 'YouTube'"
-                                    :fileUpload="$route.query.uploadForm === 'Files'"
-                                    :timestampRequired="$route.query.uploadForm === 'YouTube' || original[0].type === 'Group'"
-                                    :group="match.group ? match.group : null"
-                                    :video="match.video ? match.video : null"
-                                    :fileInfo="match.fileInfo ? match.fileInfo : null"
-                                    :type="match.type"
-                                    :resetData="resetData"
+                                    :hasVideo="hasVideo"
+                                    :resetTimestamp="resetTimestamp"
+                                    :currentTimestamp="match.video ? match.video.timestamp : null"
                                     @add-file="readFile($event, i)"
+                                    @set-video-id="setVideoId($event, i)"
                                     @set-timestamp="setTimestamp($event, i)"
-                                    @set-url="setUrl($event, i)"
                                     @delete-timestamp="deleteTimestamp(i)"
                                     @delete-video="deleteVideo(i)"
                                     @remove-file="removeFile(i)"
                                     @remove="removeMatch(i)"
                                     @move-up="swapMatches(i, i-1)"
-                                    @move-down="swapMatches(i, i+1)" />
+                                    @move-down="swapMatches(i, i+1)"
+                                    @update-character="updateCharacter(i, $event.character, $event.index)" />
 
-                                    <hr :key="j" v-if="i < updated.length - 1" />
+                                    <hr :key="j" v-if="i < updated.matches.length - 1" />
                                 </template>
                             </div>
                             
@@ -185,11 +254,12 @@
 
                             <v-row
                             class="buttons"
-                            v-show="!loading && Object.keys(original).length > 0"
+                            v-show="!loading && Object.keys(original.matches).length > 0"
                             align="center"
                             justify="space-around">
                                 <v-col class="reset pr-5">
                                     <v-btn
+                                    height="50px"
                                     rounded
                                     color="button2"
                                     @click="resetMatches()">
@@ -199,6 +269,7 @@
 
                                 <v-col class="submit pl-5">
                                     <v-btn
+                                    height="50px"
                                     rounded
                                     :disabled="!valid || !changesFound"
                                     color="accent"
@@ -209,7 +280,7 @@
                             </v-row>
                         </v-form>
                     </div>
-                </v-stepper-content>
+                </div>
             </v-stepper-items>
         </v-stepper>
     </v-container>
@@ -218,6 +289,8 @@
 <script>
 import Preview from '.././components/Preview.vue'
 import StatusOverlay from '../components/StatusOverlay.vue'
+import uploadMixin from '../mixins/uploadMixin'
+import authMixin from '../mixins/authMixin'
 import 'firebase/storage'
 
 
@@ -227,114 +300,50 @@ export default {
         Preview,
         StatusOverlay
     },
-    props: {
-    },
+    mixins: [uploadMixin, authMixin],
     data: () => {
         return {
-            query: null,
-            uid: null,
-            hidden: true,
-            loading: false,
             step: 1,
-            original: [],
-            updated: [],
+            original: {},
+            originalStringified: {},
+            updated: {},
             deleted: [],
-            valid: false,
-            uploading: false,
-            finished: false,
+            fileUpload: false,
+            youtubeUpload: false,
             changesFound: false,
             resetData: false,
-            isAdmin: false,
-            isRegistered: true,
-            loggingIn: false,
             loadingMatches: false,
             failedMatchGet: false,
-            allowLogin: false,
             uploadId: null,
-            url: null,
-            group: null,
-            errors: [],
-            fileData: null,
-            formData: null,
-            warning: false,
-            error: false,
+            loadingVideo: false,
+            originalVideo: null,
+            resetTimestamp: false,
+            rules: {
+                group: [
+                    v => !!v || 'Required',
+                ],
+                date: [
+                    v => !!v || 'Required'
+                ],
+                url: {
+                    noReq: [
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ],
+                    req: [
+                        v => !!v || 'Required',
+                        v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
+                        v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    ]
+                }
+            }
         }
     },
     mounted: function () {
         if (this.$route.query.uploadId && this.$route.query.uploadForm) {
-            // auth state watcher
-            this.$firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
-                    this.uid = null
-                    this.step = 1
-                    
-                    this.allowLogin = true
-                    console.log('User not found')
-                    return
-                } else {
-                    this.loggingIn = true
-                    this.uid = user.uid
-
-                    let loginRef = null
-
-                    if (process.env.NODE_ENV == "production") {
-                        console.log("Production Environment")
-
-                        loginRef = this.setAuthToken()
-                        .then(() => {
-                            console.log('Checking user')
-                            return this.$users.get({ uid: user.uid })
-                        })
-
-                    } else {
-                        console.log("Dev Environment")
-
-                        loginRef = this.$users.get({ uid: user.uid })
-                    }
-
-                    loginRef.then((response) => {
-                        let userData = response.body[0]
-
-                        if (userData) {
-                            console.log("Retrieved user data")
-                            this.isAdmin = userData.admin
-                        } else {
-                            console.log("Creating new user")
-
-                            this.isRegistered = false
-
-                            let newUser = {
-                                uid: user.uid,
-                                email: user.email,
-                                admin: false
-                            }
-
-                            return this.$users.save(newUser)
-                            .then(() => {
-                                console.log('User created') 
-                            })
-                        }
-                    })
-                    .then(() => {
-                        this.loading = false
-                        this.loadingMatches = true
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 2
-                        
-                        this.getMatches(this.$route.query.uploadId)
-                    })
-                    .catch((error) => {
-
-                        this.loading = false
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 1
-                        this.allowLogin = true
-                        console.log(error)
-                    })
-                }
-            })
+            this.fileUpload = this.$route.query.uploadForm === 'Files'
+            this.youtubeUpload = this.$route.query.uploadForm === 'YouTube'
+            this.watchAuthState();
         }
     },
     watch: {
@@ -342,253 +351,246 @@ export default {
             deep: true,
             handler() {
                 /* only allow submission if user changed anything */
-                if (JSON.stringify(this.updated) !== JSON.stringify(this.original)) {
-                    this.changesFound = true
+                if (JSON.stringify(this.updated) !== this.originalStringified) {
+                    this.changesFound = true;
                 } else {
-                    this.changesFound = false
+                    this.changesFound = false;
                 }
             }
         },
         
+        'date': function(date) {
+            this.updated.info.group.date = this.formatDate(date);
+        },
+
+        'url': function(url) {
+            if (!url && this.$route.query.uploadForm !== 'YouTube') {
+                this.clearVideoInfo();
+            };
+        }
     },
     methods: {
-        signIn: function (providerName) {
-            this.loading = true
-            this.allowLogin = false
-
-            this.$firebase.auth()
-            .signInWithPopup(this.$providers[providerName])
-            .then(() => {
-                this.loading = false
-            })
-            .catch((error) => {
-                console.log(error)
-                this.allowLogin = true
-                this.loading = false
-            })
-        },
-        setAuthToken: function () {
-            return this.$firebase.auth().currentUser.getIdToken()
-                .then((token) => {
-                return this.$httpInterceptors.push((request) => {
-                    request.headers.set('Authorization', token)
-                })
-            })
-            .catch((error) => console.log(error))
-        },
         getMatches(uploadId) {
-            this.loadingMatches = true
+            this.loadingMatches = true;
 
-            this.$matches.get({uploadId: uploadId})
+            this.$edit.get({uploadId})
             .then((response) => {
-                if (response.ok) {
-                    this.group = response.body.groups[0]._id.group
-                    this.original = response.body.groups[0].matches
-                    this.updated = JSON.parse(JSON.stringify(response.body.groups[0].matches))
-                    this.url = (this.original[0].video ? 'https://youtu.be/' + this.original[0].video.id : null)
-                    this.loadingMatches = false
-                }
+                this.original = response.body;
+                this.originalStringified = JSON.stringify(this.original)
+                this.updated = JSON.parse(this.originalStringified);
+                this.originalVideo = this.original.info.video.id;
+                this.hasVideo = this.originalVideo ? true : false;
+                this.url = this.originalVideo ? 'https://youtu.be/' + this.originalVideo : null;
+                this.loadingMatches = false;
             })
             .catch((error) => {
-                 console.log(error)
-                 this.loadingMatches = false
-                 this.failedMatchGet = true
+                 console.log(error);
+                 this.loadingMatches = false;
+                 this.failedMatchGet = true;
             })
         },
-        resetMatches() {
-            this.updated = JSON.parse(JSON.stringify(this.original))
-            this.resetData = !this.resetData
-        },
-        updateCharacter(character, i) {
-            this.$set(this.updated.players[i], 'character', character)
-        },
-        updateMatches() {
-            this.uploading = true
-            let files = []
-            let order = 0
 
-            this.updated.map((match) => {
-                if (match.file) {
-                    files.push(match.file)
-                    delete match.file
-                }
+        validateYoutubeID() {
+            this.loadingVideo = true;
+            this.vid = this.url.match(this.$regex.ytId)[1];
+            this.video = {};
+            let youtubeRef;
 
-                match.order = order
-                order += 1
-            })
-
-            if (process.env.NODE_ENV === 'development' || files.length <= 0) {
-                let matches = this.updated.filter((match) => {
-                    let i = this.original.findIndex(original => original._id === match._id)
-
-                    if (JSON.stringify(match) !== JSON.stringify(this.original[i]))
-                        return true
-                    else
-                        return false
-                })
-                .map((match) => match)
-
-                this.$update.save({
-                    matches: matches,
-                    deleted: this.deleted,
-                    getYoutubeData: false
-                })
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Updated matches')
-                    }
-
-                    this.uploading = false
-                    this.finished = true
-                })
-                .catch((error) => {
-                    console.log(error)
-                    console.log('Failed to update')
-                    this.setErrors('upload')
-                    this.uploading = false
-                    this.error = true
-                })
+            if (this.$dev) {
+                youtubeRef = this.$youtubeData.get({ id: this.vid });
             } else {
-                Promise.all(files.map(file => this.uploadFilesAsPromise(file)))
-                .then(() => {
-                    let matches = this.updated.filter((match) => {
-                        let i = this.original.findIndex(original => original._id === match._id)
-
-                        if (JSON.stringify(match) !== JSON.stringify(this.original[i]))
-                            return true
-                        else
-                            return false
-                    })
-                    .map((match) => match)
-
-                    return this.$update.save({
-                        matches: matches,
-                        deleted: this.deleted,
-                        getYoutubeData: false
-                    })
-                })
-                .then((response) => {
-                    if (response.ok) {
-                        console.log('Updated matches')
-                    }
-
-                    this.uploading = false
-                    this.finished = true
-                })
-                .catch((error) => {
-                    console.log(error)
-                    console.log('Failed to update matches')
-                    this.setErrors('upload')
-                    this.uploading = false
-                    this.error = true
+                youtubeRef = this.setAuthToken().then(() => {
+                    console.log('Retrieving Youtube data')
+                    return this.$youtubeData.get({ id: this.vid })
                 })
             }
 
-        },
-        uploadFilesAsPromise(file) {
-            let storageRef = this.$firebase.storage()
-            .ref(`replays/${file.name}`)
-            .put(file)
+            youtubeRef.then((response) => {
+                this.hasVideo = true;
+                this.changeButton = true;
+                this.changeVerifyBtn();
 
-            return storageRef
-            .then((snapshot) => snapshot.ref.getDownloadURL())
-            .then((url) => {
-                let i = this.updated.findIndex((match) => match.fileInfo.name === file.name)
-                this.updated[i].fileInfo.url = url
+                this.loadingVideo = false;
+                this.invalidVideo = false;
+                this.updated.info.video = {
+                    id: response.body.video.id,
+                    title: response.body.video.title
+                }
+                this.updated.info.channel = response.body.channel
+                this.validateForm();
             })
             .catch((error) => {
-                console.log(error)
-                let i = this.updated.findIndex((match) => match.fileInfo.name === file.name)
-                console.log("Removing file info from match #" + (i+1))
-                delete this.updated[i].fileInfo
+                console.log(error);
+                this.hasVideo = false;
+                this.changeVerifyBtn();
+
+                this.loadingVideo = false;
+                this.invalidVideo = true;
+                
+                this.validateForm();
             })
         },
-        setUrl(url, i) {
-            if (!this.updated[i].video) {
-                this.$set(this.updated[i], 'video', {})
+
+        resetMatches() {
+            this.updated = JSON.parse(this.originalStringified);
+            this.resetTimestamp = !this.resetTimestamp
+
+            if (this.originalVideo) {
+                this.url = 'https://youtu.be/' + this.originalVideo;
+                this.hasVideo = true;
+            } else {
+                this.url = null;
+                this.hasVideo = false;
             }
 
-            if (this.updated[i].video.url !== url || !this.updated[i].video.url) {
-                this.$set(this.updated[i].video, 'id', url.match(this.$regex.ytId)[1])
-            }
         },
+
+        updateMatches() {
+            this.uploading = true;
+            let deleted = this.deleted;
+            let files = [];
+            let uploadRef;
+
+            this.updated.matches.map((match) => {
+                if (match.file) {
+                    files.push(match.file);
+                    delete match.file;
+                }
+            })
+
+            if (this.$dev || files.length <= 0) {
+                uploadRef = Promise.all(this.formatMatchesForUpload());
+            } else {
+                uploadRef = Promise.all(this.uploadFilesAsPromise(files))
+                .then(() => Promise.all(this.formatMatchesForUpload()));
+            }
+
+            uploadRef.then((matches) => this.$edit.save({ matches, deleted }))
+            .then((response) => {
+                console.log('Updated matches');
+                this.uploading = false;
+                this.finished = true;
+            })
+            .catch((error) => {
+                console.log(error);
+                console.log('Failed to update');
+                this.setErrors('upload');
+                this.uploading = false;
+                this.error = true;
+            })
+        },
+
+        uploadFilesAsPromise(files) {
+            return files.map((file) => {
+                let i = this.updated.matchesfindIndex((match) => match.fileInfo.name === file.name);
+                let j = this.original.matches.findIndex((match) => match._id === this.updated.matches[i]._id);
+
+                return this.$firebase.storage()
+                .ref(`replays/${file.name}`)
+                .put(file)
+                .then((snapshot) => snapshot.ref.getDownloadURL())
+                .then((url) => this.updated.matches[i].fileInfo.url = url)
+                .catch((error) => {
+                    console.log(error);
+                    if (this.original.matches[j].fileInfo) {
+                        console.log("Reverting file info from match #" + (i+1));
+                        this.updated.matches[i].fileInfo = this.original.matches[j].fileInfo;
+                    } else {
+                        console.log("Removing file info from match #" + (i+1));
+                        delete this.updated.matches[i].fileInfo;
+                    }
+                })
+            })
+        },
+
+        formatMatchesForUpload() {
+            let order = 0;
+
+            return this.updated.matches.filter((match) => {
+                let i = this.original.matches.findIndex(original => original._id === match._id);
+                match.group = this.updated.info.group;
+                match.video = {
+                    ...this.updated.info.video,
+                    timestamp: match.video.timestamp,
+                }
+                match.channel = this.updated.info.channel;
+                match.order = order;
+
+                order += 1;
+
+                if (JSON.stringify(match) !== JSON.stringify(this.original.matches[i]))
+                    return true;
+                else
+                    return false;
+            })
+            .map((match) => match)
+        },
+
         setTimestamp(timestamp, i) {
-            if (this.updated[i].video && !this.updated[i].video.timestamp || this.updated[i].video.timestamp !== timestamp) {
-                this.$set(this.updated[i].video, 'timestamp', timestamp)
-            }
+            console.log('setting timestamp')
+            this.$set(this.updated.matches[i], 'video', {timestamp});
         },
-        deleteVideo(i) {
-            if (this.updated[i].video) {
-                console.log('deleting video')
-                this.$delete(this.updated[i], 'video')
-            }
-        },
+
+
         deleteTimestamp(i) {
-            if (this.updated[i].video && this.updated[i].video.timestamp) {
-                console.log('deleting timestamp')
-                this.$delete(this.updated[i].video, 'timestamp')
-            }
+            console.log('deleting timestamp');
+            this.$delete(this.updated.matches[i], 'video');
         },
-        /** generates reader for each file */
+
+        
+        /** generates reader for file */
         readFile(file, i) {
             (function (that, file, i) {
                 new Promise(function(resolve, reject) {
                     // check file extension and duplicate issues first
                     if (file.name.substring(file.name.length - 5, file.name.length) !== '.tfhr') {
-                        that.setErrors('extension', file.name)
-                        reject("File" + file.name + " does not end in a valid TFHR file extension.")
-                    } else if (that.updated.find(m => m.file?.name === file.name)) {
-                        that.setErrors('duplicate', file.name)
-                        reject("File " + file.name + " already exists.")
+                        that.setErrors('extension', file.name);
+                        reject("File" + file.name + " does not end in a valid TFHR file extension.");
+                    } else if (that.updated.matches.find(m => m.fileInfo?.name === file.name)) {
+                        that.setErrors('duplicate', file.name);
+                        reject("File " + file.name + " already exists.");
                     } else {
                         // read hex code of file to retrieve timestamp
-                        var hexReader = new FileReader()
+                        var hexReader = new FileReader();
                         
                         hexReader.onload = function(e) {
-                            
-                            let hex = that.buf2hex(e.target.result)
-                            let hexTime = hex?.match(/.{1,2}/g)?.reverse().join('')
-                            let timestamp = new Date(parseInt(hexTime, 16) * 1000)?.toISOString()?.split('T')
+                            let hex = that.buf2hex(e.target.result);
+                            let hexTime = hex?.match(/.{1,2}/g)?.reverse().join('');
+                            let timestamp = new Date(parseInt(hexTime, 16) * 1000)?.toISOString()?.split('T');
 
                             if (!timestamp) {
-                                that.setErrors('parse', file.name)
-                                reject("Could not retrieve file timestamp from " + file.name)
+                                that.setErrors('parse', file.name);
+                                reject("Could not retrieve file timestamp from " + file.name);
                             } else {
-                                resolve(timestamp[0])
-                            }
-                        }
+                                resolve(timestamp[0]);
+                            };
+                        };
 
-                        hexReader.readAsArrayBuffer(file)
+                        hexReader.readAsArrayBuffer(file);
                     }
                 }).then((timestamp) => {
                     // read file as text for rest of data
-                    var textReader = new FileReader()
+                    var textReader = new FileReader();
 
                     textReader.onload = function(e) {
-                        that.parseFileData(e.target.result, file, timestamp, i)
-                    }
+                        that.parseFileData(e.target.result, file, timestamp, i);
+                    };
 
-                    textReader.readAsText(file)
+                    textReader.readAsText(file);
                 })
                 .then(() => {
-                    if (that.errors.length > 0) that.error = true
+                    if (that.errors.length > 0)
+                        that.error = true;
                 })
                 .catch((error) => {
-                    console.log(error)
+                    console.log(error);
 
-                    if (that.errors.length > 0) that.error = true
+                    if (that.errors.length > 0)
+                        that.error = true;
                 })
             })(this, file, i)
         },
-        /** converts array buffer to string */
-        buf2hex(buffer) {
-            let buf = [...new Uint8Array(buffer)]
 
-            if (buf.length < 154) return null
-
-            let timestamp = buf.slice(150, 154)
-            return timestamp.map(x => x.toString(16).padStart(2, '0')).join('')
-        },
         /**
          * parses file data
          * p1 hex @ offset 8-72
@@ -599,25 +601,24 @@ export default {
          */
         parseFileData(fileText, file, timestamp, i) {
             // error if file uses non-.tfhr extension
-            let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2)
-            let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g)
+            let playerNames = fileText.substring(8, 137)?.replace(/\0{1,65}/g, '\n').split('\n', 2);
+            let characterNames = fileText.substring(197,213)?.match(/\b(Paca|Velvet|Tianhuo|Shanty|Pom|Uni|Cow)/g);
 
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
-                this.setErrors('parse', file.name)
-                this.error = true
+                this.setErrors('parse', file.name);
+                this.error = true;
             } else {
-
                 let players = {
                     p1: {
                         name: playerNames[0],
-                        character: (this.$characters.find(c => c.devName == characterNames[0])).name
+                        character: (this.$characters.find(c => c.alias[0] == characterNames[0])).name
                     },
                     p2: {
                         name: playerNames[1],
-                        character: (this.$characters.find(c => c.devName == characterNames[1])).name
+                        character: (this.$characters.find(c => c.alias[0] == characterNames[1])).name
                     }
-                }
+                };
 
                 this.tempData = {
                     index: i,
@@ -628,83 +629,81 @@ export default {
                         version: fileText.charCodeAt(146),
                         date: this.formatDate(timestamp),
                     }
-                }
+                };
 
-                let p1Regex = new RegExp(['^' + players.p1.name], 'i')
-                let p2Regex = new RegExp(['^' + players.p2.name], 'i')
-                let p1 = this.updated[i].p1
-                let p2 = this.updated[i].p2
+                let p1Regex = new RegExp(['^' + players.p1.name], 'i');
+                let p2Regex = new RegExp(['^' + players.p2.name], 'i');
+                let p1 = this.updated.matches[i].p1;
+                let p2 = this.updated.matches[i].p2;
 
                 if (!p1.name.match(p1Regex) || !p2.name.match(p2Regex) ||
                     p1.character !== players.p1.character || p2.character !== players.p2.character) {
-                    this.fileData = players
-                    this.formData = {p1: this.updated[i].p1, p2: this.updated[i].p2}
-                    this.warning = true
+                    this.fileData = players;
+                    this.formData = {p1: this.updated.matches[i].p1, p2: this.updated.matches[i].p2};
+                    this.warning = true;
                 } else {
-                    this.addFile(this.tempData)
+                    this.addFile(this.tempData);
                 }
             }
         },
+
         addFile(data) {
-
-            this.$set(this.updated[data.index], 'file', data.file)
-            this.$set(this.updated[data.index], 'fileInfo', data.fileInfo)
+            this.$set(this.updated.matches[data.index], 'file', data.file);
+            this.$set(this.updated.matches[data.index], 'fileInfo', data.fileInfo);
             
-            if (this.warning = true) {
-                this.closeWarning()
-            }
+            if (this.warning = true)
+                this.closeWarning();
 
-            console.log("File added to match #" + (data.index + 1))
+            console.log("File added to match #" + (data.index + 1));
         },
+        
         removeFile(i) {
-            console.log("Deleting file from match #" + (i + 1))
+            console.log("Deleting file from match #" + (i + 1));
             
             // file name string in input field won't update otherwise ?????
-            this.updated[i].fileInfo.name = null
-            delete this.updated[i].file
-            delete this.updated[i].fileInfo
+            this.updated.matches[i].fileInfo.name = null;
+            delete this.updated.matches[i].file;
+            delete this.updated.matches[i].fileInfo;
         },
-        reload() {
-            this.$router.go(this.$router.currentRoute)
-        },
-        closeWarning() {
-            this.formData = null
-            this.fileData = null
-            this.tempData = null
-            this.warning = false
-        },
-         /**
-         * clears errors array
-         */
-        clearErrors() {
-           this.error = false
-           this.errors = []
-        },
-        /** sets errors array for display once files finish being read */
-        setErrors(type, file) {
-            let index = this.errors.findIndex(e => e.type == type)
 
-            if (index === -1) {
-                if (!file) {
-                    this.errors.push({type: type})
-                } else {
-                    this.errors.push({type: type, files: [file]})
-                }
-            } else if (file) {
-                this.errors[index].files.push(file)
+        reload() {
+            this.$router.go(this.$router.currentRoute);
+        },
+
+        closeWarning() {
+            this.formData = null;
+            this.fileData = null;
+            this.tempData = null;
+            this.warning = false;
+        },
+
+        removeMatch(i) {
+            console.log("Deleting match #", (i+1));
+            
+            this.deleted.push(this.updated.matches[i]._id);
+            this.updated.matches.splice(i, 1);
+        },
+
+        swapMatches(i, j) {
+            let tempMatch = this.updated.matches[i];
+            this.$set(this.updated.matches, i, this.updated.matches[j]);
+            this.$set(this.updated.matches, j, tempMatch);
+        },
+
+        clearVideoInfo() {
+            if (this.original.info.video?.id) {
+                delete this.updated.info.video;
+                delete this.updated.info.channel;
+                this.hasVideo = false;
+                this.invalidVideo = true;
             }
         },
-        removeMatch(i) {
-            console.log("Deleting match #", (i+1))
-            
-            this.deleted.push(this.updated[i]._id)
-            this.updated.splice(i, 1)
-        },
-        swapMatches(i, j) {
-            let tempMatch = this.updated[i]
-            this.$set(this.updated, i, this.updated[j])
-            this.$set(this.updated, j, tempMatch)
-        },
+
+        urlOnBlur(url) {
+            if (!url && this.youtubeUpload) {
+                this.url = 'https://youtu.be/' + this.originalVideo;
+            }
+        }
     }
 }
 </script>

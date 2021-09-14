@@ -1,6 +1,30 @@
 /** main html stuff **/
-#app {
-    overflow-x: auto;
+html {
+    overflow-x: auto !important;
+}
+
+body {
+    background-color: var(--v-background-base)
+}
+
+.scroll-up {
+    font-size: 24px !important;
+}
+
+.character-icon {
+    transition: 1s;
+    transition-property: filter;
+}
+
+p {
+    margin-bottom: 0px !important;
+}
+
+.character-icon.invalid {
+    filter: 
+        drop-shadow(0px 1px 3px var(--v-error-darken1)) 
+        drop-shadow(0px -1px 3px var(--v-error-darken1))
+        drop-shadow(0px 0px 2px var(--v-error-darken1))
 }
 
 #app .v-application--wrap {
@@ -43,7 +67,7 @@
 }
 
 #router-view {
-    width: 90%;
+    width: 80%;
     max-width: 960px;
     height: 100%;
 }
@@ -65,7 +89,6 @@ a {
     order: 3;
 }
 
-/*#router-view .v-btn:not(.v-btn--plain),*/
 #filters .advanced__inner,
 #filters .header,
 #filters .main {
@@ -124,17 +147,18 @@ a {
     justify-self: center;
 }
 
-picture.icon {
+picture.character-icon {
     height: 56px;
 }
 
-picture.icon source, picture.icon img {
+picture.character-icon source, picture.character-icon img {
     height: 56px;
 }
 
-/* display width */
-#router-view.small {
-    width: 80%;
+
+.v-stepper__items, .v-stepper {
+    overflow: visible !important;
+
 }
 
 .wide .p1 > .v-input > .v-input__control > .v-text-field__details {
@@ -152,8 +176,8 @@ picture.icon source, picture.icon img {
 }
 
 /* character select menu icons */
-.character-menu .icon {
-    margin-right: 10px;
+.character-menu .character-icon {
+    margin-right: 15px;
 }
 
 .character-menu .v-list-item {
@@ -163,21 +187,21 @@ picture.icon source, picture.icon img {
 }
 
 /* player icons */
-.player .icon {
+.player .character-icon {
     width: max-content !important;
 }
 
-.p1 .icon {
-    margin-left: 10px;
+.p1 .character-icon {
+    margin-left: 15px;
 }
 
-.p2 .icon {
-    margin-right: 10px;
+.p2 .character-icon {
+    margin-right: 15px;
 }
 
-.small .p1 .icon {
+.small .p1 .character-icon {
     margin-left: 0px;
-    margin-right: 10px;
+    margin-right: 15px;
 }
 
 /** forms **/
@@ -226,6 +250,14 @@ picture.icon source, picture.icon img {
 #edit #step__edit .progress {
     display: block;
     margin: auto;
+}
+
+.status {
+    width: 100%;
+}
+
+.status .heading {
+    text-align: center;
 }
 
 .status .character-icon,
@@ -325,7 +357,16 @@ picture.icon source, picture.icon img {
     -webkit-box-orient: vertical;
 }
 
+.status .status__error {
+    word-wrap: anywhere;
+}
 
-.status .character-icon {
+
+.status .p1 .character-icon {
+    margin-left: 0px;
     margin-right: 15px;
+}
+
+#app .v-input.clearable.v-input--is-label-active .v-text-field__slot {
+    max-width: calc(100% - 30px) !important;
 }

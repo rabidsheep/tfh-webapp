@@ -27,7 +27,7 @@
         <v-toolbar-items>
           <v-col
           class="version">
-            v0.1.1
+            v0.1.4
           </v-col>
         </v-toolbar-items>
     </v-toolbar>
@@ -36,7 +36,7 @@
       <v-layout column align-center justify-center>
         <div id="router-view"
         :class="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 'small xsmall' : 'small') : 'wide'">
-          <router-view :key="mainKey" />
+          <router-view :key="$route.fullPath" />
         </div>
       </v-layout>
 
@@ -87,6 +87,8 @@ export default {
     forceRerenderMain(e) {
       if (this.$route.path === '/' && !e.ctrlKey) {
         this.mainKey = !this.mainKey
+      } else if (this.$route.path !== '/') {
+        this.$route.push('/')
       }
     },
   }
@@ -118,7 +120,7 @@ export default {
 }
 
 ::v-deep .theme--dark.v-icon.v-icon.v-icon--disabled {
-  color: #5e5e5e !important;
+  color: var(--v-buttonDisabled-base) !important;
 }
 
 ::v-deep .preview .v-input--dense > .v-input__control > .v-input__slot {
@@ -130,12 +132,7 @@ export default {
   padding: 24px 0px;
 }
 
-::v-deep .mdi {
-  display: flex !important;
-  
-}
-
-::v-deep .v-text-field__slot > input {
+::v-deep .v-input input {
     text-overflow: ellipsis;
     overflow: hidden;
     display: -webkit-box;
@@ -143,10 +140,10 @@ export default {
     -webkit-box-orient: vertical;  
 }
 
-::v-deep .small .v-form .match-list .v-text-field__slot {
+/*::v-deep .small .v-form .match-list div:not([class*="add"]) .v-text-field__slot {
     white-space: nowrap;
     overflow: hidden;
-}
+}*/
 
 ::v-deep .small .v-form .match-list .v-text-field__slot {
   max-width: calc(100% - 30px);

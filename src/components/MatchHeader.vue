@@ -1,9 +1,9 @@
 <template>
-    <v-row class="header">
-      <v-col
-      class="btn">
+    <div class="header">
+      <div
+      class="edit">
         <router-link
-        class="edit"
+        class="edit__button"
         title="Edit Data"
         :to="{
           path: 'edit',
@@ -16,56 +16,38 @@
             mdi-square-edit-outline
           </v-icon>
         </router-link>
-      </v-col>
+      </div>
 
       <v-divider class="mr-3 ml-2" vertical/>
 
-      <v-col
+      <div
       class="data">
-        <v-col
-        class="group">
-          <v-col
-          class="date"
-          cols="12">
-              <p>{{ date }} @ {{ time }} {{ timezone }}</p>
-          </v-col>
+          <p class="group">
+            {{ group.part ?
+            group.title + ' | ' + group.part + ' | ' + group.date :
+            group.title + ' | ' + group.date }}
+          </p>
 
-        <v-col
-        class="group-info"
-        cols="12">
-          <template v-if="group">
-            <p>
-              {{ group.part ?
-                group.title + ' | ' + group.part + ' | ' + group.date :
-                group.title + ' | ' + group.date }}
-            </p>
-          </template>
+          <p class="upload">
+            <i>Uploaded {{ date }} @ {{ time }} {{ timezone }}</i>
+          </p>
+        </div>
 
-          <template v-else>
-            <p>{{ 'Individual | ' + originalDate }}</p>
-          </template>
-        </v-col>
-        
-        </v-col>
+        <v-icon
+        v-if="downloadAvailable"
+        class="download-all__button"
+        size="36px"
+        color="accent"
+        title="Download All Files"
+        :disabled="!downloadAvailable"
+        @click="$emit('generate-zip-file')">
+            mdi-folder-download
+        </v-icon>
 
-        <v-col
-        class="download-all">
-          <v-icon
-          size="36px"
-          color="accent"
-          title="Download All Files"
-          :disabled="!downloadAvailable"
-          @click="$emit('generate-zip-file')"
-          v-if="downloadAvailable">
-              mdi-folder-download
-          </v-icon>
-
-          <div class="v-icon" v-else>
-            <FolderDownloadOff />
-          </div>
-        </v-col>
-      </v-col>
-    </v-row>
+        <div v-else class="download-all__button off" >
+          <FolderDownloadOff />
+        </div>
+    </div>
 </template>
 
 <script>

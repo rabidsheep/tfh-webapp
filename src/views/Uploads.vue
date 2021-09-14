@@ -26,12 +26,11 @@
                 </v-stepper-header>
                 
                 <!-- sign in -->
-                <v-stepper-content step="1">
+                <div v-show="step === 1">
                     <div
                     id="step__sign-in"
                     class="step">
                         <h1>Sign In</h1>
-
                         
                         <br />
 
@@ -43,7 +42,7 @@
                         align-center>
                             <v-btn
                             color="button2"
-                            height="50"
+                            height="50px"
                             rounded
                             :disabled="!allowLogin"
                             @click="signIn('google')">
@@ -78,9 +77,9 @@
                         
                         
                     </div>
-                </v-stepper-content>
+                </div>
 
-                <v-stepper-content step="2">
+                <div v-show="step === 2">
                     <div
                     id="step__select"
                     class="step">
@@ -89,6 +88,7 @@
                         <br />
 
                         <v-btn
+                        height="50px"
                         color="button2"
                         rounded
                         @click="setUploadType('files')">
@@ -99,6 +99,7 @@
                         <br />
                         
                         <v-btn
+                        height="50px"
                         color="button2"
                         rounded
                         @click="setUploadType('youtube')">
@@ -106,10 +107,10 @@
                             YouTube Link
                         </v-btn>
                     </div>
-                </v-stepper-content>
+                </div>
 
                 <!-- upload form -->
-                <v-stepper-content step="3">
+                <div v-show="step === 3">
                     <div
                     id="step__upload"
                     class="step">
@@ -130,13 +131,17 @@
                         
                         <FileUploads
                         v-if="uploadType == 'files'"
-                        :uid="uid" />
+                        :key="fileKey"
+                        :userId="uid"
+                        @reload-form="fileKey = !fileKey" />
 
                         <YoutubeUploads
                         v-else-if="uploadType === 'youtube'"
-                        :uid="uid"/>
+                        :key="youtubeKey"
+                        :userId="uid"
+                        @reload-form="youtubeKey = !youtubeKey" />
                     </div>
-                </v-stepper-content>
+                </div>
             </v-stepper-items>
         </v-stepper>
     </v-container>
@@ -145,6 +150,7 @@
 <script>
 import FileUploads from '../components/FileUploads.vue'
 import YoutubeUploads from '../components/YoutubeUploads.vue'
+import authMixin from '../mixins/authMixin'
 import 'firebase/auth'
 
 export default {
@@ -152,13 +158,11 @@ export default {
         FileUploads,
         YoutubeUploads,
     },
+    mixins: [authMixin],
     name: 'Uploads',
-    props: {
-    },
     data: () => {
         return {
             uid: null,
-            hidden: true,
             step: 1,
             uploadType: null,
             loading: false,
@@ -169,114 +173,22 @@ export default {
             loggingIn: false,
             allowLogin: false,
             loggedIn: false,
+            youtubeKey: false,
+            fileKey: false,
         }
     },
     watch: {
     },
     mounted() {
-            this.$firebase.auth().onAuthStateChanged((user) => {
-                if (!user) {
-                    this.uid = null
-                    this.step = 1
-                    
-                    this.allowLogin = true
-                    console.log('User not found')
-                    return null
-                } else {
-                    this.loggingIn = true
-                    this.uid = user.uid
-
-                    let loginRef = null
-
-                    if (process.env.NODE_ENV == "production") {
-                        console.log("Production Environment")
-
-                        loginRef = this.setAuthToken()
-                        .then(() => {
-                            console.log('Checking user')
-                            return this.$users.get({ uid: user.uid })
-                        })
-
-                    } else {
-                        console.log("Dev Environment")
-
-                        loginRef = this.$users.get({ uid: user.uid })
-                    }
-
-                    loginRef.then((response) => {
-                        let userData = response.body[0]
-
-                        if (userData) {
-                            console.log("Retrieved user data")
-                            this.isAdmin = userData.admin
-                            return null
-                        } else {
-                            console.log("Creating new user")
-
-                            this.isRegistered = false
-
-                            let newUser = {
-                                uid: user.uid,
-                                email: user.email,
-                                admin: false
-                            }
-
-                            return this.$users.save(newUser)
-                            .then(() => {
-                                console.log('User created') 
-                            })
-                        }
-                    })
-                    .then(() => {
-                        this.loading = false
-                        this.loadingMatches = true
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 2
-                    })
-                    .catch((error) => {
-
-                        this.loading = false
-                        this.isRegistered = true
-                        this.loggingIn = false
-                        this.step = 1
-                        this.allowLogin = true
-                        console.log(error)
-                    })
-                }
-            })
+        this.watchAuthState();
     },
     methods: {
-        signIn: function (providerName) {
-            this.loading = true
-            this.allowLogin = false
-
-            this.$firebase.auth()
-            .signInWithPopup(this.$providers[providerName])
-            .then(() => {
-                this.loading = false
-            })
-            .catch((error) => {
-                console.log(error)
-                this.allowLogin = true
-                this.loading = false
-            })
-        },
-        setAuthToken: function () {
-            return this.$firebase.auth().currentUser.getIdToken()
-                .then((token) => {
-                    console.log('Setting auth token')
-                    return this.$httpInterceptors.push((request) => {
-                        request.headers.set('Authorization', token)
-                    })
-                })
-                .catch((error) => console.log(error))
-        },
         /** determines what upload form to use */
         setUploadType(type) {
             this.uploadType = type
             this.step = 3
         },
+
         /** return to upload type selection step */
         goBack() {
             this.step = 2
@@ -292,4 +204,6 @@ export default {
   .v-stepper >>> .v-stepper__wrapper {
       overflow: visible !important;
   }
+
+  
 </style>

@@ -4,45 +4,26 @@
         <v-col
         cols="12"
         class="header">
-            <div
-            class="leader mr-3">
-                <button
-                aria-label="Remove Match"
-                :ripple="false"
-                class="remove"
-                @click.prevent="$emit('remove')">
-                    <RemoveButton />
-                </button>
-                
-                <div class="matchinfo">
-                    <b>{{ 'Match #' + (index+1) }}</b>
-                    
-                    <template v-if="fileDate && fileUpload">
-                        <br />
-                        File Date: {{ fileDate }}
-                    </template>
-                </div>
-            </div>
+            <button
+            aria-label="Remove Match"
+            :ripple="false"
+            class="remove"
+            @click.prevent="$emit('remove')">
+                <RemoveButton />
+            </button>
             
-            <v-divider :vertical="$vuetify.breakpoint.smAndDown && fileUpload" />
-
-            <v-col
-            v-if="fileUpload"
-            class="name ml-3">
-                <v-text-field
-                readonly
-                class="filename"
-                v-model="fileName"
-                prepend-icon="mdi-file"
-                dense
-                label="File"
-                outlined
-                hide-details />
-            </v-col>
-
+            <b class="match__num">{{ 'Match #' + (index+1) }}</b>                 
             
+            <v-divider />
+
+            <p class="file__date" v-if="fileDate && fileUpload">
+                File Date: {{ fileDate }}
+            </p>
         </v-col>
 
+        <v-col
+        class="main"
+        cols="12">
         <v-col
         class="swap">
             <button
@@ -66,7 +47,7 @@
         class="data">
             <v-col
             class="players"
-            :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : 8">
+            :cols="$vuetify.breakpoint.smAndDown ? ($vuetify.breakpoint.xsOnly ? 12 : undefined) : undefined">
                 <v-col
                 v-for="(player, i) in [p1, p2]"
                 :cols="$vuetify.breakpoint.smAndDown ? 12 : undefined"
@@ -74,18 +55,19 @@
                 :key="i"
                 :reverse="i === 0 && !$vuetify.breakpoint.smAndDown">
                     <CharacterSelect
+                    :invalid="!player.character ? true : false"
                     :currentCharacter ="player.character ? player.character : `Any`"
                     :index="i"
                     :selectionEnabled="true"
                     :anyEnabled="false"
-                    @character-select="$emit('update-character', { character: $event, index: i})"/>
+                    @character-select="$emit('update-character', { character: $event, index: i+1 })"/>
                                     
                     <v-text-field
                     :label="`Player ${i + 1}`"
                     v-model="player.name"
                     maxLength="64"
                     counter="64"
-                    single-line
+                    clearable
                     required
                     :rules="rules.name"
                     :reverse="i === 0 && !$vuetify.breakpoint.smAndDown" />
@@ -111,84 +93,45 @@
                 </v-col>
             </v-col>
 
-            <v-col
-            class="add"
-            :cols="$vuetify.breakpoint.smOnly ? 3 : undefined">
-                <v-col
-                v-if="fileUpload"
-                cols="12"
-                class="link">
-                    <v-text-field
-                    readonly
-                    ref="url"
-                    label="YouTube Link"
-                    placeholder="YouTube Link"
-                    v-model="url"
-                    prepend-icon="mdi-youtube"
-                    hint="Optional"
-                    persistent-hint
-                    single-line
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    :rules="rules.url.noReq" />
-                </v-col>
+            <div
+            class="add">
+                <v-text-field
+                :class="youtubeUpload ? 'file clearable' : 'file'"
+                label="File"
+                :title="fileNameStr ? fileNameStr : 'No File'"
+                readonly
+                v-model="fileNameStr"
+                prepend-icon="mdi-paperclip"
+                hint="Optional"
+                persistent-hint
+                :clearable="youtubeUpload"
+                :disabled="fileUpload"
+                @click="youtubeUpload ? selectFiles() : undefined"
+                @click:clear="youtubeUpload ? $emit('remove-file') : undefined" />
 
-                
-                <v-col
-                cols="12"
-                class="timestamp">
-                    <v-text-field
-                    ref="timestamp"
-                    label="Timestamp"
-                    v-model="timestamp"
-                    prepend-icon="mdi-timer-outline"
-                    hint="##h##m##s"
-                    persistent-hint
-                    single-line
-                    clearable
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    :required="timestampRequired"
-                    :rules="timestampRequired ? rules.timestamp.req : rules.timestamp.noReq" />
-                </v-col>
+                <input
+                v-show="false"
+                ref="uploadFileBtn"
+                type="file"
+                accept=".tfhr"
+                @change="$emit('add-file', $event.target.files[0])" />
 
-                <v-col
-                v-if="youtubeUpload"
-                class="file"
-                cols="12">
-                    <!--<v-file-input
-                    v-model="file"
-                    label="File"
-                    accept=".tfhr"
-                    hint="Optional"
-                    persistent-hint
-                    single-line
-                    clearable
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    @change="$emit('add-file', $event)"
-                    @click:clear="$emit('remove-file')" />-->
-
-                    <v-text-field
-                    label="File"
-                    readonly
-                    v-model="fileNameStr"
-                    prepend-icon="mdi-paperclip"
-                    hint="Optional"
-                    persistent-hint
-                    single-line
-                    clearable
-                    :dense="!$vuetify.breakpoint.smOnly"
-                    @click="selectFiles()"
-                    @click:clear="$emit('remove-file')" />
-
-                    <input
-                    v-show="false"
-                    ref="uploadFileBtn"
-                    type="file"
-                    accept=".tfhr"
-                    @change="$emit('add-file', $event.target.files[0])" />
-                </v-col>
-            </v-col>
+                <v-text-field
+                class="timestamp clearable mt-0"
+                ref="timestamp"
+                label="Timestamp"
+                v-model="timestamp"
+                prepend-icon="mdi-timer-outline"
+                hint="##h##m##s"
+                persistent-hint
+                placeholder="(ex: 01h02m03s)"
+                clearable
+                :required="hasVideo"
+                :disabled="!hasVideo"
+                :rules="hasVideo ? rules.timestamp.req : rules.timestamp.noReq" />
+            </div>
         </v-col>
-
+        </v-col>
     </v-row>
 </template>
 
@@ -199,7 +142,7 @@ import DownButton from '.././assets/img/svg/down'
 import UpButton from '.././assets/img/svg/up'
 
 export default {
-    name: 'EditPreview',
+    name: 'Preview',
     components: {
         CharacterSelect,
         RemoveButton,
@@ -210,17 +153,16 @@ export default {
         index: Number,
         youtubeUpload: [Boolean, null],
         fileUpload: [Boolean, null],
-        groupMode: Boolean,
         p1: Object,
         p2: Object,
-        video: [Object, null],
         fileName: [String, null],
         fileDate: [String, null],
         firstMatch: Boolean,
         lastMatch: Boolean,
         resetData: Boolean,
-        timestampRequired: Boolean,
-        masterUrl: [String, null]
+        hasVideo: Boolean,
+        resetTimestamp: Boolean,
+        currentTimestamp: [String, null]
     },
     data: () => {
         return {
@@ -259,66 +201,51 @@ export default {
         }
     },
     mounted: function () {
-        if (this.video) {
-            this.url = 'https://youtu.be/' + this.video.id
-            this.timestamp = this.video.timestamp
-        }
+        this.fileNameStr = this.fileName;
 
-        if (this.masterUrl) {
-            this.url = this.masterUrl
-        }
+        if (this.currentTimestamp)
+            this.timestamp = this.currentTimestamp;
+
     },
     watch: {
         'resetData': function() {
             this.reset()
         },
-        'url': function(v) {  
-            if (v && this.$regex.ytUrl.test(v) && this.$regex.ytIdLength.test(v)) {
-                this.$emit('set-video-id', v.match(this.$regex.ytId))
-            } else if (!v) {
-                this.$emit('remove-video')
-            }
-        },
         
-        'timestamp': function(v) {
-            if (v && v.match(this.$regex.strTimestamp)) {
-                    if (this.timestamp !== this.video.timestamp) {
-                        this.$emit('set-timestamp', this.timestamp.match(this.$regex.strTimestamp)[0])
-                    }
-            } else if (!v) {
-                this.$emit('delete-timestamp')
+        'timestamp': function(timestamp) {
+            if (timestamp && timestamp.match(this.$regex.strTimestamp)) {
+                    if (!this.currentTimestamp || timestamp !== this.currentTimestamp) {
+                        this.$emit('set-timestamp', timestamp);
+                    };
+            } else if (!timestamp) {
+                this.$emit('delete-timestamp');
             }
         },
 
         'fileName': function(name) {
-            this.fileNameStr = name
+            this.fileNameStr = name;
         },
-
-        'masterUrl': function(url) {
-            this.url = url
-        },
-
-        'video.timestamp': function(time) {
-            if (time !== this.timestamp) {
-                this.timestamp = time
+        
+        'hasVideo': function(hasVideo) {
+            if (!hasVideo) {
+                this.timestamp = null;
             }
+        },
+
+        'resetTimestamp': function() {
+            this.timestamp = this.currentTimestamp
         }
     },
     methods: {
         /* makes visible upload button act like html file upload button */
         selectFiles() {
-            this.isSelecting = true
+            this.isSelecting = true;
+
             window.addEventListener('focus', () => {
-                this.isSelecting = false
+                this.isSelecting = false;
             }, { once: true })
-            this.$refs.uploadFileBtn.click()
-        },
-       updateCharacter(character, i) {
-            this.$set(this.updated.players[i], 'character', character)
-        },
-        reset() {
-            this.url = this.video?.url
-            this.timestamp = this.video?.timestamp
+
+            this.$refs.uploadFileBtn.click();
         },
     }
 }
@@ -330,25 +257,8 @@ export default {
     padding-right: 4px;
 }
 
-div:not([class*="file"]) > .v-input--is-readonly >>> .v-input__slot::before {
-    border-color: rgba(255, 255, 255, 0.24) !important;
+::v-deep .add >>> .v-text-field__slot {
+    overflow: visible !important;
 }
 
-div:not([class*="file"]) > .v-input--is-readonly >>> i {
-    color: #5e5e5e !important
-}
-
-.v-input >>> .v-messages__message.message-transition-move {
-    transition: none !important;
-}
-
-div:not([class*="file"]) > .v-input--is-readonly >>> .v-label,
-div:not([class*="file"]) > .v-input--is-readonly >>> .v-messages,
-div:not([class*="file"]) > .v-input--is-readonly >>> input {
-    color: rgba(255, 255, 255, 0.7) !important;
-}
-
-div:not([class*="file"]) > .v-input--is-readonly {
-    pointer-events: none;
-}
 </style>

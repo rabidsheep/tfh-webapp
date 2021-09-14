@@ -27,8 +27,8 @@
       :playerList="playerList"
       :groupList="groupList"
       :channelList="channelList"
-      @update-name="filters.deep.players[$event.i].name = $event.name"
-      @update-character="filters.deep.players[$event.i].character = $event.character"
+      @update-name="filters.deep.players[$event.index].name = $event.name"
+      @update-character="filters.deep.players[$event.index].character = $event.character"
       @update-strictness="filters.strict = $event"
       @update-group="filters.deep.group = $event"
       @update-hasfile="filters.deep.hasFile = $event"
@@ -129,11 +129,13 @@ import saveAs from 'file-saver'
 
 export default {
   name: 'Matches',
+
   components: {
     MatchRow,
     MatchHeader,
     Filters,
   },
+
   data: () => {
     return {
       showToTop: false,
@@ -178,14 +180,16 @@ export default {
       oldStrict: false
     }
   },
+
   mounted() {
     return this.loadContent().then(() => this.getMatches(this.filters, 1));
   },
+
   watch: {
     'filters.deep': {
       handler: function() {
-          this.page = 1;
-          this.getMatches(this.filters, 1);
+        this.page = 1;
+        this.getMatches(this.filters, 1);
       },
       deep: true
     },
@@ -201,7 +205,27 @@ export default {
       }
     }
   },
+
   methods: {
+    // retrieve content for dropdown lists
+    loadContent() {
+      return this.$filterContent.get()
+      .then((response) => {
+          this.error = false;
+          this.groupList = response.body?.groups;
+          this.playerList = response.body?.players;
+          this.channelList = response.body?.channels;
+          this.loadingFilterContent = false;
+
+          //this.printObj(this.playerList)
+      })
+      .catch((error) => {
+          this.errorMsg = `${error.status}: ${error.statusText}`;
+          console.log("Error retrieving filter content.\n", this.errorMsg);
+          this.loadingFilterContent = false;
+      })
+    },
+
     getMatches(filters, page) {
       this.loadingMatches = true
 
@@ -229,27 +253,6 @@ export default {
           this.stop = false;
       })
     },
-
-    // retrieve content for dropdown lists
-    loadContent() {
-        return this.$filterContent.get()
-        .then((response) => {
-            this.error = false;
-            this.groupList = response.body?.groups;
-            this.playerList = response.body?.players;
-            this.channelList = response.body?.channels;
-
-            //console.log(JSON.parse(JSON.stringify(this.channelList)));
-            //console.log(this.playerList);
-            //console.log(JSON.parse(JSON.stringify(this.groupList)));
-            this.loadingFilterContent = false;
-        })
-        .catch((error) => {
-            this.errorMsg = `${error.status}: ${error.statusText}`;
-            console.log("Error retrieving filter content.\n", this.errorMsg);
-            this.loadingFilterContent = false;
-        })
-      },
 
     clearFilters() {
       this.stop = true;

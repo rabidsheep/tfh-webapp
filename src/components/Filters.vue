@@ -207,73 +207,67 @@
                             </div>
                             <!-- /group filters -->
 
-                            <!--<v-col
-                            class="videos"
-                            cols="12">
-                                <v-col
+                            <!--<div
+                            class="videos">
+                                <v-combobox
                                 class="channel"
-                                cols="5">
-                                    <v-combobox
-                                    clearable
-                                    v-model="channelFilter.name"
-                                    append-icon=""
-                                    :menu-props="{
-                                        contentClass: 'channel-select-menu',
-                                        bottom: true,
-                                        offsetY: true,
-                                        maxHeight: '200'
-                                        }"
-                                    dense
-                                    label="Channel"
-                                    :hide-no-data="!channelSearch"
-                                    :items="channelList"
-                                    item-text="name"
-                                    @change="updateChannel($event)"
-                                    :search-input.sync="channelSearch">
-                                        <template v-slot:no-data>
-                                            <v-list-item>
-                                                <v-list-item-content>
-                                                    <v-list-item-title>
-                                                        No results matching "<strong>{{ channelSearch }}</strong>".
-                                                    </v-list-item-title>
-                                                </v-list-item-content>
-                                            </v-list-item>
-                                        </template>
-                                    </v-combobox>
-                                </v-col>
+                                clearable
+                                v-model="channelFilter.name"
+                                append-icon=""
+                                :menu-props="{
+                                    contentClass: 'channel-select-menu',
+                                    bottom: true,
+                                    offsetY: true,
+                                    maxHeight: '200'
+                                    }"
+                                dense
+                                label="Channel"
+                                :hide-no-data="!channelSearch"
+                                :items="channelList"
+                                item-text="name"
+                                @change="updateChannel($event)"
+                                :search-input.sync="channelSearch">
+                                    <template v-slot:no-data>
+                                        <v-list-item>
+                                            <v-list-item-content>
+                                                <v-list-item-title>
+                                                    No results matching "<strong>{{ channelSearch }}</strong>".
+                                                </v-list-item-title>
+                                            </v-list-item-content>
+                                        </v-list-item>
+                                    </template>
+                                </v-combobox>
 
-                                <v-col
+                                <v-combobox
                                 class="video"
-                                cols="5">
-                                    <v-combobox
-                                    clearable
-                                    v-model="videoFilter.title"
-                                    append-icon=""
-                                    :menu-props="{
-                                        contentClass: 'video-select-menu',
-                                        bottom: true,
-                                        offsetY: true,
-                                        maxHeight: '200'
-                                        }"
-                                    dense
-                                    label="Video"
-                                    :hide-no-data="!videoSearch"
-                                    :items="videoList"
-                                    item-text="title"
-                                    @change="updateVideo($event)"
-                                    :search-input.sync="videoSearch">
-                                        <template v-slot:no-data>
-                                            <v-list-item>
-                                                <v-list-item-content>
-                                                    <v-list-item-title>
-                                                        No results matching "<strong>{{ videoSearch }}</strong>".
-                                                    </v-list-item-title>
-                                                </v-list-item-content>
-                                            </v-list-item>
-                                        </template>
-                                    </v-combobox>
-                                </v-col>
-                            </v-col>-->
+                                clearable
+                                v-model="videoFilter.title"
+                                append-icon=""
+                                :menu-props="{
+                                    contentClass: 'video-select-menu',
+                                    bottom: true,
+                                    offsetY: true,
+                                    maxHeight: '200'
+                                    }"
+                                dense
+                                label="Video"
+                                :hide-no-data="!videoSearch"
+                                :items="videoList"
+                                item-text="title"
+                                return-object
+                                @change="$emit('update-video', $event)"
+                                :search-input.sync="videoSearch">
+                                    <template v-slot:no-data>
+                                        <v-list-item>
+                                            <v-list-item-content>
+                                                <v-list-item-title>
+                                                    No results matching "<strong>{{ videoSearch }}</strong>".
+                                                </v-list-item-title>
+                                            </v-list-item-content>
+                                        </v-list-item>
+                                    </template>
+                                </v-combobox>
+                            </div>-->
 
                             <div
                             class="links">
@@ -448,19 +442,26 @@ export default {
         },
         'channelFilter.name': function() {
             //console.log(JSON.parse(JSON.stringify(this.channelFilter)))
+        },
+
+        'video': {
+            handler: function(video) {
+                //console.log(video)
+            }
         }
     },
     methods: {
-        
         // update player characters
         selectCharacter: function (character, i) {
             if (character !== this.players[i].character)
-                this.$emit('update-character', {character: character, i: i})
+                this.$emit('update-character', {character: character, index: i})
         },
+
         // update player names
         selectPlayer: function (name, i) {
-            this.$emit('update-name', {name: name, i: i})
+            this.$emit('update-name', {name: name, index: i})
         },
+
         // update part list
         updateParts() {
             if (this.groupFilter.title) {
@@ -469,11 +470,8 @@ export default {
                     t._id === this.groupFilter.title
                 )
 
-                this.partList = this.groupList[this.groupIndex].sub.filter((s) => {
-                    if (s.part) return true
-                    else return false
-                    
-                }).map((s) => s)
+                this.partList = this.groupList[this.groupIndex].sub
+                .filter((s) => s.part).map((s) => s)
             } else {
                 // else clear part and date
                 this.partList = []
@@ -484,6 +482,7 @@ export default {
 
             this.updateDates()
         },
+
         // update date list
         updateDates() {
             if (!this.groupFilter.part && this.groupFilter.title) {
@@ -491,9 +490,7 @@ export default {
                 this.dateList = this.groupList[this.groupIndex].sub.map((s) => s.date)
             } else if (this.groupFilter.part && this.groupFilter.title) {
                 // else if part is selected...
-                let index = this.partList.findIndex((s) => s.part === this.groupFilter.part)
-                
-                this.dateList = [this.partList[index].date]
+                this.dateList = this.partList.filter((s) => s.part === this.groupFilter.part).map((date) => date)
                 
             } else {
                 // clear if group is not selected
@@ -505,11 +502,18 @@ export default {
 
             //console.log(JSON.parse(JSON.stringify(this.dateList)))
         },
+
         updateChannel(channel) {
             //console.log(channel)
-            if (channel.id !== this.channel.id)
-                this.$emit('update-channel', channel)
+            this.$emit('update-channel', channel)
+            this.updateVideoList(channel)
         },
+
+        updateVideoList(channel) {
+            if (channel)
+                this.videoList = this.channelList.filter((ch) => ch._id === channel._id).map((ch) => ch.videos)
+        },
+
         // clear filters
         clear() {
             // check if objects for each player & group contain only null values or not
@@ -529,6 +533,7 @@ export default {
                 console.log('No filters to reset')
             }
         },
+
         clearGroupFilters() {
             this.groupFilter = {
                 title: null,

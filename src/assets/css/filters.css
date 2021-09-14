@@ -245,3 +245,17 @@
 .small #filters .p1 {
     flex-direction: row;
 }
+
+#filters .videos {
+    display: grid;
+    column-gap: 10px;
+    grid-template: 'channel video'
+}
+
+.xsmall #filters .videos {
+    display: grid;
+    row-gap: 10px;
+    grid-template: 'channel' 'video'
+}
+#filters .videos .channel { grid-area: channel; }
+#filters .videos .video { grid-area: video; }

@@ -93,7 +93,7 @@ api.get('/matches', (req, res) => {
     )
     .then((results) => {
         console.log(results[0])
-        let count = results[0].countAggregate[0].count;
+        let count = results[0].countAggregate[0] ? results[0].countAggregate[0].count : 0;
         let groups = results[0].groupAggregate;
         console.log("api.get('/matches'): Returning " + count + " group(s).");
         
@@ -263,8 +263,12 @@ api.get('/filter/content', (req, res) => {
     const channels = [
         { $match: { 'channel': {$ne: null} } },
         { $group: {
-            '_id': null,
-            'channels': { $addToSet: '$channel' }
+            '_id': '$channel.id',
+            'name': { $first: '$channel.name' },
+            'videos': { $addToSet: {
+                id: '$video.id',
+                title: '$video.title'
+            } }
         } }
     ];
 
@@ -278,8 +282,9 @@ api.get('/filter/content', (req, res) => {
         .toArray()
     )
     .then((results) => {
+        console.log(results[0])
         let groups = results[0].groups;
-        let players = results[0].players;
+        let players = results[0].players[0].players;
         let channels = results[0].channels;
 
         console.log("api.get('/filter/content'): Returning filter content.");
@@ -297,7 +302,7 @@ api.get('/users', (req, res) => {
     if (!req.headers.authorization && !devMode) {
         console.log("api.get('/users'): Unauthorized");
         res.status(403).send('Unauthorized');
-    };
+    }
 
     console.log("api.get('users'): Verifying User");
 
@@ -432,50 +437,50 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
         query = { $or: [{}, {}] };
 
         // need help trimming this down
-        if (p1.name) {
+        if (players[0].name) {
             query.$or[0] = {
-                'p1.name': p1.name,
+                'p1.name': players[0].name,
                 ...query.$or[0]
             };
 
             query.$or[1] = {
-                'p2.name': p1.name,
+                'p2.name': players[0].name,
                 ...query.$or[1]
             };
-        };
+        }
 
-        if (p2.name) {
+        if (players[1].name) {
             query.$or[0] = {
-                'p2.name': p2.name,
+                'p2.name': players[1].name,
                 ...query.$or[0]
             };
 
             query.$or[1] = {
-                'p1.name': p2.name,
+                'p1.name': players[1].name,
                 ...query.$or[1]
             };
-        };
+        }
         
-        if (p1.character) {
+        if (players[0].character) {
             query.$or[0] = {
-                'p1.character': p1.character,
+                'p1.character': players[0].character,
                 ...query.$or[0]
             };
 
             query.$or[1] = {
-                'p2.character': p1.character,
+                'p2.character': players[0].character,
                 ...query.$or[1]
             };
-        };
+        }
 
-        if (p2.character) {
+        if (players[1].character) {
             query.$or[0] = {
-                'p2.character': p2.character,
+                'p2.character': players[1].character,
                 ...query.$or[0]
             };
 
             query.$or[1] = {
-                'p1.character': p2.character,
+                'p1.character': players[1].character,
                 ...query.$or[1]
             };
         }
@@ -486,8 +491,8 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
 
             if (players[i].character)
                 query[`p${i + 1}.character`] = players[i].character;
-        };
-    };
+        }
+    }
 
     if (group) {
         query = {
@@ -501,29 +506,29 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
                 'group.part': new RegExp([group.part.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i'),
                 ...query
             };
-        };
+        }
     
         if (group.date) {
             query = {
                 'group.date': group.date,
                 ...query
             };
-        };
-    };
+        }
+    }
 
     if (hasFile) {
         query = {
-            fileInfo: {'$ne': null},
+            fileInfo: {$ne: null},
             ...query
         };
-    };
+    }
 
     if (hasVideo) {
         query = {
-            video: {'$ne': null},
+            video: {$ne: null},
             ...query
         };
-    };
+    }
 
     return query;
 }

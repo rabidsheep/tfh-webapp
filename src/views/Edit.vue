@@ -175,16 +175,18 @@
                                 <div
                                 class="url__input">
                                     <v-text-field
-                                    :class="$route.query.uploadForm === 'Files' ? 'url clearable' : 'url'"
+                                    :class="fileUpload ? 'url clearable' : 'url'"
                                     ref="url"
                                     label="YouTube Link"
                                     v-model="url"
                                     prepend-icon="mdi-youtube"
-                                    hint="Optional"
+                                    :hint="youtubeUpload ? 'Required' : 'Optional'"
                                     persistent-hint
-                                    :clearable="$route.query.uploadForm === 'Files'"
-                                    :required="$route.query.uploadForm === 'YouTube'"
-                                    :rules="$route.query.uploadForm === 'YouTube' ? rules.url.req : rules.url.noReq" />
+                                    :clearable="fileUpload"
+                                    :required="youtubeUpload"
+                                    :rules="youtubeUpload ? rules.url.req : rules.url.noReq"
+                                    @blur="youtubeUpload ? urlOnBlur(url) : undefined"
+                                    @click:clear="fileUpload ? clearVideoInfo() : undefined" />
 
 
                                     
@@ -224,8 +226,8 @@
                                     :index="i"
                                     :firstMatch="i === 0"
                                     :lastMatch="i === updated.length - 1"
-                                    :youtubeUpload="$route.query.uploadForm === 'YouTube'"
-                                    :fileUpload="$route.query.uploadForm === 'Files'"
+                                    :youtubeUpload="youtubeUpload"
+                                    :fileUpload="fileUpload"
                                     :fileDate="match.fileInfo ? match.fileInfo.date : null"
                                     :fileName="match.fileInfo ? match.fileInfo.name : null"
                                     :p1="match.p1"
@@ -306,6 +308,8 @@ export default {
             originalStringified: {},
             updated: {},
             deleted: [],
+            fileUpload: false,
+            youtubeUpload: false,
             changesFound: false,
             resetData: false,
             loadingMatches: false,
@@ -336,8 +340,11 @@ export default {
         }
     },
     mounted: function () {
-        if (this.$route.query.uploadId && this.$route.query.uploadForm)
+        if (this.$route.query.uploadId && this.$route.query.uploadForm) {
+            this.fileUpload = this.$route.query.uploadForm === 'Files'
+            this.youtubeUpload = this.$route.query.uploadForm === 'YouTube'
             this.watchAuthState();
+        }
     },
     watch: {
         'updated': {
@@ -348,7 +355,7 @@ export default {
                     this.changesFound = true;
                 } else {
                     this.changesFound = false;
-                };
+                }
             }
         },
         
@@ -358,8 +365,7 @@ export default {
 
         'url': function(url) {
             if (!url && this.$route.query.uploadForm !== 'YouTube') {
-                this.hasVideo = false;
-                this.invalidVideo = true;
+                this.clearVideoInfo();
             };
         }
     },
@@ -381,7 +387,7 @@ export default {
                  console.log(error);
                  this.loadingMatches = false;
                  this.failedMatchGet = true;
-            });
+            })
         },
 
         validateYoutubeID() {
@@ -396,7 +402,7 @@ export default {
                 youtubeRef = this.setAuthToken().then(() => {
                     console.log('Retrieving Youtube data')
                     return this.$youtubeData.get({ id: this.vid })
-                });
+                })
             }
 
             youtubeRef.then((response) => {
@@ -422,7 +428,7 @@ export default {
                 this.invalidVideo = true;
                 
                 this.validateForm();
-            });
+            })
         },
 
         resetMatches() {
@@ -435,7 +441,7 @@ export default {
             } else {
                 this.url = null;
                 this.hasVideo = false;
-            };
+            }
 
         },
 
@@ -449,15 +455,15 @@ export default {
                 if (match.file) {
                     files.push(match.file);
                     delete match.file;
-                };
-            });
+                }
+            })
 
             if (this.$dev || files.length <= 0) {
                 uploadRef = Promise.all(this.formatMatchesForUpload());
             } else {
                 uploadRef = Promise.all(this.uploadFilesAsPromise(files))
                 .then(() => Promise.all(this.formatMatchesForUpload()));
-            };
+            }
 
             uploadRef.then((matches) => this.$edit.save({ matches, deleted }))
             .then((response) => {
@@ -471,8 +477,7 @@ export default {
                 this.setErrors('upload');
                 this.uploading = false;
                 this.error = true;
-            });
-
+            })
         },
 
         uploadFilesAsPromise(files) {
@@ -493,9 +498,9 @@ export default {
                     } else {
                         console.log("Removing file info from match #" + (i+1));
                         delete this.updated.matches[i].fileInfo;
-                    };
-                });
-            });
+                    }
+                })
+            })
         },
 
         formatMatchesForUpload() {
@@ -518,7 +523,7 @@ export default {
                 else
                     return false;
             })
-            .map((match) => match);
+            .map((match) => match)
         },
 
         setTimestamp(timestamp, i) {
@@ -582,8 +587,8 @@ export default {
 
                     if (that.errors.length > 0)
                         that.error = true;
-                });
-            })(this, file, i);
+                })
+            })(this, file, i)
         },
 
         /**
@@ -638,8 +643,8 @@ export default {
                     this.warning = true;
                 } else {
                     this.addFile(this.tempData);
-                };
-            };
+                }
+            }
         },
 
         addFile(data) {
@@ -684,6 +689,21 @@ export default {
             this.$set(this.updated.matches, i, this.updated.matches[j]);
             this.$set(this.updated.matches, j, tempMatch);
         },
+
+        clearVideoInfo() {
+            if (this.original.info.video?.id) {
+                delete this.updated.info.video;
+                delete this.updated.info.channel;
+                this.hasVideo = false;
+                this.invalidVideo = true;
+            }
+        },
+
+        urlOnBlur(url) {
+            if (!url && this.youtubeUpload) {
+                this.url = 'https://youtu.be/' + this.originalVideo;
+            }
+        }
     }
 }
 </script>

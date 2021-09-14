@@ -318,6 +318,7 @@
 import Preview from './Preview.vue'
 import StatusOverlay from './StatusOverlay.vue'
 import uploadMixin from '../mixins/uploadMixin'
+import authMixin from '../mixins/authMixin'
 // youtube test video url: https://www.youtube.com/watch?v=uciAaVk3xaE
 
 export default {
@@ -328,7 +329,7 @@ export default {
     props: {
         userId: String,
     },
-    mixins: [uploadMixin],
+    mixins: [uploadMixin, authMixin],
     name: 'YoutubeUploads',
     data: () => {
         return {

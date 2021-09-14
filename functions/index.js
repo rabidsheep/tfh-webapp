@@ -430,8 +430,6 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
         players[0].name = new RegExp([players[0].name.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i');
     if (players[1].name)
         players[1].name = new RegExp([players[1].name.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i');
-    let p1 = players[0];
-    let p2 = players[1];
 
     if (!strict && !unfiltered) {
         query = { $or: [{}, {}] };

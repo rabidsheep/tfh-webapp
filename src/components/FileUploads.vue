@@ -22,6 +22,7 @@
                 ref="group" 
                 label="Group Title"
                 v-model="group.title"
+                @change="group.title = group.title.trim()"
                 hint="Required"
                 placeholder="(ex: Rodeo Regional, Grand Stampede)"
                 maxLength="32"
@@ -34,6 +35,7 @@
                 class="part__input clearable"
                 label="Part"
                 v-model="group.part"
+                @change="group.part = group.part.trim()"
                 hint="Optional"
                 placeholder="(ex: #3, Finals, etc.)"
                 maxLength="16"
@@ -80,6 +82,7 @@
                 ref="url"
                 label="YouTube Link"
                 v-model="url"
+                @change="url = url.trim()"
                 prepend-icon="mdi-youtube"
                 hint="Optional"
                 persistent-hint
@@ -254,8 +257,8 @@ export default {
                     v => !!v || 'Required'
                 ],
                 url: [
-                    v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                    v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?\s]*)/.test(v) || 'Invalid URL',
+                    v => !v || /(?:\?v=|youtu.be\/)([^#\&\?\s]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?\s]{11}$)/.test(v) || 'Video ID must be 11 characters'
                 ]
             },
             currentDate: new Date().toISOString().split('T').toString()

@@ -23,6 +23,7 @@
             ref="url"
             label="YouTube Link"
             v-model="url"
+            @change="url = url.trim()"
             prepend-icon="mdi-youtube"
             hide-details
             clearable
@@ -160,6 +161,7 @@
                         label="Group Title"
                         placeholder="(ex: Rodeo Regional, Grand Stampede)"
                         v-model="group.title"
+                        @change="group.title = group.title.trim()"
                         hint="Required"
                         persistent-hint
                         maxLength="32"
@@ -176,6 +178,7 @@
                         ref="groupPart"
                         label="Part"
                         v-model="group.part"
+                        @change="group.part = group.part.trim()"
                         placeholder="(ex: #3, Finals, etc.)"
                         maxLength="16"
                         hint="Optional"
@@ -345,8 +348,8 @@ export default {
                 ],
                 url: [
                     v => !!v,
-                    v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?]*)/.test(v) || 'Invalid URL',
-                    v => !v || /(?:\?v=|youtu.be\/)([^#\&\?]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?]{11}$)/.test(v) || 'Video ID must be 11 characters'
+                    v => !v || v && /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|\?v=)([^#\&\?\s]*)/.test(v) || 'Invalid URL',
+                    v => !v || /(?:\?v=|youtu.be\/)([^#\&\?\s]*)/.test(v) && /(?:\?v=|youtu.be\/)([^#\&\?\s]{11}$)/.test(v) || 'Video ID must be 11 characters'
                 ],
                 timestamp: [
                     v => !v || v && (/^([0-9]{1,2}h)?([0-9]{1,3}m)?([0-9]{1,5}s)?$/).test(v) || 'Invalid format',

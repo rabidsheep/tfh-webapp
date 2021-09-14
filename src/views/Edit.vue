@@ -121,6 +121,7 @@
                                 ref="group" 
                                 label="Group Title"
                                 v-model="updated.info.group.title"
+                                @change="updated.info.group.title = updated.info.group.title.trim()"
                                 hint="Required"
                                 placeholder="(ex: Rodeo Regional, Grand Stampede)"
                                 maxLength="32"
@@ -133,6 +134,7 @@
                                 class="part__input clearable"
                                 label="Part"
                                 v-model="updated.info.group.part"
+                                @change="updated.info.group.part = updated.info.group.part.trim()"
                                 hint="Optional"
                                 placeholder="(ex: #3, Finals, etc.)"
                                 maxLength="16"
@@ -179,6 +181,7 @@
                                     ref="url"
                                     label="YouTube Link"
                                     v-model="url"
+                                    @change="url = url.trim()"
                                     prepend-icon="mdi-youtube"
                                     :hint="youtubeUpload ? 'Required' : 'Optional'"
                                     persistent-hint
@@ -515,7 +518,7 @@ export default {
                         ...this.updated.info.video,
                         timestamp: match.video?.timestamp,
                     };
-                    
+
                     match.channel = this.updated.info.channel;
                 } else if (this.fileUpload && match.video) {
                     delete match.video;

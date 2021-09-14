@@ -73,17 +73,6 @@ export default {
     }
   },
   methods: {
-    setAuthToken: function () {
-      return this.$firebase.auth().currentUser
-      .getIdToken()
-      .then((token) => {
-        console.log('Setting auth token')
-        return this.$httpInterceptors.push((request) => {
-          request.headers.set('Authorization', token)
-        })
-      })
-      .catch((error) => console.log(error))
-    },
     forceRerenderMain(e) {
       if (this.$route.path === '/' && !e.ctrlKey) {
         this.mainKey = !this.mainKey

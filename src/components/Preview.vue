@@ -65,6 +65,7 @@
                     <v-text-field
                     :label="`Player ${i + 1}`"
                     v-model="player.name"
+                    @change="player.name = player.name.trim()"
                     maxLength="64"
                     counter="64"
                     clearable

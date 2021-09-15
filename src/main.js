@@ -1,9 +1,9 @@
-import Vue from 'vue'
-import App from './App.vue'
-import vuetify from './plugins/vuetify'
-import router from './router'
-import './plugins/globals.js'
-import './registerServiceWorker'
+import Vue from 'vue';
+import App from './App.vue';
+import vuetify from './plugins/vuetify';
+import router from './router';
+import './plugins/globals.js';
+import './registerServiceWorker';
 
 export default Vue.mixin({
   methods: {
@@ -18,18 +18,15 @@ export default Vue.mixin({
 
     // format date to MM-DD-YYYY format
     formatDate(date) {
-      if (!date) return null
+      if (!date) return null;
 
-      const [year, month, day] = date.split('-')
-      return `${month}-${day}-${year}`
+      const [year, month, day] = date.split('-');
+      return `${month}-${day}-${year}`;
     },
 
     // overridden in Edit.vue
     updateCharacter(character, j, i) {
-      console.log(j)
-      console.log(i)
-      this.printObj(this.matches[i])
-      this.matches[i][`p${j}`].character = character;
+      this.$set(this.matches[i][`p${j}`], 'character', character);
     },
 
     
@@ -44,7 +41,7 @@ export default Vue.mixin({
   }
 })
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 new Vue({
   vuetify,

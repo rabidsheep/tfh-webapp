@@ -185,14 +185,14 @@ export default {
     methods: {
         /** determines what upload form to use */
         setUploadType(type) {
-            this.uploadType = type
-            this.step = 3
+            this.uploadType = type;
+            this.step = 3;
         },
 
         /** return to upload type selection step */
         goBack() {
-            this.step = 2
-            this.uploadType = null
+            this.step = 2;
+            this.uploadType = null;
         },
     }
 }

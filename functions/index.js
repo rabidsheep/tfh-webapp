@@ -36,10 +36,11 @@ api.get('/matches', (req, res) => {
     } else {
         query = { 'uploadId': req.query.uploadId };
     }
+
     const countAggregate = [
         { $group: { '_id': '$uploadId' } },
         { $count: 'count'}
-    ]
+    ];
 
     const groupAggregate = [
         { $sort: { order: 1 } },
@@ -92,7 +93,7 @@ api.get('/matches', (req, res) => {
         .toArray()
     )
     .then((results) => {
-        console.log(results[0])
+        console.log(results[0]);
         let count = results[0].countAggregate[0] ? results[0].countAggregate[0].count : 0;
         let groups = results[0].groupAggregate;
         console.log("api.get('/matches'): Returning " + count + " group(s).");
@@ -159,7 +160,7 @@ api.get('/edit', (req, res) => {
                 }
             },
         }},
-    ]
+    ];
 
     return mongoDb()
     .then((client) =>
@@ -189,25 +190,24 @@ api.put('/edit', (req, res) => {
         Promise.all([
             // update matches
             matches.forEach((match) => {
-                console.log(match)
-                    let data = [
-                        { _id: ObjectId(match._id) },
-                        { $set: {
-                            p1: match.p1,
-                            p2: match.p2,
-                            video: match.video,
-                            channel: match.channel,
-                            group: match.group,
-                            fileInfo: match.fileInfo,
-                            order: match.order
-                        } }
-                    ]
+                console.log(match);
+                let data = [
+                    { _id: ObjectId(match._id) },
+                    { $set: {
+                        p1: match.p1,
+                        p2: match.p2,
+                        video: match.video,
+                        channel: match.channel,
+                        group: match.group,
+                        fileInfo: match.fileInfo,
+                        order: match.order
+                    } }
+                ];
 
-                    client.db('tfhr')
-                    .collection('matches')
-                    .updateOne(...data)
-                }
-            ),
+                client.db('tfhr')
+                .collection('matches')
+                .updateOne(...data)
+            }),
             
             // delete matches if any were removed
             client.db('tfhr')

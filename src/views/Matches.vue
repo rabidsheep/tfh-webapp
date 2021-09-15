@@ -121,11 +121,11 @@
 </template>
 
 <script>
-import MatchRow from '../components/MatchRow.vue'
-import MatchHeader from '../components/MatchHeader.vue'
-import Filters from '../components/Filters.vue'
-import JSZip from 'jszip'
-import saveAs from 'file-saver'
+import MatchRow from '../components/MatchRow.vue';
+import MatchHeader from '../components/MatchHeader.vue';
+import Filters from '../components/Filters.vue';
+import JSZip from 'jszip';
+import saveAs from 'file-saver';
 
 export default {
   name: 'Matches',

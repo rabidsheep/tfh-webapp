@@ -71,9 +71,17 @@
             this.error = false;
         },
         
+        closeWarning() {
+            this.formData = null;
+            this.fileData = null;
+            this.tempData = null;
+            this.warning = false;
+        },
+        
          
         validateForm() {
             const refs = this.$refs;
+            
             window.setTimeout(function () {
                 refs.form.validate();
             }, 100);

@@ -523,8 +523,8 @@ export default {
                     console.log(error);
                     console.log("Removing file info from match #" + (i+1));
                     delete this.matches[i].fileInfo;
-                });
-            });
+                })
+            })
         },
 
         formatMatchesForUpload() {
@@ -555,7 +555,7 @@ export default {
 
                 order += 1;
                 return match;
-            });
+            })
         },
 
         /** generates reader for each file */
@@ -660,8 +660,8 @@ export default {
                     this.warning = true;
                 } else {
                     this.addFile(this.tempData);
-                };
-            };
+                }
+            }
         },
 
         addFile(data) {
@@ -713,12 +713,6 @@ export default {
             
         },
 
-        closeWarning() {
-            this.formData = null;
-            this.fileData = null;
-            this.tempData = null;
-            this.warning = false;
-        },
     }
 }
 </script>

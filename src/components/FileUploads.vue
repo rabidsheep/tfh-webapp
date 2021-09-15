@@ -9,7 +9,7 @@
             }"
         :errors="errors"
         @clear-errors="clearErrors()"
-        @close="resetForm()" />
+        @close="$emit('reload-form')" />
 
         <v-form
         v-model="valid"
@@ -351,12 +351,12 @@ export default {
                     };
                     
                     match.channel = this.channel;
-                };
+                }
 
                 order += 1;
 
                 return match;
-            });
+            })
 
             //this.printObj(this.matches)
 
@@ -369,7 +369,7 @@ export default {
 
             uploadRef.then((response) => {
                 console.log('Uploaded matches:');
-                response.body.matchIds.forEach((id) => console.log('ID:', id) );
+                response.body.matchIds.forEach((id) => console.log('ID:', id));
 
                 this.uploading = false;
                 this.finished = true;
@@ -544,10 +544,6 @@ export default {
             let tempMatch = this.matches[i];
             this.$set(this.matches, i, this.matches[j]);
             this.$set(this.matches, j, tempMatch);
-        },
-
-        resetForm() {
-            this.$emit('reload-form');
         },
     }
 }

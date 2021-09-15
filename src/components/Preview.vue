@@ -210,14 +210,14 @@ export default {
     },
     watch: {
         'resetData': function() {
-            this.reset()
+            this.reset();
         },
         
         'timestamp': function(timestamp) {
             if (timestamp && timestamp.match(this.$regex.strTimestamp)) {
                     if (!this.currentTimestamp || timestamp !== this.currentTimestamp) {
                         this.$emit('set-timestamp', timestamp);
-                    };
+                    }
             } else if (!timestamp) {
                 this.$emit('delete-timestamp');
             }
@@ -234,7 +234,7 @@ export default {
         },
 
         'resetTimestamp': function() {
-            this.timestamp = this.currentTimestamp
+            this.timestamp = this.currentTimestamp;
         }
     },
     methods: {

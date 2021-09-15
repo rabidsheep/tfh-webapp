@@ -344,8 +344,8 @@ export default {
     },
     mounted: function () {
         if (this.$route.query.uploadId && this.$route.query.uploadForm) {
-            this.fileUpload = this.$route.query.uploadForm === 'Files'
-            this.youtubeUpload = this.$route.query.uploadForm === 'YouTube'
+            this.fileUpload = this.$route.query.uploadForm === 'Files';
+            this.youtubeUpload = this.$route.query.uploadForm === 'YouTube';
             this.watchAuthState();
         }
     },
@@ -379,7 +379,7 @@ export default {
             this.$edit.get({uploadId})
             .then((response) => {
                 this.original = response.body;
-                this.originalStringified = JSON.stringify(this.original)
+                this.originalStringified = JSON.stringify(this.original);
                 this.updated = JSON.parse(this.originalStringified);
                 this.originalVideo = this.original.info.video.id;
                 this.hasVideo = this.originalVideo ? true : false;
@@ -405,7 +405,7 @@ export default {
                 youtubeRef = this.setAuthToken().then(() => {
                     console.log('Retrieving Youtube data')
                     return this.$youtubeData.get({ id: this.vid })
-                })
+                });
             }
 
             youtubeRef.then((response) => {
@@ -418,8 +418,8 @@ export default {
                 this.updated.info.video = {
                     id: response.body.video.id,
                     title: response.body.video.title
-                }
-                this.updated.info.channel = response.body.channel
+                };
+                this.updated.info.channel = response.body.channel;
                 this.validateForm();
             })
             .catch((error) => {
@@ -436,7 +436,7 @@ export default {
 
         resetMatches() {
             this.updated = JSON.parse(this.originalStringified);
-            this.resetTimestamp = !this.resetTimestamp
+            this.resetTimestamp = !this.resetTimestamp;
 
             if (this.originalVideo) {
                 this.url = 'https://youtu.be/' + this.originalVideo;
@@ -696,6 +696,7 @@ export default {
         },
 
         swapMatches(i, j) {
+            console.log("Swapping match #" + i+1 + "and #" + j+1)
             let tempMatch = this.updated.matches[i];
             this.$set(this.updated.matches, i, this.updated.matches[j]);
             this.$set(this.updated.matches, j, tempMatch);
@@ -703,6 +704,7 @@ export default {
 
         clearVideoInfo() {
             if (this.original.info.video?.id) {
+                console.log("Clearing video info")
                 delete this.updated.info.video;
                 delete this.updated.info.channel;
                 this.hasVideo = false;
@@ -711,9 +713,8 @@ export default {
         },
 
         urlOnBlur(url) {
-            if (!url && this.youtubeUpload) {
+            if (!url && this.youtubeUpload)
                 this.url = 'https://youtu.be/' + this.originalVideo;
-            }
         }
     }
 }

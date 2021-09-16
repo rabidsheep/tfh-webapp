@@ -5,18 +5,19 @@
     class="edit">
         <StatusOverlay
         v-bind="{
-            error,
-            uploading,
-            finished,
-            warning,
+            showOverlay,
             errors,
             fileData,
-            formData
+            formData,
             }"
+        :status="alert.status"
+        :type="alert.type"
         @add-file-anyways="addFile(tempData)"
         @close-warning="closeWarning()"
         @clear-errors="clearErrors()"
-        @close="reload()" />
+        @close="reload()"
+        @delete-set="deleteSet()"
+        @return-home="$router.push('/')" />
 
         <v-stepper v-model="step" flat>
             <v-stepper-items>
@@ -101,187 +102,189 @@
                             Retrieving matches...
                         </div>
 
-                        <v-form
-                        v-model="valid"
-                        ref="form"
-                        id="edit"
+                        <template
                         v-if="!loadingMatches && Object.keys(original).length > 0 && !failedMatchGet">
                             <v-btn
-                            v-if="isAdmin"
+                            class="delete"
                             color="accent"
-                            @click="deleteSet()">
+                            rounded
+                            width="max-content"
+                            height="50px"
+                            @click="displayAlert({ delete: true }, { warning: true })">
                                 Delete Set
                             </v-btn>
-                            
-                            <div
-                            v-if="updated.info.group"
-                            class="group">
-                                <v-text-field
-                                class="title__input clearable"
-                                ref="group" 
-                                label="Group Title"
-                                v-model="updated.info.group.title"
-                                @change="updated.info.group.title = updated.info.group.title.trim()"
-                                hint="Required"
-                                placeholder="(ex: Rodeo Regional, Grand Stampede)"
-                                maxLength="32"
-                                clearable
-                                persistent-hint
-                                :rules="rules.group"
-                                required />
 
-                                <v-text-field
-                                class="part__input clearable"
-                                label="Part"
-                                v-model="updated.info.group.part"
-                                @change="updated.info.group.part = updated.info.group.part.trim()"
-                                hint="Optional"
-                                placeholder="(ex: #3, Finals, etc.)"
-                                maxLength="16"
-                                persistent-hint
-                                clearable />
-
-                                <v-menu
-                                label="Date"
-                                content-class="datepicker__menu"
-                                attach=".date__input .v-input__control"
-                                transition="scale-transition"
-                                min-width="auto"
-                                v-model="datepicker"
-                                :close-on-content-click="false">
-                                    <template v-slot:activator="{ on, attrs }">
-                                        <v-text-field
-                                        class="date__input clearable"
-                                        ref="date"
-                                        label="Date"
-                                        v-model="updated.info.group.date"
-                                        v-bind="attrs"
-                                        v-on="on"
-                                        prepend-icon="mdi-calendar"
-                                        hint="Required"
-                                        persistent-hint
-                                        placeholder="MM-DD-YYYY"
-                                        clearable
-                                        :rules="rules.date"
-                                        required />
-                                    </template>
-
-                                    <v-date-picker
-                                    v-model="date"
-                                    no-title
-                                    scrollable
-                                    :max="currentDate"
-                                    @input="datepicker = false" />
-                                </v-menu>
-
+                            <v-form
+                            v-model="valid"
+                            ref="form"
+                            id="edit">
                                 <div
-                                class="url__input">
+                                v-if="updated.info.group"
+                                class="group">
                                     <v-text-field
-                                    :class="fileUpload ? 'url clearable' : 'url'"
-                                    ref="url"
-                                    label="YouTube Link"
-                                    v-model="url"
-                                    @change="url = url.trim()"
-                                    prepend-icon="mdi-youtube"
-                                    :hint="youtubeUpload ? 'Required' : 'Optional'"
+                                    class="title__input clearable"
+                                    ref="group" 
+                                    label="Group Title"
+                                    v-model="updated.info.group.title"
+                                    @change="updated.info.group.title = updated.info.group.title.trim()"
+                                    hint="Required"
+                                    placeholder="(ex: Rodeo Regional, Grand Stampede)"
+                                    maxLength="32"
+                                    clearable
                                     persistent-hint
-                                    :clearable="fileUpload"
-                                    :required="youtubeUpload"
-                                    :rules="youtubeUpload ? rules.url.req : rules.url.noReq"
-                                    @blur="youtubeUpload ? urlOnBlur(url) : undefined"
-                                    @click:clear="fileUpload ? clearVideoInfo() : undefined" />
+                                    :rules="rules.group"
+                                    required />
 
+                                    <v-text-field
+                                    class="part__input clearable"
+                                    label="Part"
+                                    v-model="updated.info.group.part"
+                                    @change="updated.info.group.part = updated.info.group.part.trim()"
+                                    hint="Optional"
+                                    placeholder="(ex: #3, Finals, etc.)"
+                                    maxLength="16"
+                                    persistent-hint
+                                    clearable />
 
-                                    
+                                    <v-menu
+                                    label="Date"
+                                    content-class="datepicker__menu"
+                                    attach=".date__input .v-input__control"
+                                    transition="scale-transition"
+                                    min-width="auto"
+                                    v-model="datepicker"
+                                    :close-on-content-click="false">
+                                        <template v-slot:activator="{ on, attrs }">
+                                            <v-text-field
+                                            class="date__input clearable"
+                                            ref="date"
+                                            label="Date"
+                                            v-model="updated.info.group.date"
+                                            v-bind="attrs"
+                                            v-on="on"
+                                            prepend-icon="mdi-calendar"
+                                            hint="Required"
+                                            persistent-hint
+                                            placeholder="MM-DD-YYYY"
+                                            clearable
+                                            :rules="rules.date"
+                                            required />
+                                        </template>
+
+                                        <v-date-picker
+                                        v-model="date"
+                                        no-title
+                                        scrollable
+                                        :max="currentDate"
+                                        @input="datepicker = false" />
+                                    </v-menu>
+
                                     <div
-                                    class="url__button">
-                                        <v-progress-circular
-                                        v-if="loadingVideo"
-                                        indeterminate />
+                                    class="url__input">
+                                        <v-text-field
+                                        :class="fileUpload ? 'url clearable' : 'url'"
+                                        ref="url"
+                                        label="YouTube Link"
+                                        v-model="url"
+                                        @change="url = url.trim()"
+                                        prepend-icon="mdi-youtube"
+                                        :hint="youtubeUpload ? 'Required' : 'Optional'"
+                                        persistent-hint
+                                        :clearable="fileUpload"
+                                        :required="youtubeUpload"
+                                        :rules="youtubeUpload ? rules.url.req : rules.url.noReq"
+                                        @blur="youtubeUpload ? urlOnBlur(url) : undefined"
+                                        @click:clear="fileUpload ? clearVideoInfo() : undefined" />
 
-                                        <v-btn
-                                        v-if="$refs.url && !loadingVideo"
-                                        class="verify"
-                                        :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
-                                        height="50px"
-                                        :width="!changeButton ? '84px' : '50px'"
-                                        :fab="changeButton"
-                                        rounded
-                                        :ripple="false"
-                                        :disabled="!$refs.url.valid || !url"
-                                        @click="validateYoutubeID()">
-                                            <template v-if="!changeButton">
-                                                Verify
-                                            </template>
 
-                                            <v-icon v-else>
-                                            {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
-                                            </v-icon>
-                                        </v-btn>
+                                        
+                                        <div
+                                        class="url__button">
+                                            <v-progress-circular
+                                            v-if="loadingVideo"
+                                            indeterminate />
+
+                                            <v-btn
+                                            v-if="$refs.url && !loadingVideo"
+                                            class="verify"
+                                            :color="!changeButton ? 'accent' : (hasVideo ? 'success' : 'error' )"
+                                            :width="!changeButton ? '84px' : '50px'"
+                                            :fab="changeButton"
+                                            rounded
+                                            :ripple="false"
+                                            :disabled="!$refs.url.valid || !url"
+                                            @click="validateYoutubeID()">
+                                                <template v-if="!changeButton">
+                                                    Verify
+                                                </template>
+
+                                                <v-icon v-else>
+                                                {{ hasVideo ? 'mdi-check-bold' : 'mdi-close-thick' }}
+                                                </v-icon>
+                                            </v-btn>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="match-list">
-                                <template v-for="(match, i, j) in updated.matches">
-                                    <Preview
-                                    :key="i"
-                                    :index="i"
-                                    :firstMatch="i === 0"
-                                    :lastMatch="i === updated.matches.length - 1"
-                                    :youtubeUpload="youtubeUpload"
-                                    :fileUpload="fileUpload"
-                                    :fileDate="match.fileInfo ? match.fileInfo.date : null"
-                                    :fileName="match.fileInfo ? match.fileInfo.name : null"
-                                    :p1="match.p1"
-                                    :p2="match.p2"
-                                    :hasVideo="hasVideo"
-                                    :resetTimestamp="resetTimestamp"
-                                    :currentTimestamp="match.video ? match.video.timestamp : null"
-                                    @add-file="readFile($event, i)"
-                                    @set-video-id="setVideoId($event, i)"
-                                    @set-timestamp="setTimestamp($event, i)"
-                                    @delete-timestamp="deleteTimestamp(i)"
-                                    @delete-video="deleteVideo(i)"
-                                    @remove-file="removeFile(i)"
-                                    @remove="removeMatch(i)"
-                                    @move-up="swapMatches(i, i-1)"
-                                    @move-down="swapMatches(i, i+1)"
-                                    @update-character="updateCharacter(i, $event.character, $event.index)" />
+                                <div class="match-list">
+                                    <template v-for="(match, i, j) in updated.matches">
+                                        <Preview
+                                        :key="i"
+                                        :index="i"
+                                        :firstMatch="i === 0"
+                                        :lastMatch="i === updated.matches.length - 1"
+                                        :youtubeUpload="youtubeUpload"
+                                        :fileUpload="fileUpload"
+                                        :fileDate="match.fileInfo ? match.fileInfo.date : null"
+                                        :fileName="match.fileInfo ? match.fileInfo.name : null"
+                                        :p1="match.p1"
+                                        :p2="match.p2"
+                                        :hasVideo="hasVideo"
+                                        :resetTimestamp="resetTimestamp"
+                                        :currentTimestamp="match.video ? match.video.timestamp : null"
+                                        @add-file="readFile($event, i)"
+                                        @set-video-id="setVideoId($event, i)"
+                                        @set-timestamp="setTimestamp($event, i)"
+                                        @delete-timestamp="deleteTimestamp(i)"
+                                        @delete-video="deleteVideo(i)"
+                                        @remove-file="removeFile(i)"
+                                        @remove="removeMatch(i)"
+                                        @move-up="swapMatches(i, i-1)"
+                                        @move-down="swapMatches(i, i+1)"
+                                        @update-character="updateCharacter(i, $event.character, $event.index)" />
 
-                                    <hr :key="j" v-if="i < updated.matches.length - 1" />
-                                </template>
-                            </div>
-                            
-                            <br />
+                                        <hr :key="j" v-if="i < updated.matches.length - 1" />
+                                    </template>
+                                </div>
+                                
+                                <br />
 
-                            <v-row
-                            class="buttons"
-                            v-show="!loading && Object.keys(original.matches).length > 0"
-                            align="center"
-                            justify="space-around">
-                                <v-col class="reset pr-5">
-                                    <v-btn
-                                    height="50px"
-                                    rounded
-                                    color="button2"
-                                    @click="resetMatches()">
-                                        Reset
-                                    </v-btn>
-                                </v-col>
+                                <v-row
+                                class="buttons"
+                                v-show="!loading && Object.keys(original.matches).length > 0"
+                                align="center"
+                                justify="space-around">
+                                    <v-col class="reset pr-5">
+                                        <v-btn
+                                        rounded
+                                        color="button2"
+                                        @click="resetMatches()">
+                                            Reset
+                                        </v-btn>
+                                    </v-col>
 
-                                <v-col class="submit pl-5">
-                                    <v-btn
-                                    height="50px"
-                                    rounded
-                                    :disabled="!valid || !changesFound"
-                                    color="accent"
-                                    @click="updateMatches()">
-                                        Submit
-                                    </v-btn>
-                                </v-col>
-                            </v-row>
-                        </v-form>
+                                    <v-col class="submit pl-5">
+                                        <v-btn
+                                        rounded
+                                        :disabled="!valid || !changesFound"
+                                        color="accent"
+                                        @click="updateMatches()">
+                                            Submit
+                                        </v-btn>
+                                    </v-col>
+                                </v-row>
+                            </v-form>
+                        </template>
                     </div>
                 </div>
             </v-stepper-items>
@@ -307,20 +310,23 @@ export default {
     data: () => {
         return {
             step: 1,
-            original: {},
-            originalStringified: {},
-            updated: {},
-            deleted: [],
             fileUpload: false,
             youtubeUpload: false,
-            changesFound: false,
-            resetData: false,
             loadingMatches: false,
             failedMatchGet: false,
+
+            deleted: [],
+            original: {},
+            originalStringified: {},
+            originalVideo: null,
+            updated: {},
+            changesFound: false,
+
             uploadId: null,
             loadingVideo: false,
-            originalVideo: null,
+            resetData: false,
             resetTimestamp: false,
+            
             rules: {
                 group: [
                     v => !!v || 'Required',
@@ -354,11 +360,10 @@ export default {
             deep: true,
             handler() {
                 /* only allow submission if user changed anything */
-                if (JSON.stringify(this.updated) !== this.originalStringified) {
+                if (JSON.stringify(this.updated) !== this.originalStringified)
                     this.changesFound = true;
-                } else {
+                else
                     this.changesFound = false;
-                }
             }
         },
         
@@ -367,9 +372,8 @@ export default {
         },
 
         'url': function(url) {
-            if (!url && this.$route.query.uploadForm !== 'YouTube') {
+            if (!url && this.$route.query.uploadForm !== 'YouTube')
                 this.clearVideoInfo();
-            };
         }
     },
     methods: {
@@ -449,38 +453,43 @@ export default {
         },
 
         updateMatches() {
-            this.uploading = true;
-            let deleted = this.deleted;
-            let files = [];
-            let uploadRef;
+            if (this.updated.matches.length > 0) {
+                this.displayAlert({ update: true }, { loading: true });
 
-            this.updated.matches.map((match) => {
-                if (match.file) {
-                    files.push(match.file);
-                    delete match.file;
+                let deleted = this.deleted;
+                let files = [];
+                let uploadRef;
+                
+                this.updated.matches.map((match) => {
+                    if (match.file) {
+                        files.push(match.file);
+                        delete match.file;
+                    }
+                })
+
+                if (this.$dev || files.length <= 0) {
+                    uploadRef = Promise.all(this.formatMatchesForUpload());
+                } else {
+                    uploadRef = Promise.all(this.uploadFilesAsPromise(files))
+                    .then(() => Promise.all(this.formatMatchesForUpload()));
                 }
-            })
 
-            if (this.$dev || files.length <= 0) {
-                uploadRef = Promise.all(this.formatMatchesForUpload());
+                uploadRef.then((matches) => this.$edit.save({ matches, deleted }))
+                .then((response) => {
+                    console.log('Updated matches');
+
+                    this.displayAlert({ update: true }, { finished: true });
+                })
+                .catch((error) => {
+                    console.log(error);
+                    console.log('Failed to update');
+
+                    this.setErrors('upload');
+                    this.displayAlert({}, { error: true });
+                })
             } else {
-                uploadRef = Promise.all(this.uploadFilesAsPromise(files))
-                .then(() => Promise.all(this.formatMatchesForUpload()));
+                this.displayAlert({ delete: true }, { warning: true })
             }
-
-            uploadRef.then((matches) => this.$edit.save({ matches, deleted }))
-            .then((response) => {
-                console.log('Updated matches');
-                this.uploading = false;
-                this.finished = true;
-            })
-            .catch((error) => {
-                console.log(error);
-                console.log('Failed to update');
-                this.setErrors('upload');
-                this.uploading = false;
-                this.error = true;
-            })
         },
 
         uploadFilesAsPromise(files) {
@@ -542,12 +551,10 @@ export default {
             this.$set(this.updated.matches[i], 'video', {timestamp});
         },
 
-
         deleteTimestamp(i) {
             console.log('deleting timestamp');
             this.$delete(this.updated.matches[i], 'video');
         },
-
         
         /** generates reader for file */
         readFile(file, i) {
@@ -591,13 +598,13 @@ export default {
                 })
                 .then(() => {
                     if (that.errors.length > 0)
-                        that.error = true;
+                        that.displayAlert({}, {error: true})
                 })
                 .catch((error) => {
                     console.log(error);
 
                     if (that.errors.length > 0)
-                        that.error = true;
+                        that.displayAlert({}, {error: true})
                 })
             })(this, file, i)
         },
@@ -617,8 +624,7 @@ export default {
 
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
-                this.setErrors('parse', file.name);
-                this.error = true;
+                return this.setErrors('parse', file.name);
             } else {
                 let players = {
                     p1: {
@@ -650,24 +656,18 @@ export default {
                 if (!p1.name.match(p1Regex) || !p2.name.match(p2Regex) ||
                     p1.character !== players.p1.character || p2.character !== players.p2.character) {
                     this.fileData = players;
-                    this.formData = {p1: this.updated.matches[i].p1, p2: this.updated.matches[i].p2};
-                    this.warning = true;
+                    this.formData = {
+                        p1: this.updated.matches[i].p1,
+                        p2: this.updated.matches[i].p2
+                    };
+
+                    this.displayAlert({}, { warning: true });
                 } else {
                     this.addFile(this.tempData);
                 }
             }
         },
 
-        addFile(data) {
-            this.$set(this.updated.matches[data.index], 'file', data.file);
-            this.$set(this.updated.matches[data.index], 'fileInfo', data.fileInfo);
-            
-            if (this.warning = true)
-                this.closeWarning();
-
-            console.log("File added to match #" + (data.index + 1));
-        },
-        
         removeFile(i) {
             console.log("Deleting file from match #" + (i + 1));
             
@@ -677,15 +677,18 @@ export default {
             delete this.updated.matches[i].fileInfo;
         },
 
+        addFile(data) {
+            this.$set(this.updated.matches[data.index], 'file', data.file);
+            this.$set(this.updated.matches[data.index], 'fileInfo', data.fileInfo);
+            
+            if (this.alert.status.warning)
+                this.closeWarning();
+
+            console.log("File added to match #" + (data.index + 1));
+        },
+        
         reload() {
             this.$router.go(this.$router.currentRoute);
-        },
-
-        closeWarning() {
-            this.formData = null;
-            this.fileData = null;
-            this.tempData = null;
-            this.warning = false;
         },
 
         removeMatch(i) {
@@ -715,6 +718,24 @@ export default {
         urlOnBlur(url) {
             if (!url && this.youtubeUpload)
                 this.url = 'https://youtu.be/' + this.originalVideo;
+        },
+
+        deleteSet() {
+            this.displayAlert({delete: true}, {loading: true})
+
+            Promise.all(this.updated.matches.map((match) => match._id))
+            .then((deleted) => this.$edit.save({ deleted })).then((response) => {
+                console.log('Set deleted');
+
+                this.displayAlert({delete: true}, {finished: true})
+            })
+            .catch((error) => {
+                console.log(error);
+                console.log('Failed to delete set');
+
+                this.setErrors('setDelete');
+                this.displayAlert({}, {error: true})
+            })
         }
     }
 }

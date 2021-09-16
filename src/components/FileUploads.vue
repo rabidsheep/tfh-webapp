@@ -3,11 +3,13 @@
     id="files">
         <StatusOverlay
         v-bind="{
-            error,
-            uploading,
-            finished,
+            showOverlay,
+            errors,
+            fileData,
+            formData,
             }"
-        :errors="errors"
+        :status="alert.status"
+        :type="alert.type"
         @clear-errors="clearErrors()"
         @close="$emit('reload-form')" />
 
@@ -134,7 +136,6 @@
                     :fileUpload="true"
                     :p1="match.p1"
                     :p2="match.p2"
-                    :uploading="uploading"
                     :fileName="match.fileInfo.name"
                     :fileDate="match.fileInfo.date"
                     :firstMatch="i === 0"
@@ -146,13 +147,12 @@
                     @set-timestamp="setTimestamp($event, i)"
                     @delete-timestamp="deleteTimestamp(i)"
                     @move-up="swapMatches(i, i-1)"
-                    @move-down="swapMatches(i, i+1)"
-                    @update-file-date="match.file.date = $event" />
+                    @move-down="swapMatches(i, i+1)" />
 
                     
                     <div class="match-divider" :key="j">
                         <hr />
-
+                        
                         <v-btn
                         class="add-match"
                         height="28px"
@@ -215,7 +215,7 @@
                 color="accent"
                 rounded
                 :ripple="false"
-                :disabled="!valid || matches.length <= 0 || uploading"
+                :disabled="!valid || matches.length <= 0 || showOverlay"
                 @click="submitFiles()">
                 Upload
                 </v-btn>
@@ -305,7 +305,6 @@ export default {
                 this.group.date = this.video.date;
                 this.invalidVideo = false;
                 this.loading = false;
-
             })
             .catch((error) => {
                 console.log(error);
@@ -318,10 +317,12 @@ export default {
 
         /** tell parent component to begin uploading files */
         submitFiles() {
+            this.displayAlert({ upload: true }, { loading: true })
             let time = new Date().toISOString().split('T');
             let files = [];
             let order = 0;
             let uploadRef;
+
             let general = {
                 userId: this.userId,
                 uploadForm: 'Files',
@@ -332,7 +333,6 @@ export default {
                 uploadTime: time[1],
             }
 
-            this.uploading = true;
             let matches = this.matches.map((match) => {
                 files.push(match.file);
                 delete match.file;
@@ -371,15 +371,13 @@ export default {
                 console.log('Uploaded matches:');
                 response.body.matchIds.forEach((id) => console.log('ID:', id));
 
-                this.uploading = false;
-                this.finished = true;
+                this.displayAlert({ upload: true }, { finished: true })
             })
             .catch((error) => {
                 console.log(error);
                 
                 this.setErrors('upload');
-                this.uploading = false;
-                this.finished = true;
+                this.displayAlert({}, { error: true })
             });
         },
 
@@ -467,7 +465,7 @@ export default {
                         that.readFiles(files, i + 1);
                     else
                         if (that.errors.length > 0)
-                            that.error = true;
+                            that.displayAlert({}, { error: true })
                 })
             })(this, files, i);
         },
@@ -489,7 +487,7 @@ export default {
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
                 console.log("Parsing error with file", file.name);
-                this.setErrors('parse', file.name);
+                return this.setErrors('parse', file.name);
             } else {
                 let match = {
                     p1: {
@@ -524,7 +522,7 @@ export default {
                 this.insertAtIndex = null;
                 this.validateForm();
                 if (this.errors.length > 0)
-                    this.error = true;
+                    this.displayAlert({}, { error: true })
             };
         },
 

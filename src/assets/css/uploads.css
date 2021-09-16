@@ -269,7 +269,7 @@
     min-height: max-content;   
 }
 
-#forms #files .group-info .v-input__append-inner {
+.clearable .v-input__append-inner {
     position: absolute;
     right: 0px;
 }
@@ -506,16 +506,8 @@ button.move:not(.disabled):hover .st0 {
 
 #step__edit {
     display: grid;
-    grid-template:
-        'title'
-        'subtitle'
-        'form';
     row-gap: 20px;
 }
-
-#step__edit h1 { grid-area: title; }
-#step__edit .subtitle { grid-area: subtitle; }
-#step__edit form { grid-area: form; }
 
 .date__input .v-input__control {
     position: relative;
@@ -589,12 +581,12 @@ button.move:not(.disabled):hover .st0 {
     flex-wrap: nowrap;
 }
 
-.wide #youtube .url {
-    max-width: 45%;
+#youtube .url {
+    max-width: 50%;
 }
 
-.small #youtube .url {
-    max-width: 60%;
+.xsmall #youtube .url {
+    max-width: 100%;
 }
 
 .xsmall .add .v-input__icon--prepend {
@@ -606,5 +598,10 @@ button.move:not(.disabled):hover .st0 {
 }
 
 #step__edit .progress {
+    justify-self: center;
+}
+
+.v-btn.delete {
+    align-self: center;
     justify-self: center;
 }

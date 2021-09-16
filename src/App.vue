@@ -27,7 +27,7 @@
         <v-toolbar-items>
           <v-col
           class="version">
-            v0.1.6
+            v0.2.0
           </v-col>
         </v-toolbar-items>
     </v-toolbar>

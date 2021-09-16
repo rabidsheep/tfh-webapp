@@ -254,11 +254,9 @@ picture.character-icon source, picture.character-icon img {
 
 .status {
     width: 100%;
-}
-
-.status .heading {
     text-align: center;
 }
+
 
 .status .character-icon,
 .match .character-icon,
@@ -369,4 +367,8 @@ picture.character-icon source, picture.character-icon img {
 
 #app .v-input.clearable.v-input--is-label-active .v-text-field__slot {
     max-width: calc(100% - 30px) !important;
+}
+
+div:not(#filters) .v-btn:not(.back) {
+    height: 50px;
 }

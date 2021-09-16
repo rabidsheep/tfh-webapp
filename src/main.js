@@ -24,6 +24,10 @@ export default Vue.mixin({
       return `${month}-${day}-${year}`;
     },
 
+    formatRegex(string) {
+      return new RegExp([string.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i')
+    },
+
     // overridden in Edit.vue
     updateCharacter(character, j, i) {
       this.$set(this.matches[i][`p${j}`], 'character', character);

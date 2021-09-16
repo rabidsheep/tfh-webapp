@@ -126,6 +126,7 @@
                 hint="##h##m##s"
                 persistent-hint
                 placeholder="(ex: 01h02m03s)"
+                @change="timestamp = timestamp.trim()"
                 clearable
                 :required="hasVideo"
                 :disabled="!hasVideo"
@@ -196,7 +197,7 @@ export default {
                     ]
                 },
                 character: [
-                    v => !!v || 'Required'
+                    v => !!v || 'Required',
                 ]
             },
         }

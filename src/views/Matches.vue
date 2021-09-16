@@ -27,13 +27,14 @@
       :playerList="playerList"
       :groupList="groupList"
       :channelList="channelList"
+      :allVideos="allVideos"
       @update-name="filters.deep.players[$event.index].name = $event.name"
       @update-character="filters.deep.players[$event.index].character = $event.character"
       @update-strictness="filters.strict = $event"
       @update-group="filters.deep.group = $event"
       @update-hasfile="filters.deep.hasFile = $event"
       @update-hasvideo="filters.deep.hasVideo = $event"
-      @update-channel="filters.deep.channel = $event"
+      @update-channel="updateChannel($event)"
       @update-video="filters.deep.video = $event"
       @clear-filters="clearFilters()"
       @swap="swap()"
@@ -151,14 +152,8 @@ export default {
             part: null,
             date: null,
           },
-          channel: {
-            id: null,
-            name: null,
-          },
-          video: {
-            id: null,
-            title: null,
-          },
+          channel: null,
+          video: null,
           hasFile: false,
           hasVideo: false,
         },
@@ -169,6 +164,7 @@ export default {
       groupList: [],
       playerList: [],
       channelList: [],
+      allVideos: [],
       resultsCount: null,
       lastVisible: null,
       error: false,
@@ -215,6 +211,7 @@ export default {
           this.groupList = response.body?.groups;
           this.playerList = response.body?.players;
           this.channelList = response.body?.channels;
+          this.allVideos = response.body?.videos;
           this.loadingFilterContent = false;
 
           //this.printObj(this.playerList)
@@ -268,10 +265,8 @@ export default {
             part: null,
             date: null,
           },
-          channel: {
-            id: null,
-            name: null,
-          },
+          channel: null,
+          video: null,
           hasFile: false,
           hasVideo: false,
         },
@@ -287,6 +282,10 @@ export default {
     updateName(name, i) {
       if (this.filters.deep.players[i].name !== name)
         this.filters.deep.players[i].name = name;
+    },
+
+    updateChannel(channel) {
+      this.filters.deep.channel = channel
     },
 
     swap() {

@@ -3,14 +3,13 @@
     id="youtube">
         <StatusOverlay
         v-bind="{
-            error,
-            uploading,
-            finished,
-            warning,
+            showOverlay,
             errors,
             fileData,
-            formData
+            formData,
             }"
+        :status="alert.status"
+        :type="alert.type"
         @add-file-anyways="addFile(tempData)"
         @close-warning="closeWarning()"
         @clear-errors="clearErrors()"
@@ -307,7 +306,7 @@
                     color="accent"
                     rounded
                     :ripple="false"
-                    :disabled="!valid"
+                    :disabled="!valid || showOverlay"
                     @click="youtubeUpload()">
                         Upload
                     </v-btn>
@@ -497,15 +496,13 @@ export default {
             uploadRef.then((response) => {
                 console.log('Uploaded matches:');
                 response.body.matchIds.forEach((id) => console.log('ID:', id));
-                this.uploading = false;
-                this.finished = true;
+                this.displayAlert({ uploading: true }, { finished: true })
             })
             .catch((error) => {
                 console.log(error);
                 console.log('Failed to upload');
                 this.setErrors('upload');
-                this.uploading = false;
-                this.error = true;
+                this.displayAlert({}, { error: true })
             });
         },
 
@@ -603,7 +600,7 @@ export default {
                     console.log(error)
                     
                     if (that.errors.length > 0)
-                        that.error = true
+                        that.displayAlert({}, { error: true })
                 })
             })(this, file, i)
         },
@@ -623,8 +620,7 @@ export default {
 
             // error if player or character names cannot be parsed
             if (playerNames.length !== 2 || characterNames.length !== 2) {
-                this.setErrors('parse', file.name);
-                this.error = true;
+                return this.setErrors('parse', file.name);
             } else {
                 let players = {
                     p1: {
@@ -656,8 +652,12 @@ export default {
                 if (!p1.name?.match(p1Regex) || !p2.name?.match(p2Regex) ||
                     p1.character !== players.p1.character || p2.character !== players.p2.character) {
                     this.fileData = players;
-                    this.formData = {p1: this.matches[i].p1, p2: this.matches[i].p2};
-                    this.warning = true;
+                    this.formData = {
+                        p1: this.matches[i].p1,
+                        p2: this.matches[i].p2
+                    };
+                    
+                    this.displayAlert({}, { warning: true });
                 } else {
                     this.addFile(this.tempData);
                 }

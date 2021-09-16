@@ -8,27 +8,25 @@
         return {
             loading: false,
             valid: false,
-            error: false,
-            errors: [],
-            warning: false,
-            uploading: false,
-            finished: false,
+            datepicker: false,
             currentDate: new Date().toISOString().split('T').toString(),
+            hasVideo: false,
+            changeButton: false,
+            
+            showOverlay: false,
+            alert: { status: {}, type: {} },
+            errors: [],
+
             fileData: null,
             formData: null,
             tempData: null,
-            datepicker: false,
-            hasVideo: false,
-            changeButton: false,
-
             
-            date: null,
             group: {
                 title: null,
                 part: null,
                 date: null,
             },
-            
+            date: null,
             url: null,
             video: {},
             channel: {},
@@ -36,6 +34,11 @@
         }
     },
     methods: {
+        displayAlert(type, status) {
+            this.alert = {type, status}
+            this.showOverlay = true;
+        },
+
         /** converts array buffer to string */
         buf2hex(buffer) {
             let buf = [...new Uint8Array(buffer)];
@@ -45,7 +48,6 @@
             let timestamp = buf.slice(150, 154);
             return timestamp.map(x => x.toString(16).padStart(2, '0')).join('');
         },
-
         
         /** sets errors array for display once files finish being read */
         setErrors(type, file) {
@@ -67,15 +69,23 @@
 
         /** clears errors array */
         clearErrors() {
+            this.showOverlay = false;
+            this.alert = {
+                type: {},
+                status: {},
+            }
             this.errors = [];
-            this.error = false;
         },
         
         closeWarning() {
+            this.showOverlay = false;
+            this.alert = {
+                type: {},
+                status: {},
+            }
             this.formData = null;
             this.fileData = null;
             this.tempData = null;
-            this.warning = false;
         },
         
          

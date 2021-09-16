@@ -237,7 +237,7 @@
     justify-content: space-between;
 }
 
-.small .match .p2 {
+.small .match .p2, .small .match .links .file {
     padding-top: 10px;
 }
 

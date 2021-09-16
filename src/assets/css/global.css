@@ -369,6 +369,6 @@ picture.character-icon source, picture.character-icon img {
     max-width: calc(100% - 30px) !important;
 }
 
-div:not(#filters) .v-btn:not(.back):not(.scroll-up) {
+div:not(#filters) .v-btn:not(.back):not(.scroll-up):not(.show) {
     height: 50px;
 }

@@ -14,7 +14,7 @@
     align-items: center;
 }
 
-#matches .match-group > div {
+#matches .match-group > * {
     width: 95%;
     justify-self: center;
 }
@@ -275,4 +275,9 @@
 
 .xsmall .match {
     flex-wrap: nowrap;
+}
+
+.match-group .show {
+    margin-top: -1px;
+    border: 1px solid black;
 }

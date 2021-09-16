@@ -111,7 +111,7 @@
                             width="max-content"
                             height="50px"
                             @click="displayAlert({ delete: true }, { warning: true })">
-                                Delete Set
+                                <v-icon left>mdi-trash-can-outline</v-icon> Delete Set
                             </v-btn>
 
                             <v-form

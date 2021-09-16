@@ -13,6 +13,16 @@
         @clear-errors="clearErrors()"
         @close="$emit('reload-form')" />
 
+        <v-btn
+        class="delete"
+        color="accent"
+        rounded
+        width="max-content"
+        height="50px"
+        @click="matches = []">
+            <v-icon left>mdi-trash-can-outline</v-icon> Clear Matches
+        </v-btn>
+
         <v-form
         v-model="valid"
         class="form"

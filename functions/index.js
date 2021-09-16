@@ -29,10 +29,14 @@ api.get('/matches', (req, res) => {
         let strict = req.query.filters.strict === 'true';
         let hasFile = req.query.filters.hasFile === 'true';
         let hasVideo = req.query.filters.hasVideo === 'true';
+        let channel = req.query.filters.channel;
+        let video = req.query.filters.video;
         let unfiltered = !players.some((player) => player.name || player.character);
         skip = req.query.page > 0 ? (req.query.page - 1) * itemsPerPage : 0;
 
-        query = formatQuery(players, strict, unfiltered, group, hasFile, hasVideo);
+        console.log(req.query.filters);
+
+        query = formatQuery(players, strict, unfiltered, group, hasFile, hasVideo, channel, video);
     } else {
         query = { 'uploadId': req.query.uploadId };
     }
@@ -93,7 +97,7 @@ api.get('/matches', (req, res) => {
         .toArray()
     )
     .then((results) => {
-        console.log(results[0]);
+        //console.log(results[0]);
         let count = results[0].countAggregate[0] ? results[0].countAggregate[0].count : 0;
         let groups = results[0].groupAggregate;
         console.log("api.get('/matches'): Returning " + count + " group(s).");
@@ -184,37 +188,43 @@ api.put('/edit', (req, res) => {
     console.log(req.body)
     let matches = req.body.matches;
     let deleted = req.body.deleted.map(id => ObjectId(id));
-
+    
     return mongoDb()
-    .then((client) =>
-        Promise.all([
-            // update matches
-            matches.forEach((match) => {
-                console.log(match);
-                let data = [
-                    { _id: ObjectId(match._id) },
-                    { $set: {
-                        p1: match.p1,
-                        p2: match.p2,
-                        video: match.video,
-                        channel: match.channel,
-                        group: match.group,
-                        fileInfo: match.fileInfo,
-                        order: match.order
-                    } }
-                ];
+    .then((client) => {
+        if (matches) {
+            return Promise.all([
+                // update matches
+                matches.forEach((match) => {
+                    console.log(match);
+                    let data = [
+                        { _id: ObjectId(match._id) },
+                        { $set: {
+                            p1: match.p1,
+                            p2: match.p2,
+                            video: match.video,
+                            channel: match.channel,
+                            group: match.group,
+                            fileInfo: match.fileInfo,
+                            order: match.order
+                        } }
+                    ];
 
+                    client.db('tfhr')
+                    .collection('matches')
+                    .updateOne(...data)
+                }),
+                
+                // delete matches if any were removed
                 client.db('tfhr')
                 .collection('matches')
-                .updateOne(...data)
-            }),
-            
-            // delete matches if any were removed
-            client.db('tfhr')
+                .deleteMany({ _id: { $in: deleted } })
+            ])
+        } else {
+            return client.db('tfhr')
             .collection('matches')
             .deleteMany({ _id: { $in: deleted } })
-        ])
-    )
+        }
+    })
     .then(() => {
         console.log("api.put('/edit'): Matches updated");
         return res.status(200).send();
@@ -224,10 +234,23 @@ api.put('/edit', (req, res) => {
 
 /** get list of groups */
 api.get('/filter/content', (req, res) => {
+    const players = [
+        { $group: {
+            '_id': null,
+            'p1': { $addToSet: '$p1.name' },
+            'p2': { $addToSet: '$p2.name' } 
+        } },
+        { $project: {
+            '_id': 0,
+            'players': { $setUnion: ['$p1', '$p2'] }
+        } }
+    ];
+
     const groups = [
         { $match: { 'group': { $ne: null } } },
         { $group: {
             '_id': '$group.title',
+            'title': { $first: '$group.title' },
             'sub': {
                 $addToSet: {
                     $cond: {
@@ -239,40 +262,35 @@ api.get('/filter/content', (req, res) => {
                         else: { 'date': '$group.date' }
                     }
                 }
-                
             }
         } },
         { $sort: {
-            '_id': -1,
+            'title': -1,
             'sub.part': -1,
             'sub.date': -1
-        } }
-    ];
-
-    const players = [
-        { $group: {
-            '_id': null,
-            'p1': { $addToSet: '$p1.name' },
-            'p2': { $addToSet: '$p2.name' } 
         } },
-        { $project: {
-            'players': { $setUnion: ['$p1', '$p2'] }
-        } }
+        { $project: { '_id': 0, 'title': 1, 'sub': 1 }}
     ];
     
     const channels = [
         { $match: { 'channel': {$ne: null} } },
         { $group: {
-            '_id': '$channel.id',
+            '_id': '$channel.name',
             'name': { $first: '$channel.name' },
-            'videos': { $addToSet: {
-                id: '$video.id',
-                title: '$video.title'
-            } }
-        } }
+            'videos': { $addToSet: '$video.title' }
+        } },
+        { $project: { '_id': 0, 'name': 1, 'videos': 1 }}
     ];
 
-    const facet = [{ $facet: { groups, players, channels } }];
+    const videos = [
+        { $match: { 'video': {$ne: null} } },
+        { $group: {
+            '_id': null,
+            'videos': { $addToSet: '$video.title' }
+        }}
+    ];
+
+    const facet = [{ $facet: { players, groups, channels, videos } }];
 
     return mongoDb()
     .then((client) =>
@@ -283,13 +301,15 @@ api.get('/filter/content', (req, res) => {
     )
     .then((results) => {
         console.log(results[0])
-        let groups = results[0].groups;
         let players = results[0].players[0].players;
+        let groups = results[0].groups;
         let channels = results[0].channels;
-
+        let videos = results[0].videos[0].videos;
+        
+        // generate list of all videos
         console.log("api.get('/filter/content'): Returning filter content.");
 
-        return res.status(200).send({groups, players, channels});
+        return res.status(200).send({groups, players, channels, videos});
     })
     .catch((error) => res.status(400).send(error.toString()));
 })
@@ -424,7 +444,7 @@ function formatDate(date) {
 }
 
 // format query object for filtering matches
-function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
+function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo, channel, video) {
     let query = {};
     if (players[0].name)
         players[0].name = new RegExp([players[0].name.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i');
@@ -527,6 +547,22 @@ function formatQuery(players, strict, unfiltered, group, hasFile, hasVideo) {
             ...query
         };
     }
+
+    if (channel) {
+        query = {
+            'channel.name': new RegExp([channel.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i'),
+            ...query
+        }
+    }
+
+    if (video) {
+        query = {
+            'video.title': new RegExp([video.replace(/[-[\]{}()*+?.,\\^$|]/g, "\\$&")], 'i'),
+            ...query
+        }
+    }
+
+    console.log("Query:\n", query)
 
     return query;
 }

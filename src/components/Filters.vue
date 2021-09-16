@@ -24,7 +24,7 @@
                     v-model="player.name"
                     append-icon=""
                     :menu-props="{
-                        contentClass: 'player-select-menu',
+                        contentClass: 'select-menu select-menu__player',
                         bottom: true,
                         offsetY: true,
                         maxHeight: '200'
@@ -55,8 +55,8 @@
                     v-if="strictFilter"
                     fab
                     small
+                    height="40px"
                     minWidth="40px"
-                    minHeight="40px"
                     :disabled="!strict"
                     :ripple="false"
                     color="accent"
@@ -80,6 +80,7 @@
                 :class="hidden ? `toggle` : `toggle--active`"
                 color="button2"
                 width="auto"
+                height="30px"
                 small
                 elevation="0"
                 :ripple="false"
@@ -105,7 +106,8 @@
                                     v-model="groupFilter.title"
                                     append-icon=""
                                     :menu-props="{
-                                        contentClass: 'group-select-menu',
+                                        maxWidth: '300',
+                                        contentClass: 'select-menu select-menu__title',
                                         bottom: true,
                                         offsetY: true,
                                         maxHeight: '200'
@@ -115,8 +117,8 @@
                                     label="Group Title"
                                     :hide-no-data="!groupSearch"
                                     :items="groupList"
-                                    item-text="_id"
-                                    item-value="_id"
+                                    item-text="title"
+                                    item-value="title"
                                     :return-object="false"
                                     :search-input.sync="groupSearch"
                                     @change="updateParts()">
@@ -140,7 +142,8 @@
                                     v-model="groupFilter.part"
                                     append-icon=""
                                     :menu-props="{
-                                        contentClass: 'group-part-select-menu',
+                                        maxWidth: '300',
+                                        contentClass: 'select-menu select-menu__part',
                                         bottom: true,
                                         offsetY: true,
                                         maxHeight: '200'
@@ -155,7 +158,7 @@
                                     :return-object="false"
                                     :disabled="!groupFilter.title || partList.length === 1 && partList[0].part === null"
                                     :search-input.sync="partSearch"
-                                    @change="updateDates()">
+                                    @change="updateDates(groupList.filter((group) => formatRegex(groupFilter.title).test(group.title)))">
                                         <template v-slot:no-data>
                                             <v-list-item>
                                                 <v-list-item-content>
@@ -177,7 +180,8 @@
                                     prepend-icon="mdi-calendar"
                                     append-icon=""
                                     :menu-props="{
-                                        contentClass: 'group-date-select-menu',
+                                        maxWidth: '300',
+                                        contentClass: 'select-menu select-menu__date',
                                         bottom: true,
                                         offsetY: true,
                                         maxHeight: '200'
@@ -207,15 +211,16 @@
                             </div>
                             <!-- /group filters -->
 
-                            <!--<div
+                            <div
                             class="videos">
                                 <v-combobox
-                                class="channel"
+                                class="channel clearable"
                                 clearable
-                                v-model="channelFilter.name"
+                                v-model="channelFilter"
                                 append-icon=""
                                 :menu-props="{
-                                    contentClass: 'channel-select-menu',
+                                    maxWidth: '300',
+                                    contentClass: 'select-menu select-menu__channel',
                                     bottom: true,
                                     offsetY: true,
                                     maxHeight: '200'
@@ -225,6 +230,8 @@
                                 :hide-no-data="!channelSearch"
                                 :items="channelList"
                                 item-text="name"
+                                item-value="name"
+                                :return-object="false"
                                 @change="updateChannel($event)"
                                 :search-input.sync="channelSearch">
                                     <template v-slot:no-data>
@@ -239,22 +246,22 @@
                                 </v-combobox>
 
                                 <v-combobox
-                                class="video"
+                                class="video clearable"
                                 clearable
-                                v-model="videoFilter.title"
+                                v-model="videoFilter"
                                 append-icon=""
                                 :menu-props="{
-                                    contentClass: 'video-select-menu',
+                                    maxWidth: '300',
+                                    contentClass: 'select-menu select-menu__video',
                                     bottom: true,
                                     offsetY: true,
-                                    maxHeight: '200'
+                                    maxHeight: '300'
                                     }"
                                 dense
                                 label="Video"
                                 :hide-no-data="!videoSearch"
                                 :items="videoList"
-                                item-text="title"
-                                return-object
+                                :return-object="false"
                                 @change="$emit('update-video', $event)"
                                 :search-input.sync="videoSearch">
                                     <template v-slot:no-data>
@@ -267,7 +274,7 @@
                                         </v-list-item>
                                     </template>
                                 </v-combobox>
-                            </div>-->
+                            </div>
 
                             <div
                             class="links">
@@ -316,42 +323,6 @@
 <script>
 import CharacterSelect from './CharacterSelect.vue'
 
-function initializeData() {
-    return {
-        hidden: true,
-        playersFilter: [
-            {name: null, character: null},
-            {name: null, character: null}
-        ],
-        groupFilter: {
-            title: null,
-            part: null,
-            date: null,
-        },
-        channelFilter: {
-            id: null,
-            name: null,
-        },
-        videoFilter: {
-            id: null,
-            title: null,
-        },
-        strictFilter: false,
-        hasFileFilter: false,
-        hasVideoFilter: false,
-        partList: [],
-        dateList: [],
-        videoList: [],
-        playerSearch: [],
-        groupSearch: null,
-        partSearch: null,
-        dateSearch: null,
-        channelSearch: null,
-        videoSearch: null,
-        groupIndex: null,
-    }
-}
-
 export default {
     name: 'Filters',
     components: {
@@ -360,14 +331,15 @@ export default {
     props: {
         players: Array,
         group: Object,
-        channel: Object,
-        video: Object,
+        channel: String,
+        video: String,
         strict: Boolean,
         hasFile: Boolean,
         hasVideo: Boolean,
         groupList: [Array, null],
         playerList: [Array, null],
-        channelList: [Array, null]
+        channelList: [Array, null],
+        allVideos: [Array, null]
     },
     data: () => {
         return {
@@ -381,18 +353,11 @@ export default {
                 part: null,
                 date: null,
             },
-            channelFilter: {
-                id: null,
-                name: null,
-            },
-            videoFilter: {
-                id: null,
-                title: null,
-            },
+            channelFilter: null,
+            videoFilter: null,
             strictFilter: false,
             hasFileFilter: false,
             hasVideoFilter: false,
-            groupIndex: null,
             partList: [],
             dateList: [],
             videoList: [],
@@ -407,7 +372,7 @@ export default {
     watch: {
         'players': {
             handler: function(players) {
-                this.playersFilter = players
+                this.playersFilter = players;
                 
                 //console.log(JSON.parse(JSON.stringify(this.players)))
                 //console.log(JSON.parse(JSON.stringify(this.playersFilter)))
@@ -417,120 +382,139 @@ export default {
 
         'group': {
             handler: function(group) {
-                this.groupFilters = group
+                this.groupFilter = group;
             },
             deep: true,
         },
 
         'strict': function(strict) {
-            this.strictFilter = strict
+            this.strictFilter = strict;
         },
 
         'hasFile': function(hasFile) {
-            this.hasFileFilter = hasFile
+            this.hasFileFilter = hasFile;
         },
 
         'hasVideo': function(hasVideo) {
-            this.hasVideoFilter = hasVideo
+            this.hasVideoFilter = hasVideo;
         },
 
-        'channel': {
-            handler: function(channel) {
-                this.channelFilter = channel
-            },
-            deep: true,
-        },
-        'channelFilter.name': function() {
-            //console.log(JSON.parse(JSON.stringify(this.channelFilter)))
+        'channel': function(channel) {
+            this.channelFilter = channel;
         },
 
         'video': {
             handler: function(video) {
                 //console.log(video)
             }
+        },
+
+        'allVideos': function(all) {
+            this.videoList = this.allVideos;
         }
     },
     methods: {
         // update player characters
         selectCharacter: function (character, i) {
             if (character !== this.players[i].character)
-                this.$emit('update-character', {character: character, index: i})
+                this.$emit('update-character', {character: character, index: i});
         },
 
         // update player names
         selectPlayer: function (name, i) {
-            this.$emit('update-name', {name: name, index: i})
+            this.$emit('update-name', {name: name, index: i});
         },
 
         // update part list
         updateParts() {
+            let parts = [];
+            let matched = null;
+
             if (this.groupFilter.title) {
+                matched = [];
+                let re = this.formatRegex(this.groupFilter.title);
+                matched = this.groupList.filter((group) => re.test(group.title))
+                
                 // if group is selected...
-                this.groupIndex = this.groupList.findIndex((t) => 
-                    t._id === this.groupFilter.title
+                matched.forEach((group) =>
+                    group.sub.forEach((sub) => {
+                        if (sub.part) return parts.push(sub)
+                    })
                 )
 
-                this.partList = this.groupList[this.groupIndex].sub
-                .filter((s) => s.part).map((s) => s)
+                this.partList = parts;
             } else {
                 // else clear part and date
-                this.partList = []
-                this.dateList = []
-                this.groupFilter.part = null
-                this.groupFilter.date = null
+                this.partList = [];
+                this.dateList = [];
+                this.groupFilter.part = null;
+                this.groupFilter.date = null;
             }
 
-            this.updateDates()
+            this.updateDates(matched);
         },
 
         // update date list
-        updateDates() {
+        updateDates(matched) {
+            let dates = [];
+
             if (!this.groupFilter.part && this.groupFilter.title) {
                 // if no part is selected...
-                this.dateList = this.groupList[this.groupIndex].sub.map((s) => s.date)
+                matched.forEach((group) => {
+                    return group.sub.forEach((sub) => dates.push(sub.date));
+                })
+
             } else if (this.groupFilter.part && this.groupFilter.title) {
                 // else if part is selected...
-                this.dateList = this.partList.filter((s) => s.part === this.groupFilter.part).map((date) => date)
-                
+                let re = this.formatRegex(this.groupFilter.part);
+                dates = this.partList.filter((sub) => re.test(sub.part)).map((sub) => sub.date);
             } else {
                 // clear if group is not selected
-                this.dateList = []
-                this.groupFilter.date = null
+                this.groupFilter.date = null;
             }
+            
+            this.dateList = dates;
 
-            this.$emit('update-group', this.groupFilter)
-
-            //console.log(JSON.parse(JSON.stringify(this.dateList)))
+            this.$emit('update-group', this.groupFilter);
         },
 
         updateChannel(channel) {
-            //console.log(channel)
-            this.$emit('update-channel', channel)
-            this.updateVideoList(channel)
+            if (channel) console.log("Filtering results with videos from", channel)
+            else console.log("Clearing channel filter")
+            this.$emit('update-channel', channel);
+
+            this.updateVideoList(channel);
         },
 
         updateVideoList(channel) {
-            if (channel)
-                this.videoList = this.channelList.filter((ch) => ch._id === channel._id).map((ch) => ch.videos)
+            if (channel) {
+                let videos = [];
+                let re = this.formatRegex(channel);
+                this.channelList.filter((ch) => re.test(ch.name)).forEach((ch) => videos.push(...ch.videos))
+                this.videoList = videos;
+            } else {
+                this.videoList = this.allVideos;
+            }
         },
 
         // clear filters
         clear() {
             // check if objects for each player & group contain only null values or not
-            let p1 = Object.values(this.playersFilter[0]).every( e => e === null )
-            let p2 = Object.values(this.playersFilter[1]).every( e => e === null )
-            let group = Object.values(this.groupFilter).every ( e => e === null )
-            let filterValuesExist = !p1 || !p2 || !group || this.strict && !p1 || this.strict && !p2 || this.hasFileFilter || this.hasVideoFilter
+            let p1 = Object.values(this.playersFilter[0]).every( e => e === null );
+            let p2 = Object.values(this.playersFilter[1]).every( e => e === null );
+            let group = Object.values(this.groupFilter).every ( e => e === null );
+            let filterValuesExist = !p1 || !p2 || !group || this.strict && !p1 || this.strict && !p2 
+            || this.hasFileFilter || this.hasVideoFilter || this.channelFilter || this.videoFilter;
 
             // if anything has been changed, clear the filter (this prevents unnecessary calls to the server)
             if (filterValuesExist) {
-                console.log('Clearing filters')
-                this.$emit('clear-filters')
+                console.log('Clearing filters');
+                this.$emit('clear-filters');
             } else if (this.strict) {
-                console.log('Resetting strictness')
-                this.$emit('reset-strictness')
+                console.log('Resetting strictness');
+                this.$emit('reset-strictness');
             } else {
-                console.log('No filters to reset')
+                console.log('No filters to reset');
             }
         },
 
@@ -539,7 +523,7 @@ export default {
                 title: null,
                 part: null,
                 date: null,
-            }
+            };
         }
     },
 }

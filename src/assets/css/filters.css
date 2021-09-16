@@ -33,7 +33,7 @@
     background-color: #272727;
     border-radius: 10px;
     padding: 20px;
-    width: 80%;
+    width: 90%;
     margin: auto;
 }
     #filters .advanced__inner .v-messages {
@@ -85,12 +85,16 @@
 }
 
     #filters .main > .players { grid-area: players; }
-    #filters .main > .toggle {
-        grid-area: toggle; 
-        height: auto;
+
+    #filters .main > .advanced { 
+        grid-area: advanced;
+        width: 90%;
     }
-    #filters .main > .advanced { grid-area: advanced; }
-    #filters .main > .clear { grid-area: clear; }
+
+    #filters .main > .clear {
+        grid-area: clear;
+        margin-top: 10px;
+    }
 
     #filters .main > * { justify-self: center; }
 
@@ -154,6 +158,7 @@
     display: grid;
     grid-template:
         "group"
+        "videos"
         "links"
         "sides" auto;
     row-gap: 20px;
@@ -162,6 +167,7 @@
 #filters .group { grid-area: group; }
 #filters .links { grid-area: links; }
 #filters .sides { grid-area: sides; }
+#filters .videos { grid-area: videos; }
 
 /******/
 
@@ -177,13 +183,13 @@
 
     .wide #filters .group {
         grid-template:
-            "title part date" auto / 2fr 1fr 1fr;
+            "title part date" auto / 1fr 1fr 1fr;
     }
 
     .small #filters .group {
         grid-template:
             "title title" auto
-            "part date" auto / 45% 45%;
+            "part date" auto / 42% auto;
         row-gap: 10px;
     }
 
@@ -191,8 +197,9 @@
 
 #filters .links {
     display: grid;
-    justify-content: center;
-    justify-items: center;
+    text-align: center;
+    width: max-content;
+    justify-self: center;
 }
 
     #filters .links label {
@@ -223,7 +230,7 @@
             "label label" auto
             "file video" auto / auto;
         row-gap: 10px;
-        column-gap: 50px;
+        column-gap: 20px;
     }
 
 /******/

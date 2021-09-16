@@ -1,7 +1,6 @@
 <template>
   <div
-  id="index"
-  v-scroll="onScroll">
+  id="index">
       <div
       class="loading__filters"
       v-if="loadingFilterContent">
@@ -27,13 +26,14 @@
       :playerList="playerList"
       :groupList="groupList"
       :channelList="channelList"
+      :allVideos="allVideos"
       @update-name="filters.deep.players[$event.index].name = $event.name"
       @update-character="filters.deep.players[$event.index].character = $event.character"
       @update-strictness="filters.strict = $event"
       @update-group="filters.deep.group = $event"
       @update-hasfile="filters.deep.hasFile = $event"
       @update-hasvideo="filters.deep.hasVideo = $event"
-      @update-channel="filters.deep.channel = $event"
+      @update-channel="updateChannel($event)"
       @update-video="filters.deep.video = $event"
       @clear-filters="clearFilters()"
       @swap="swap()"
@@ -102,21 +102,6 @@
         </div>
       </div>
     </div>
-
-    <v-slide-y-reverse-transition>
-      <v-btn
-      title="Go to Top"
-      class="scroll-up"
-      @click="$vuetify.goTo(0)"
-      small fab
-      fixed bottom right
-      color="accent"
-      v-show="showToTop">
-        <v-icon>
-          mdi-arrow-up-bold
-        </v-icon>
-      </v-btn>
-    </v-slide-y-reverse-transition>
   </div>
 </template>
 
@@ -138,7 +123,6 @@ export default {
 
   data: () => {
     return {
-      showToTop: false,
       hidden: false,
       filters: {
         deep: {
@@ -151,14 +135,8 @@ export default {
             part: null,
             date: null,
           },
-          channel: {
-            id: null,
-            name: null,
-          },
-          video: {
-            id: null,
-            title: null,
-          },
+          channel: null,
+          video: null,
           hasFile: false,
           hasVideo: false,
         },
@@ -169,6 +147,7 @@ export default {
       groupList: [],
       playerList: [],
       channelList: [],
+      allVideos: [],
       resultsCount: null,
       lastVisible: null,
       error: false,
@@ -177,7 +156,6 @@ export default {
       loadingMatches: false,
       loadingFilterContent: true,
       stop: false,
-      oldStrict: false
     }
   },
 
@@ -215,6 +193,7 @@ export default {
           this.groupList = response.body?.groups;
           this.playerList = response.body?.players;
           this.channelList = response.body?.channels;
+          this.allVideos = response.body?.videos;
           this.loadingFilterContent = false;
 
           //this.printObj(this.playerList)
@@ -268,10 +247,8 @@ export default {
             part: null,
             date: null,
           },
-          channel: {
-            id: null,
-            name: null,
-          },
+          channel: null,
+          video: null,
           hasFile: false,
           hasVideo: false,
         },
@@ -289,6 +266,10 @@ export default {
         this.filters.deep.players[i].name = name;
     },
 
+    updateChannel(channel) {
+      this.filters.deep.channel = channel
+    },
+
     swap() {
       let p1 = JSON.stringify(this.filters.deep.players[0]);
       let p2 = JSON.stringify(this.filters.deep.players[1]);
@@ -296,10 +277,6 @@ export default {
       // do not swap if sides are the same
       if (p1 !== p2)
         this.filters.deep.players = [this.filters.deep.players[1], this.filters.deep.players[0]];
-    },
-
-    onScroll: function (event) {
-      this.showToTop = event.currentTarget.scrollY >= 250;
     },
 
     generateZipFile(matches, group) {

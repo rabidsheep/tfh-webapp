@@ -1,5 +1,6 @@
 <template>
-  <v-app dark>
+  <v-app dark 
+  v-scroll="onScroll">
     <v-toolbar id="menubar" height="58px" maxHeight="58px" dense color="accent">
         <!-- replace <a> with <router-link> eventually -->
         <router-link to="/" @click.native="forceRerenderMain($event)">
@@ -27,7 +28,7 @@
         <v-toolbar-items>
           <v-col
           class="version">
-            v0.1.6
+            v0.2.0
           </v-col>
         </v-toolbar-items>
     </v-toolbar>
@@ -39,9 +40,22 @@
           <router-view :key="$route.fullPath" />
         </div>
       </v-layout>
-
     </v-main>
 
+    <v-slide-y-reverse-transition>
+      <v-btn
+      title="Go to Top"
+      class="scroll-up"
+      @click="$vuetify.goTo(0)"
+      small fab
+      fixed bottom right
+      color="accent"
+      v-show="showToTop">
+        <v-icon>
+          mdi-arrow-up-bold
+        </v-icon>
+      </v-btn>
+    </v-slide-y-reverse-transition>
 
     <v-container id="footer" class="pb-4">
       <v-row>
@@ -62,15 +76,13 @@ export default {
   data: () => {
     return {
       mainKey: true,
+      showToTop: false,
       uploadKey: true,
     }
   },
   mounted: function () {
   },
   watch: {
-    onScroll: function (event) {
-      this.showToTop = event.currentTarget.scrollY >= 250
-    }
   },
   methods: {
     forceRerenderMain(e) {
@@ -80,6 +92,10 @@ export default {
         this.$route.push('/')
       }
     },
+    
+    onScroll: function (event) {
+      this.showToTop = event.currentTarget.scrollY >= 250
+    }
   }
 }
 </script>

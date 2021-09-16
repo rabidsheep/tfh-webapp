@@ -72,7 +72,7 @@
 
               <MatchRow
               v-for="(match, k) in group.matches"
-              v-show="!hideMatches[i] || hideMatches[i] && k < 8"
+              v-show="!hideMatches[i] || hideMatches[i] && k < 6"
               :key="k"
               :p1="match.p1"
               :p2="match.p2"
@@ -88,7 +88,7 @@
               v-if="group.matches.length > 8"
               @click="$set(hideMatches, i, !hideMatches[i])"
               tile>
-                {{ hideMatches[i] ? 'Show ' + (group.matches.length - 8) + ' More' : 'Show Less' }}
+                {{ hideMatches[i] ? 'Show ' + (group.matches.length - 6) + ' More' : 'Show Less' }}
                 <v-icon right color="accent">
                   {{ hideMatches[i] ? 'mdi-chevron-double-down' : 'mdi-chevron-double-up' }}
                 </v-icon>

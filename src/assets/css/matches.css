@@ -237,8 +237,7 @@
     justify-content: space-between;
 }
 
-.small .match .p2,
-.small .match .video {
+.small .match .p2 {
     padding-top: 10px;
 }
 

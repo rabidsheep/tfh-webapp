@@ -1,7 +1,6 @@
 <template>
   <div
-  id="index"
-  v-scroll="onScroll">
+  id="index">
       <div
       class="loading__filters"
       v-if="loadingFilterContent">
@@ -103,21 +102,6 @@
         </div>
       </div>
     </div>
-
-    <v-slide-y-reverse-transition>
-      <v-btn
-      title="Go to Top"
-      class="scroll-up"
-      @click="$vuetify.goTo(0)"
-      small fab
-      fixed bottom right
-      color="accent"
-      v-show="showToTop">
-        <v-icon>
-          mdi-arrow-up-bold
-        </v-icon>
-      </v-btn>
-    </v-slide-y-reverse-transition>
   </div>
 </template>
 
@@ -139,7 +123,6 @@ export default {
 
   data: () => {
     return {
-      showToTop: false,
       hidden: false,
       filters: {
         deep: {
@@ -173,7 +156,6 @@ export default {
       loadingMatches: false,
       loadingFilterContent: true,
       stop: false,
-      oldStrict: false
     }
   },
 
@@ -295,10 +277,6 @@ export default {
       // do not swap if sides are the same
       if (p1 !== p2)
         this.filters.deep.players = [this.filters.deep.players[1], this.filters.deep.players[0]];
-    },
-
-    onScroll: function (event) {
-      this.showToTop = event.currentTarget.scrollY >= 250;
     },
 
     generateZipFile(matches, group) {

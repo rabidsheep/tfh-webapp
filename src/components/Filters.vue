@@ -55,8 +55,8 @@
                     v-if="strictFilter"
                     fab
                     small
+                    height="40px"
                     minWidth="40px"
-                    minHeight="40px"
                     :disabled="!strict"
                     :ripple="false"
                     color="accent"
@@ -80,6 +80,7 @@
                 :class="hidden ? `toggle` : `toggle--active`"
                 color="button2"
                 width="auto"
+                height="30px"
                 small
                 elevation="0"
                 :ripple="false"

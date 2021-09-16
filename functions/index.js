@@ -192,7 +192,7 @@ api.put('/edit', (req, res) => {
     return mongoDb()
     .then((client) => {
         if (matches) {
-            Promise.all([
+            return Promise.all([
                 // update matches
                 matches.forEach((match) => {
                     console.log(match);

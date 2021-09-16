@@ -85,7 +85,12 @@
 }
 
     #filters .main > .players { grid-area: players; }
-    #filters .main > .advanced { grid-area: advanced; }
+
+    #filters .main > .advanced { 
+        grid-area: advanced;
+        width: 90%;
+    }
+
     #filters .main > .clear {
         grid-area: clear;
         margin-top: 10px;
@@ -192,8 +197,9 @@
 
 #filters .links {
     display: grid;
-    justify-content: center;
-    justify-items: center;
+    text-align: center;
+    width: max-content;
+    justify-self: center;
 }
 
     #filters .links label {
@@ -224,7 +230,7 @@
             "label label" auto
             "file video" auto / auto;
         row-gap: 10px;
-        column-gap: 50px;
+        column-gap: 20px;
     }
 
 /******/

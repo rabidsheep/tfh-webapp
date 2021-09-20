@@ -14,7 +14,7 @@
     align-items: center;
 }
 
-#matches .match-group > div {
+#matches .match-group > * {
     width: 95%;
     justify-self: center;
 }
@@ -237,8 +237,7 @@
     justify-content: space-between;
 }
 
-.small .match .p2,
-.small .match .video {
+.small .match .p2, .small .match .links .file {
     padding-top: 10px;
 }
 
@@ -275,4 +274,9 @@
 
 .xsmall .match {
     flex-wrap: nowrap;
+}
+
+.match-group .show {
+    margin-top: -1px;
+    border: 1px solid black;
 }

@@ -72,6 +72,7 @@
 
               <MatchRow
               v-for="(match, k) in group.matches"
+              v-show="!hideMatches[i] || hideMatches[i] && k < 6"
               :key="k"
               :p1="match.p1"
               :p2="match.p2"
@@ -80,6 +81,18 @@
               :order="match.order"
               @update-character="updateCharacter($event.character, $event.index)"
               @update-name="updateName($event.name, $event.index)" />
+
+              <v-btn
+              class="show"
+              height="40px"
+              v-if="group.matches.length > 6"
+              @click="$set(hideMatches, i, !hideMatches[i])"
+              tile>
+                {{ hideMatches[i] ? 'Show ' + (group.matches.length - 6) + ' More' : 'Show Less' }}
+                <v-icon right color="accent">
+                  {{ hideMatches[i] ? 'mdi-chevron-double-down' : 'mdi-chevron-double-up' }}
+                </v-icon>
+              </v-btn>
             </div>
 
             <hr :key="i" v-if="i < groups.length - 1" />
@@ -124,6 +137,7 @@ export default {
   data: () => {
     return {
       hidden: false,
+      hideMatches: [true, true, true, true, true],
       filters: {
         deep: {
           players: [
@@ -312,6 +326,10 @@ export default {
 
         xhr.send();
       });
+    },
+
+    hide(i) {
+      this.$set(this.hideMatches, i, !this.hideMatches[i])
     }
   }
 }

@@ -85,7 +85,7 @@
               <v-btn
               class="show"
               height="40px"
-              v-if="group.matches.length > 8"
+              v-if="group.matches.length > 6"
               @click="$set(hideMatches, i, !hideMatches[i])"
               tile>
                 {{ hideMatches[i] ? 'Show ' + (group.matches.length - 6) + ' More' : 'Show Less' }}

@@ -437,15 +437,19 @@ export default {
                         let playersPattern = /\s*(.*)\s+\(\s*(.*)\s*\)\s+vs.?\s+(.*)\s+\(\s*(.*)\s*\)\s*/i;
                         if (players.match(playersPattern)) {
                             let matched = players.match(playersPattern);
-                            
+
                             let match = {
                                 p1: {
                                     name: matched[1].trim(),
-                                    character: (this.$characters.find(c => c.alias.includes(matched[2]))?.name)
+                                    character: this.$characters.find(c =>
+                                        c.alias.some(a => a.toLowerCase() === matched[2].toLowerCase())
+                                    )?.name
                                 },
                                 p2: {
                                     name: matched[3].trim(),
-                                    character: (this.$characters.find(c => c.alias.includes(matched[4]))?.name)
+                                    character: this.$characters.find(c =>
+                                        c.alias.some(a => a.toLowerCase() === matched[4].toLowerCase())
+                                    )?.name
                                 },
                                 video: {
                                     id: this.video.id,

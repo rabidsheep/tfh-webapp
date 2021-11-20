@@ -519,7 +519,11 @@ export default {
                 .ref(`replays/${file.name}`)
                 .put(file)
                 .then((snapshot) => snapshot.ref.getDownloadURL())
-                .then((url) => this.matches[i].fileInfo.url = url)
+                .then((url) => {
+                    let filePath = url.split('/o/')[1];
+                    let finalUrl = 'https://firebasestorage.googleapis.com/v0/b/clean-tfh-webapp/o/' + filePath;
+                    return this.matches[i].fileInfo.url = finalUrl;
+                })
                 .catch((error) => {
                     console.log(error);
                     console.log("Removing file info from match #" + (i+1));

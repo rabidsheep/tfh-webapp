@@ -374,7 +374,13 @@ export default {
                 uploadRef = this.$matches.save({matches});
             } else {
                 uploadRef = Promise.all(this.uploadFilesAsPromise(files))
-                .then(() => this.$matches.save({matches: matches}));
+                .then(() => {
+                    if (this.matches.length > 0) {
+                        return this.$matches.save({matches: matches});
+                    } else {
+                        reject(new Error("No matches to upload"));
+                    }
+                });
             };
 
             uploadRef.then((response) => {
@@ -397,14 +403,18 @@ export default {
                 let i = this.matches.findIndex((match) => match.fileInfo.name === file.name);
 
                 return this.$firebase.storage()
-                .ref(`replays/${file.name}`)
+                .ref(`${file.name}`)
                 .put(file)
                 .then((snapshot) => snapshot.ref.getDownloadURL())
-                .then((url) => this.matches[i].fileInfo.url = url)
+                .then((url) => {
+                    let filePath = url.split('/o/')[1];
+                    let finalUrl = 'https://firebasestorage.googleapis.com/v0/b/clean-tfh-webapp/o/' + filePath;
+                    return this.matches[i].fileInfo.url = finalUrl;
+                })
                 .catch((error) => {
                     console.log(error);
                     console.log("Removing match #" + (i+1) + " from upload list.");
-                    this.matches.splice(i, 1);
+                    return this.matches.splice(i, 1);
                 });
             });
         },

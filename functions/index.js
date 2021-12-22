@@ -1,6 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const { devMode, youtubeKey } = require('./CloudConfig');
+const { youtubeKey } = require('./CloudConfig');
 const express = require('express');
 const cors = require('cors')({ origin: true });
 
@@ -319,24 +319,17 @@ api.get('/filter/content', (req, res) => {
  * verifyIdToken not currently working in dev environment???
 */
 api.get('/users', (req, res) => {
-    if (!req.headers.authorization && !devMode) {
+    if (!req.headers.authorization) {
         console.log("api.get('/users'): Unauthorized");
         res.status(403).send('Unauthorized');
     }
 
     console.log("api.get('users'): Verifying User");
 
-    let getUserRef;
-
-    if (devMode) {
-        getUserRef = mongoDb()
-    } else {
-        getUserRef = admin.auth()
-        .verifyIdToken(req.headers.authorization)
-        .then(() => mongoDb())
-    }
-
-    return getUserRef.then((client) =>
+    admin.auth()
+    .verifyIdToken(req.headers.authorization)
+    .then(() => mongoDb())
+    .then((client) =>
         client.db('tfhr')
         .collection('users')
         .find(req.query)
@@ -351,23 +344,17 @@ api.get('/users', (req, res) => {
 
 /** save user info to user table in client.db('tfhr') */
 api.put('/users', (req, res) => {
-    if (!req.headers.authorization && !devMode) {
+    if (!req.headers.authorization) {
         console.log("api.put('/users'): Unauthorized");
         res.status(403).send('Unauthorized')
     }
 
     let user = req.body;
-    let createUserRef;
 
-    if (devMode) {
-        createUserRef = mongoDb();
-    } else {
-        createUserRef = admin.auth()
-        .verifyIdToken(req.headers.authorization)
-        .then(() => mongoDb());
-    }
-    
-    return createUserRef.then((client) => {
+    admin.auth()
+    .verifyIdToken(req.headers.authorization)
+    .then(() => mongoDb())
+    .then((client) => {
         console.log("api.put('/users'): Creating user");
 
         return client.db('tfhr')
@@ -385,27 +372,20 @@ api.put('/users', (req, res) => {
 
 /** retrieve youtube video info */
 api.get('/youtube-data', (req, res) => {
-    if (!req.headers.authorization && !devMode) {
+    if (!req.headers.authorization) {
         console.log("api.put('/youtube-data'): Unauthorized");
         res.status(403).send('Unauthorized');
     }
 
     let url = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${req.query.id}&key=${youtubeKey}`
     
-    let axiosRef;
-
-    if (devMode) {
-        axiosRef = axios.get(url);
-    } else {
-        axiosRef = admin.auth()
-        .verifyIdToken(req.headers.authorization)
-        .then(() => {
-            console.log("api.get('/youtube-data'): ID Token Verified")
-            return axios.get(url)
-        });
-    }
-
-    return axiosRef.then((youtube) => {
+    admin.auth()
+    .verifyIdToken(req.headers.authorization)
+    .then(() => {
+        console.log("api.get('/youtube-data'): ID Token Verified")
+        return axios.get(url)
+    })
+    .then((youtube) => {
         if (youtube.data.items.length > 0) {
             console.log("api.get('/youtube-data'): Successfully retrieved Youtube data");
             let data = youtube.data.items[0].snippet;

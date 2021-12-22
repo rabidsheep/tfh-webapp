@@ -1,13 +1,20 @@
 import Vue from 'vue'
 import VueResource from 'vue-resource';
-import config from './AppConfig';
+import configs from './AppConfig';
 import firebase from 'firebase/app';
+
+firebase.initializeApp(configs.firebase);
 Vue.use(VueResource);
+let dev = process.env.NODE_ENV === "development";
 
 Vue.prototype.$title = 'kickandstomp.in';
-Vue.prototype.$dev = process.env.NODE_ENV === "development";
-Vue.prototype.$itemsPerPage = config.itemsPerPage;
+Vue.prototype.$itemsPerPage = 5;
 Vue.prototype.$replayVersion = 2;
+Vue.prototype.$dev = dev;
+
+if (dev) {
+  firebase.auth().useEmulator("http://localhost:9099");
+}
 
 Vue.prototype.$providers = {
   twitter: new firebase.auth.TwitterAuthProvider(),
@@ -37,7 +44,7 @@ Vue.prototype.$characters = [
 ];
 
 
-let uri = process.env.NODE_ENV == "development" ? config.uris.dev : config.uris.prod;
+let uri = dev ? configs.uris.dev : configs.uris.prod;
 
 let matchesMethods = {
   get: { method: 'GET' },

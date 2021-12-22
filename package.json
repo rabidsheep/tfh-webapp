@@ -10,6 +10,7 @@
   "dependencies": {
     "@mdi/font": "^5.9.55",
     "axios": "^0.21.1",
+    "clamscan": "^2.0.1",
     "compression-webpack-plugin": "^4.0.0",
     "connect-firebase": "^0.0.9",
     "core-js": "^3.6.5",
@@ -28,7 +29,7 @@
     "moment": "^2.29.1",
     "mongodb": "^3.6.11",
     "register-service-worker": "^1.7.2",
-    "sass": "^1.32.13",
+    "sass": "^1.33.0",
     "sass-loader": "^10.2.0",
     "vue": "^2.6.11",
     "vue-cli-plugin-vuetify": "^2.4.2",

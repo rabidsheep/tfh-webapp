@@ -32,23 +32,18 @@
                     this.loggingIn = true;
                     this.uid = user.uid;
 
-                    let loginRef = null;
-
                     if (this.$dev) {
                         console.log("Dev Environment");
-
-                        loginRef = this.$users.get({ uid: user.uid });
                     } else {
                         console.log("Production Environment");
-
-                        loginRef = this.setAuthToken()
-                        .then(() => {
-                            console.log('Checking user');
-                            return this.$users.get({ uid: user.uid });
-                        });
-                    };
-
-                    loginRef.then((response) => {
+                    }
+                    
+                    this.setAuthToken()
+                    .then(() => {
+                        console.log('Checking user');
+                        return this.$users.get({ uid: user.uid });
+                    })
+                    .then((response) => {
                         let userData = response.body[0];
 
                         if (userData) {

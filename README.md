@@ -17,7 +17,7 @@ Make sure `uri` variable in globals.js is the one that doesn't connect to localh
 
 https://tfh-webapp.web.app/#/
 
-## testing cloud functions
+## Testing Cloud Functions
 - `firebase init emulators` if you haven't initialized emulators
   - Be sure to select Cloud Functions option
 - `firebase emulators:start` to run firestore emulator
